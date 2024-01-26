@@ -85,7 +85,7 @@ class LayerImpl implements Layer {
     @Override
     public synchronized InputStream readFile(String path) throws IOException {
         if (archive.isArchived()) {
-            return archive.getInputStreamFor(path);
+            return archive.readFile(path);
         }
         else {
             return readFromStaging(path);

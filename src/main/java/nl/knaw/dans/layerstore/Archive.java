@@ -31,7 +31,7 @@ public interface Archive {
      * @return the input stream
      * @throws IOException if an I/O error occurs
      */
-    InputStream getInputStreamFor(String filePath) throws IOException;
+    InputStream readFile(String filePath) throws IOException;
 
     /**
      * Unarchives the archive to the given staging directory.

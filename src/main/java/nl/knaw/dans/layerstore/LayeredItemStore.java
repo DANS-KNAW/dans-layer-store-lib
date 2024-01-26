@@ -52,12 +52,12 @@ public class LayeredItemStore implements ItemStore {
     }
 
     @Override
-    public InputStream getInputStream(String path) {
+    public InputStream readFile(String path) {
         return null;
     }
 
     @Override
-    public void write(String path, InputStream content) {
+    public void writeFile(String path, InputStream content) {
 
     }
 

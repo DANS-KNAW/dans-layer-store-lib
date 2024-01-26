@@ -62,7 +62,7 @@ public interface ItemStore {
      * @return an input stream to the file
      * @throws IllegalArgumentException if the path does not exist or is a directory
      */
-    InputStream getInputStream(String path);
+    InputStream readFile(String path);
 
     /**
      * Writes the given content to the file at the given path. If the file does not exist yet, it is created.
@@ -70,7 +70,7 @@ public interface ItemStore {
      * @param path    the path of the file relative to the storage root
      * @param content the content to write
      */
-    void write(String path, InputStream content);
+    void writeFile(String path, InputStream content);
 
     /**
      * Moves the directory outside the store into the given destination. The parent of the destination must exist, but the destination itself must not exist yet.

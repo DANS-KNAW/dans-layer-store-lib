@@ -69,7 +69,7 @@ public class ZipArchive implements Archive {
 
 
     @Override
-    public InputStream getInputStreamFor(String filePath) throws IOException {
+    public InputStream readFile(String filePath) throws IOException {
         @SuppressWarnings("resource") // The caller is responsible for closing the stream
         ZipFile zipFile = new ZipFile(this.zipFile.toFile());
         ZipArchiveEntry entry = zipFile.getEntry(filePath);
@@ -162,7 +162,7 @@ public class ZipArchive implements Archive {
 
     @Override
     public boolean fileExists(String filePath) {
-        try (var is = getInputStreamFor(filePath)) {
+        try (var is = readFile(filePath)) {
             return is != null;
         }
         catch (IOException e) {
