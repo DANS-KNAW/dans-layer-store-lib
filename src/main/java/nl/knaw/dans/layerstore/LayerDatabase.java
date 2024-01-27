@@ -46,7 +46,6 @@ public interface LayerDatabase {
      */
     Stream<ItemRecord> getAllRecords();
 
-
     /**
      * Lists the items in <code>directoryPath</code>. It takes into account the complete stack of layers. If the directory does not exist in any of the layers, an IllegalArgumentException is thrown.
      *
@@ -66,7 +65,7 @@ public interface LayerDatabase {
     /**
      * Adds a directory to the database. Ancestor directories are added automatically, if they do not exist in the same layer yet.
      *
-     * @param path    the path of the directory relative to the storage root
+     * @param path the path of the directory relative to the storage root
      * @return the records that were added to the database for directories that did not exist yet
      * @throws IllegalArgumentException if the layerId is lower than the highest layerId in the database
      */
@@ -87,7 +86,6 @@ public interface LayerDatabase {
      * @return the records for the given path
      */
     List<ItemRecord> getRecordsByPath(String path);
-
 
     /**
      * Returns whether the path pattern matches any path in the database.

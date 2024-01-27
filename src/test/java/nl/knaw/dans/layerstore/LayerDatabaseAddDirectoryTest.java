@@ -166,7 +166,7 @@ public class LayerDatabaseAddDirectoryTest extends AbtractLayerDatabaseTest {
 
     @Test
     public void should_throw_an_IllegalArgumentException_if_the_path_contains_a_file_in_previous_layer() {
-        addToDb(1L, "", Item.Type.Directory) ;
+        addToDb(1L, "", Item.Type.Directory);
         addToDb(1L, "root", Item.Type.Directory);
         addToDb(1L, "root/child", Item.Type.Directory);
         addToDb(1L, "root/child/grandchild", Item.Type.File);

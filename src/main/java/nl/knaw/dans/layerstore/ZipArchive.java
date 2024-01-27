@@ -67,7 +67,6 @@ public class ZipArchive implements Archive {
         }
     }
 
-
     @Override
     public InputStream readFile(String filePath) throws IOException {
         @SuppressWarnings("resource") // The caller is responsible for closing the stream

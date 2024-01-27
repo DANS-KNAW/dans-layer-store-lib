@@ -15,5 +15,37 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class LayerDatabaseFindLayersContainingTest extends AbtractLayerDatabaseTest{
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+public class LayerDatabaseFindLayersContainingTest extends AbtractLayerDatabaseTest {
+
+    @Test
+    public void findLayersContaining_should_return_empty_list_when_no_layers_contain_path() {
+        addToDb(1L, "file1.txt", Item.Type.File);
+        addToDb(2L, "file2.txt", Item.Type.File);
+        addToDb(3L, "file3.txt", Item.Type.File);
+        var result = daoTestExtension.inTransaction(() -> dao.findLayersContaining("file4.txt"));
+        assertThat(result).asList().isEmpty();
+    }
+
+    @Test
+    public void findLayersContaining_should_return_layerId_when_found() {
+        addToDb(1L, "file1.txt", Item.Type.File);
+        addToDb(2L, "file2.txt", Item.Type.File);
+        addToDb(3L, "file3.txt", Item.Type.File);
+        var result = daoTestExtension.inTransaction(() -> dao.findLayersContaining("file2.txt"));
+        assertThat(result).asList().containsExactly(2L);
+    }
+
+    @Test
+    public void findLayersContaining_should_return_multiple_layerIds_when_multiple_layers_contain_path() {
+        addToDb(1L, "file1.txt", Item.Type.File);
+        addToDb(2L, "file2.txt", Item.Type.File);
+        addToDb(3L, "file3.txt", Item.Type.File);
+        addToDb(4L, "file2.txt", Item.Type.File);
+        var result = daoTestExtension.inTransaction(() -> dao.findLayersContaining("file2.txt"));
+        assertThat(result).asList().containsExactly(2L, 4L);
+    }
 }

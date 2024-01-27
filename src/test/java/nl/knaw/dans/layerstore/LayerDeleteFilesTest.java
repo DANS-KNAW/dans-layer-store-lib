@@ -15,5 +15,63 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class LayerDeleteFilesTest {
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+
+public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
+    @Test
+    public void should_delete_files_in_staging_dir_if_layer_is_open() throws Exception {
+        var stagingDir = testDir.resolve("staging");
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
+            !stagingDir.resolve("path/to/file1").toFile().createNewFile() ||
+            !stagingDir.resolve("path/to/file2").toFile().createNewFile()) {
+            throw new Exception("Could not create files to delete");
+        }
+
+        layer.deleteFiles(List.of("path/to/file1", "path/to/file2"));
+        assertThat(stagingDir.resolve("path/to/file1")).doesNotExist();
+        assertThat(stagingDir.resolve("path/to/file2")).doesNotExist();
+    }
+
+    @Test
+    public void should_throw_IllegalStateException_if_layer_is_closed() throws Exception {
+        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+        layer.close();
+        assertThatThrownBy(() -> layer.deleteFiles(List.of("path/to/file1", "path/to/file2")))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Layer is closed, but must be open for this operation");
+    }
+
+    @Test
+    public void should_throw_IllegalArgumentException_if_path_is_null() throws Exception {
+        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+        assertThatThrownBy(() -> layer.deleteFiles(null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Paths cannot be null");
+    }
+
+    @Test
+    public void should_throw_IllegalArgumentException_if_path_contains_null() throws Exception {
+        var stagingDir = testDir.resolve("staging");
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+
+        if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
+            !stagingDir.resolve("path/to/file1").toFile().createNewFile()) {
+            throw new Exception("Could not create files to delete");
+        }
+        var paths = new ArrayList<String>();
+        paths.add("path/to/file1");
+        paths.add(null);
+
+        assertThatThrownBy(() -> layer.deleteFiles(paths))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Path cannot be null");
+
+    }
 }
