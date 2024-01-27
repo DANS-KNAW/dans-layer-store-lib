@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import io.dropwizard.hibernate.AbstractDAO;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.junit.jupiter.api.BeforeEach;

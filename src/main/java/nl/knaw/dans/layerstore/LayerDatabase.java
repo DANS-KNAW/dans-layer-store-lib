@@ -65,12 +65,12 @@ public interface LayerDatabase {
 
     /**
      * Adds a directory to the database. Ancestor directories are added automatically, if they do not exist in the same layer yet.
-     * The directory is always created in the newest layer.
      *
      * @param path    the path of the directory relative to the storage root
      * @return the records that were added to the database for directories that did not exist yet
+     * @throws IllegalArgumentException if the layerId is lower than the highest layerId in the database
      */
-    List<ItemRecord> addDirectory(String path);
+    List<ItemRecord> addDirectory(long layerId, String path);
 
     /**
      * Finds all the layers that contain the given path.
