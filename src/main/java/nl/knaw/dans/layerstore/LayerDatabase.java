@@ -93,5 +93,5 @@ public interface LayerDatabase {
      * @param pathPattern a path pattern that may contain wildcards
      * @return true if the pattern matches any path in the database, false otherwise
      */
-    boolean hasPathLike(String pathPattern);
+    boolean existsPathLike(String pathPattern);
 }

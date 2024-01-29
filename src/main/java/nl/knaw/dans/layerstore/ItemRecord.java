@@ -38,7 +38,7 @@ import javax.persistence.NamedQuery;
 )
 @NamedQuery(
     name = "ItemRecord.getRecordsByPath",
-    query = "SELECT l FROM listing_record l WHERE l.path = :path"
+    query = "SELECT l FROM listing_record l WHERE l.path = :path ORDER BY l.layerId DESC"
 )
 @NamedQuery(name = "ItemRecord.getAllRecords",
             query = "SELECT l FROM listing_record l")

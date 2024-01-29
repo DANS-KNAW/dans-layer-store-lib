@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,18 +35,20 @@ public interface ItemStore {
      *
      * @param directoryPath the directory path relative to the storage root
      * @return the items in the directory
-     * @throws IllegalArgumentException if the directory does not exist in any of the layers
+     * @throws java.nio.file.NoSuchFileException if the directory does not exist in any of the layers
+     * @throws java.nio.file.NotDirectoryException if the path exists, but is not a directory
      */
-    List<Item> listDirectory(String directoryPath);
+    List<Item> listDirectory(String directoryPath) throws IOException;
 
     /**
      * Returns the files and directories in the given directory and its subdirectories.
      *
      * @param directoryPath the directory path relative to the storage root
      * @return the items in the directory and its subdirectories
-     * @throws IllegalArgumentException if the directory does not exist in any of the layers
+     * @throws java.nio.file.NoSuchFileException if the directory does not exist in any of the layers
+     * @throws java.nio.file.NotDirectoryException if the path exists, but is not a directory
      */
-    List<Item> listRecursive(String directoryPath);
+    List<Item> listRecursive(String directoryPath) throws IOException;
 
     /**
      * Returns whether a path with the given pattern exists in the store.
@@ -60,9 +63,9 @@ public interface ItemStore {
      *
      * @param path the path of the file relative to the storage root
      * @return an input stream to the file
-     * @throws IllegalArgumentException if the path does not exist or is a directory
+     * @throws IOException if the file could not be opened
      */
-    InputStream readFile(String path);
+    InputStream readFile(String path) throws IOException;
 
     /**
      * Writes the given content to the file at the given path. If the file does not exist yet, it is created.
@@ -70,7 +73,7 @@ public interface ItemStore {
      * @param path    the path of the file relative to the storage root
      * @param content the content to write
      */
-    void writeFile(String path, InputStream content);
+    void writeFile(String path, InputStream content) throws IOException;
 
     /**
      * Moves the directory outside the store into the given destination. The parent of the destination must exist, but the destination itself must not exist yet.
@@ -79,7 +82,7 @@ public interface ItemStore {
      * @param destination the path of the destination directory relative to the storage root
      * @throws IllegalArgumentException if the source does not exist or is not a directory, or if the destination already exists, or its parent does not exist
      */
-    void moveDirectoryInto(Path source, String destination);
+    void moveDirectoryInto(Path source, String destination) throws IOException;
 
     /**
      * Moves the directory inside the store to the given destination. The destination must not exist yet, but its parent must exist.
@@ -89,7 +92,7 @@ public interface ItemStore {
      * @throws IllegalArgumentException if the source does not exist or is not a directory, or if the destination already exists, or its parent does not exist
      * @throws IllegalStateException    if the implementation has persisted the source directory, or part of it in a way that does not allow it to be moved
      */
-    void moveDirectoryInternal(String source, String destination);
+    void moveDirectoryInternal(String source, String destination) throws IOException;
 
     /**
      * Deletes the directory at the given path, including all its contents.
@@ -98,7 +101,7 @@ public interface ItemStore {
      * @throws IllegalArgumentException if the path does not exist or is not a directory
      * @throws IllegalStateException    if the implementation has persisted the directory, or part of it in a way that does not allow it to be deleted
      */
-    void deleteDirectory(String path);
+    void deleteDirectory(String path) throws IOException;
 
     /**
      * Deletes the files at the given paths.
@@ -106,5 +109,10 @@ public interface ItemStore {
      * @param paths the paths of the files relative to the storage root
      * @throws IllegalArgumentException if any of the paths does not exist or is a directory
      */
-    void deleteFiles(List<String> paths);
+    void deleteFiles(List<String> paths) throws IOException;
+
+    void createDirectory(String path) throws IOException;
+
+    void copyDirectoryOutOf(String source, Path destination) throws IOException;
+
 }

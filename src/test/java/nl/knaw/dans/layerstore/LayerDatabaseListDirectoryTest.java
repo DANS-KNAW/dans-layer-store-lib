@@ -17,6 +17,9 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.NoSuchFileException;
+import java.nio.file.NotDirectoryException;
+
 import static nl.knaw.dans.layerstore.Item.Type;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -92,20 +95,20 @@ public class LayerDatabaseListDirectoryTest extends AbtractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_IllegalArgumentException_when_path_is_not_a_directory() throws Exception {
+    public void should_throw_NotDirectoryException_when_path_is_not_a_directory() throws Exception {
         addToDb(1L, "dir", Type.Directory);
         addToDb(1L, "dir/file", Type.File);
         assertThatThrownBy(() -> dao.listDirectory("dir/file"))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(NotDirectoryException.class)
             .hasMessage("Not a directory: dir/file");
     }
 
     @Test
-    public void should_throw_IllegalArgumentException_when_path_does_not_exist() throws Exception {
+    public void should_throw_NoSuchFileException_when_path_does_not_exist() throws Exception {
         addToDb(1L, "dir", Type.Directory);
         addToDb(1L, "dir/file", Type.File);
         assertThatThrownBy(() -> dao.listDirectory("dir/does-not-exist"))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(NoSuchFileException.class)
             .hasMessage("No such directory: dir/does-not-exist");
     }
 

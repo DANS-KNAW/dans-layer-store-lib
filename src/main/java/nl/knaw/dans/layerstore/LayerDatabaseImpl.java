@@ -20,6 +20,8 @@ import org.hibernate.SessionFactory;
 
 import javax.persistence.TypedQuery;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -142,13 +144,13 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
     }
 
     @Override
-    public boolean hasPathLike(String pathPattern) {
+    public boolean existsPathLike(String pathPattern) {
         return namedQuery("ItemRecord.hasPathLike")
             .setParameter("pathPattern", pathPattern)
             .getResultList().stream().anyMatch(o -> (Boolean) o);
     }
 
-    private String preprocessDirectoryArgument(String directoryPath) throws IOException {
+    private String preprocessDirectoryArgument(String directoryPath) throws NoSuchFileException, NotDirectoryException {
         if (directoryPath == null) {
             throw new IllegalArgumentException("directoryPath must not be null");
         }
@@ -156,10 +158,10 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
         if (!directoryPath.isBlank()) {
             var records = getRecordsByPath(directoryPath);
             if (records.isEmpty()) {
-                throw new IllegalArgumentException("No such directory: " + directoryPath);
+                throw new NoSuchFileException("No such directory: " + directoryPath);
             }
             if (records.stream().anyMatch(r -> r.getType() != Type.Directory)) {
-                throw new IllegalArgumentException("Not a directory: " + directoryPath);
+                throw new NotDirectoryException("Not a directory: " + directoryPath);
             }
             // Add an ending slash to directoryPath, if it doesn't have one yet.
             if (!directoryPath.endsWith("/")) {

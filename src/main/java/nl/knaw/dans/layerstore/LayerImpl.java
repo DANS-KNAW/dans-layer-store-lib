@@ -102,6 +102,20 @@ class LayerImpl implements Layer {
     }
 
     @Override
+    public void reopen() throws IOException {
+        checkClosed();
+        checkArchived();
+        ensureStagingDirExists();
+        archive.unarchiveTo(stagingDir);
+        closed = false;
+    }
+
+    @Override
+    public boolean isOpen() {
+        return !closed;
+    }
+
+    @Override
     @SneakyThrows
     public synchronized void archive() {
         checkClosed();
@@ -111,9 +125,19 @@ class LayerImpl implements Layer {
         FileUtils.deleteDirectory(stagingDir.toFile());
     }
 
+    @Override
+    public boolean isArchived() {
+        return archive.isArchived();
+    }
+
     private void checkNotArchived() {
         if (archive.isArchived())
             throw new IllegalStateException("Layer is already archived");
+    }
+
+    private void checkArchived() {
+        if (!archive.isArchived())
+            throw new IllegalStateException("Layer is not archived");
     }
 
     @Override
