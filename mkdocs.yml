@@ -23,9 +23,7 @@ repo_url: https://github.com/dans-layer-store-lib
 
 nav:
   - Manual: index.md
-  - Getting started: getting-started.md
   - JavaDocs: api.md
-  - Development: dev.md
 
 plugins:
   - markdownextradata
