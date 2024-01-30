@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
+public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
     @Test
-    public void should_delete_directory_in_staging_dir_when_layer_is_open() throws Exception {
+    public void should_move_directory_from_staging_dir_to_staging_dir_if_layer_is_open() throws Exception {
         var stagingDir = testDir.resolve("staging");
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
 
@@ -30,26 +30,14 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
         if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
             !stagingDir.resolve("path/to/file1").toFile().createNewFile() ||
             !stagingDir.resolve("path/to/file2").toFile().createNewFile()) {
-            throw new Exception("Could not create files to delete");
+            throw new Exception("Could not create files to move");
         }
 
-        // And another directory with files in it
-        if (!stagingDir.resolve("path/too").toFile().mkdirs() ||
-            !stagingDir.resolve("path/too/file1").toFile().createNewFile() ||
-            !stagingDir.resolve("path/too/file2").toFile().createNewFile()) {
-            throw new Exception("Could not create files in path too");
-        }
-
-        // Delete the files in the first directory
-        layer.deleteDirectory("path/to");
-
-        // Check that the files in the first directory are gone
+        layer.moveDirectoryInternal("path/to/", "path/too/");
         assertThat(stagingDir.resolve("path/to")).doesNotExist();
-
-        // Check that the files in the second directory are still there
+        assertThat(stagingDir.resolve("path/too")).exists();
         assertThat(stagingDir.resolve("path/too/file1")).exists();
         assertThat(stagingDir.resolve("path/too/file2")).exists();
-        assertThat(stagingDir.resolve("path/too")).isDirectory();
     }
 
     @Test
@@ -60,29 +48,28 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
         if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
             !stagingDir.resolve("path/to/file1").toFile().createNewFile() ||
             !stagingDir.resolve("path/to/file2").toFile().createNewFile()) {
-            throw new Exception("Could not create files to delete");
-        }
-
-        // And another directory with files in it
-        if (!stagingDir.resolve("path/too").toFile().mkdirs() ||
-            !stagingDir.resolve("path/too/file1").toFile().createNewFile() ||
-            !stagingDir.resolve("path/too/file2").toFile().createNewFile()) {
-            throw new Exception("Could not create files in path too");
+            throw new Exception("Could not create files to move");
         }
         layer.close();
 
-        assertThatThrownBy(() -> layer.deleteDirectory("path/to"))
+        assertThatThrownBy(() -> layer.moveDirectoryInternal("path/to/", "path/too/"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Layer is closed, but must be open for this operation");
     }
 
     @Test
-    public void should_throw_IllegalArgumentException_when_path_is_null() throws Exception {
+    public void should_throw_IllegalArgumentException_if_source_is_outside_staging_dir() throws Exception {
         var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
-        assertThatThrownBy(() -> layer.deleteDirectory(null))
+        assertThatThrownBy(() -> layer.moveDirectoryInternal("../path/to/", "path/too/"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Path cannot be null");
+            .hasMessage("Path is outside staging directory");
     }
 
-    // validatePath is tested enough in LayerImplDeleteFilesTest
+    @Test
+    public void should_throw_IllegalArgumentException_if_destination_is_outside_staging_dir() throws Exception {
+        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+        assertThatThrownBy(() -> layer.moveDirectoryInternal("path/to/", "../path/too/"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Path is outside staging directory");
+    }
 }

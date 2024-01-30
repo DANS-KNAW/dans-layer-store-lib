@@ -34,9 +34,28 @@ public interface Layer {
     void close();
 
     /**
+     * Changes the state of the layer to open. It also stages the archive file in the staging directory. This operation is not allowed when the layer is not closed or not yet archived.
+     */
+    void reopen() throws IOException;
+
+    /**
+     * Returns whether the layer is open.
+     *
+     * @return whether the layer is open
+     */
+    boolean isOpen();
+
+    /**
      * Turns the layer into an archive file.
      */
     void archive();
+
+    /**
+     * Returns whether the layer is archived.
+     *
+     * @return whether the layer is archived
+     */
+    boolean isArchived();
 
     void createDirectory(String path) throws IOException;
 

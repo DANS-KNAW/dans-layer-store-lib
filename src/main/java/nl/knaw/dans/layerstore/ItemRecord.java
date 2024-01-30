@@ -37,13 +37,13 @@ import javax.persistence.NamedQuery;
     query = "SELECT MAX(l.layerId) FROM listing_record l"
 )
 @NamedQuery(
-    name = "ListingRecord2.getRecordsByPath",
-    query = "SELECT l FROM listing_record l WHERE l.path = :path"
+    name = "ItemRecord.getRecordsByPath",
+    query = "SELECT l FROM listing_record l WHERE l.path = :path ORDER BY l.layerId DESC"
 )
-@NamedQuery(name = "ListingRecord2.getAllRecords",
+@NamedQuery(name = "ItemRecord.getAllRecords",
             query = "SELECT l FROM listing_record l")
 @NamedQuery(
-    name = "ListingRecord2.listRootDirectory",
+    name = "ItemRecord.listRootDirectory",
     query = """
         SELECT l
         FROM listing_record l
@@ -54,7 +54,7 @@ import javax.persistence.NamedQuery;
                               WHERE l2.path != '' AND l2.path NOT LIKE :pathWithTwoComponents GROUP BY l2.path)"""
 )
 @NamedQuery(
-    name = "ListingRecord2.listDirectory",
+    name = "ItemRecord.listDirectory",
     query = """
         SELECT l
         FROM listing_record l
@@ -65,7 +65,7 @@ import javax.persistence.NamedQuery;
                               WHERE l2.path LIKE :path AND l2.path NOT LIKE :pathWithTwoComponents GROUP BY l2.path)"""
 )
 @NamedQuery(
-    name = "ListingRecord2.listRecursive",
+    name = "ItemRecord.listRecursive",
     query = """
         SELECT l
         FROM listing_record l
@@ -74,24 +74,14 @@ import javax.persistence.NamedQuery;
                               FROM listing_record l2
                               WHERE l2.path LIKE :path GROUP BY l2.path)"""
 )
-@NamedQuery(name = "ListingRecord2.findLayersContaining",
+@NamedQuery(name = "ItemRecord.findLayersContaining",
             query = """
                 SELECT DISTINCT l.layerId
                 FROM listing_record l
                 WHERE l.path = :path"""
 )
 @NamedQuery(
-    name = "ListingRecord2.isContentStoredInDatabase",
-    query = """
-        SELECT l.content IS NOT NULL
-        FROM listing_record l
-        WHERE l.path = :path
-            AND l.layerId IN (SELECT MAX(l2.layerId)
-                              FROM listing_record l2
-                              WHERE l2.path = :path GROUP BY l2.path)"""
-)
-@NamedQuery(
-    name = "ListingRecord2.hasPathLike",
+    name = "ItemRecord.hasPathLike",
     query = """
         SELECT COUNT(l) > 0
         FROM listing_record l

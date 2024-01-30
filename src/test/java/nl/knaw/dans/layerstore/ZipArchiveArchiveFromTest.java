@@ -15,5 +15,49 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class ZipArchiveArchiveFromTest {
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.AssertionsForClassTypes;
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Path;
+import java.util.Collections;
+
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+
+public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir{
+    @Test
+    public void should_create_zipfile_and_change_status_to_archived() throws Exception {
+        var zipFile = testDir.resolve("test.zip");
+        ZipArchive zipArchive = new ZipArchive(zipFile);
+        // Create some files to archive
+        Path file1 = testDir.resolve("staging/file1");
+        Path file2 = testDir.resolve("staging/path/to/file2");
+        Path file3 = testDir.resolve("staging/path/to/file3");
+
+        // Write some string content to the files
+        String file1Content = "file1 content";
+        String file2Content = "file2 content";
+        String file3Content = "file3 content";
+        FileUtils.forceMkdir(file2.getParent().toFile());
+        FileUtils.write(file1.toFile(), file1Content, "UTF-8");
+        FileUtils.write(file2.toFile(), file2Content, "UTF-8");
+        FileUtils.write(file3.toFile(), file3Content, "UTF-8");
+
+        // Archive the files
+        zipArchive.archiveFrom(testDir.resolve("staging"));
+
+        // Check that the zip file exists and contains the files and not more than that
+        assertThat(zipFile).exists();
+        try (var zf = new ZipFile(zipFile.toFile())) {
+            AssertionsForClassTypes.assertThat(zf.getEntry("file1")).isNotNull();
+            AssertionsForClassTypes.assertThat(zf.getEntry("path/to/file2")).isNotNull();
+            AssertionsForClassTypes.assertThat(zf.getEntry("path/to/file3")).isNotNull();
+
+            // 3 files + 2 directories = 5 entries
+            AssertionsForClassTypes.assertThat(Collections.list(zf.getEntries()).size()).isEqualTo(5);
+        }
+
+        AssertionsForClassTypes.assertThat(zipArchive.isArchived()).isTrue();
+    }
 }

@@ -15,6 +15,11 @@
  */
 package nl.knaw.dans.layerstore;
 
+/**
+ * A generic filter interface.
+ *
+ * @param <T> the type of the object to filter
+ */
 public interface Filter<T> {
     boolean accept(T t);
 }

@@ -1,4 +1,4 @@
-dans-layer-store-lib    
+dans-layer-store-lib
 ====================
 
 A library for hierarchical storage of files in a layered way.

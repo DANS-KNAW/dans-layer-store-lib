@@ -15,5 +15,31 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class LayerArchiveTest {
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+public class LayerArchiveTest extends AbstractTestWithTestDir {
+    @Test
+    public void throws_IllegalStateException_when_layer_is_closed() throws Exception {
+        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+        assertThrows(IllegalStateException.class, layer::archive);
+    }
+
+    @Test
+    public void throws_IllegalStateException_when_layer_is_already_archived() throws Exception {
+        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+        layer.close();
+        layer.archive();
+        assertThrows(IllegalStateException.class, layer::archive);
+    }
+
+    @Test
+    public void removes_staging_dir() throws Exception {
+        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+        layer.close();
+        layer.archive();
+        assertThat(testDir.resolve("staging")).doesNotExist();
+    }
 }

@@ -15,5 +15,43 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class ZipArchiveFileExistsTest {
+import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.AssertionsForClassTypes;
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Path;
+
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+
+public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
+    @Test
+    public void should_return_true_when_file_exists_in_archive() throws Exception {
+        var zipFile = testDir.resolve("test.zip");
+        ZipArchive zipArchive = new ZipArchive(zipFile);
+        // Create some files to archive
+        Path file1 = testDir.resolve("staging/file1");
+        Path file2 = testDir.resolve("staging/path/to/file2");
+        Path file3 = testDir.resolve("staging/path/to/file3");
+
+        // Write some string content to the files
+        String file1Content = "file1 content";
+        String file2Content = "file2 content";
+        String file3Content = "file3 content";
+        FileUtils.forceMkdir(file2.getParent().toFile());
+        FileUtils.write(file1.toFile(), file1Content, "UTF-8");
+        FileUtils.write(file2.toFile(), file2Content, "UTF-8");
+        FileUtils.write(file3.toFile(), file3Content, "UTF-8");
+
+        // Archive the files
+        zipArchive.archiveFrom(testDir.resolve("staging"));
+
+        // Check that the zip file exists
+        assertThat(zipFile).exists();
+        AssertionsForClassTypes.assertThat(zipArchive.isArchived()).isTrue();
+
+        // Check that the files are unarchived
+        AssertionsForClassTypes.assertThat(zipArchive.fileExists("file1")).isTrue();
+        AssertionsForClassTypes.assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
+        AssertionsForClassTypes.assertThat(zipArchive.fileExists("path/to/file3")).isTrue();
+    }
 }

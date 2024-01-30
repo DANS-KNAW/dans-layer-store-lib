@@ -15,5 +15,5 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class LayerCloseTest {
+public class LayerCloseTest extends AbstractTestWithTestDir {
 }
