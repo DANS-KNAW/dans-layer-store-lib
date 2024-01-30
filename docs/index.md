@@ -1,7 +1,7 @@
 MANUAL
 ======
 
-TODO
+
 
 DESCRIPTION
 -----------
