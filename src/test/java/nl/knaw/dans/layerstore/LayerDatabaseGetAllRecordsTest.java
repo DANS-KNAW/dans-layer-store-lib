@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static nl.knaw.dans.layerstore.Item.Type;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-public class LayerDatabaseGetAllRecordsTest extends AbtractLayerDatabaseTest {
+public class LayerDatabaseGetAllRecordsTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_return_empty_list_when_database_is_empty() {

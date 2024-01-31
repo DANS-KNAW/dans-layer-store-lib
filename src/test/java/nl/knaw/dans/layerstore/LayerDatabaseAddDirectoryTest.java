@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class LayerDatabaseAddDirectoryTest extends AbtractLayerDatabaseTest {
+public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_add_directories() {

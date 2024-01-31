@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static nl.knaw.dans.layerstore.Item.Type;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
-public abstract class AbtractLayerDatabaseTest extends AbstractTestWithTestDir {
+public abstract class AbstractLayerDatabaseTest extends AbstractTestWithTestDir {
     protected final DAOTestExtension daoTestExtension = DAOTestExtension.newBuilder()
         .addEntityClass(ItemRecord.class)
         .build();

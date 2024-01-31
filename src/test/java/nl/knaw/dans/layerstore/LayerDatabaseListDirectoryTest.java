@@ -24,7 +24,7 @@ import static nl.knaw.dans.layerstore.Item.Type;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-public class LayerDatabaseListDirectoryTest extends AbtractLayerDatabaseTest {
+public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_return_empty_list_when_no_records_in_db() throws Exception {
@@ -85,6 +85,15 @@ public class LayerDatabaseListDirectoryTest extends AbtractLayerDatabaseTest {
     }
 
     @Test
+    void should_return_one_root_folder_item_when_item_has_records_in_multiple_layers() throws Exception {
+        addToDb(1L, "file1.txt", Type.File);
+        addToDb(2L, "file1.txt", Type.File);
+        assertThat(dao.listDirectory("")).asList()
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
+            .containsExactlyInAnyOrder(new Item("file1.txt", Type.File));
+    }
+
+    @Test
     public void should_return_one_item_when_item_has_grandchildren() throws Exception {
         addToDb(1L, "dir", Type.Directory);
         var record = addToDb(1L, "dir/subdir", Type.Directory);
@@ -92,6 +101,16 @@ public class LayerDatabaseListDirectoryTest extends AbtractLayerDatabaseTest {
         assertThat(dao.listDirectory("dir")).asList()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(record);
+    }
+
+    @Test
+    public void should_not_regard_file_starting_with_same_string_as_child_of_directory() throws Exception {
+        addToDb(1L, "dir", Type.Directory);
+        addToDb(1L, "dir/file_in_dir", Type.File);
+        addToDb(1L, "dir_file_outside_dir", Type.File);
+        assertThat(dao.listDirectory("dir")).asList()
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
+            .containsExactlyInAnyOrder(new Item("dir/file_in_dir", Type.File));
     }
 
     @Test

@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static nl.knaw.dans.layerstore.Item.Type;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-public class LayerDatabaseSaveRecordsTest extends AbtractLayerDatabaseTest {
+public class LayerDatabaseSaveRecordsTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_accept_empty_list() {

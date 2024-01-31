@@ -15,8 +15,10 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,70 +26,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
-import javax.persistence.NamedQuery;
 
 /**
  * A record in the database that represents a file or directory in a layer.
  */
 @Data
-@Builder(builderClassName = "Builder")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity(name = "listing_record")
-@NamedQuery(
-    name = "ItemRecord.getTopLayerId",
-    query = "SELECT MAX(l.layerId) FROM listing_record l"
-)
-@NamedQuery(
-    name = "ItemRecord.getRecordsByPath",
-    query = "SELECT l FROM listing_record l WHERE l.path = :path ORDER BY l.layerId DESC"
-)
-@NamedQuery(name = "ItemRecord.getAllRecords",
-            query = "SELECT l FROM listing_record l")
-@NamedQuery(
-    name = "ItemRecord.listRootDirectory",
-    query = """
-        SELECT l
-        FROM listing_record l
-        WHERE l.path != ''
-            AND l.path NOT LIKE :pathWithTwoComponents
-            AND l.layerId IN (SELECT MAX(l2.layerId)
-                              FROM listing_record l2
-                              WHERE l2.path != '' AND l2.path NOT LIKE :pathWithTwoComponents GROUP BY l2.path)"""
-)
-@NamedQuery(
-    name = "ItemRecord.listDirectory",
-    query = """
-        SELECT l
-        FROM listing_record l
-        WHERE l.path LIKE :path
-            AND l.path NOT LIKE :pathWithTwoComponents
-            AND l.layerId IN (SELECT MAX(l2.layerId)
-                              FROM listing_record l2
-                              WHERE l2.path LIKE :path AND l2.path NOT LIKE :pathWithTwoComponents GROUP BY l2.path)"""
-)
-@NamedQuery(
-    name = "ItemRecord.listRecursive",
-    query = """
-        SELECT l
-        FROM listing_record l
-        WHERE l.path LIKE :path
-            AND l.layerId IN (SELECT MAX(l2.layerId)
-                              FROM listing_record l2
-                              WHERE l2.path LIKE :path GROUP BY l2.path)"""
-)
-@NamedQuery(name = "ItemRecord.findLayersContaining",
-            query = """
-                SELECT DISTINCT l.layerId
-                FROM listing_record l
-                WHERE l.path = :path"""
-)
-@NamedQuery(
-    name = "ItemRecord.hasPathLike",
-    query = """
-        SELECT COUNT(l) > 0
-        FROM listing_record l
-        WHERE l.path LIKE :pathPattern"""
-
-)
 public class ItemRecord {
     @Id
     @Column(name = "generated_id")

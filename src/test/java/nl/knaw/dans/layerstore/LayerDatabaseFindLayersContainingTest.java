@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-public class LayerDatabaseFindLayersContainingTest extends AbtractLayerDatabaseTest {
+public class LayerDatabaseFindLayersContainingTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void findLayersContaining_should_return_empty_list_when_no_layers_contain_path() {

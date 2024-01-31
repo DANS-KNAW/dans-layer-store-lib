@@ -15,5 +15,5 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class LayerDatabaseHasPathLikeTest extends AbtractLayerDatabaseTest {
+public class LayerDatabaseHasPathLikeTest extends AbstractLayerDatabaseTest {
 }

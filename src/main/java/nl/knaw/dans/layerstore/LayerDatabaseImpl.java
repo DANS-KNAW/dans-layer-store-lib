@@ -19,11 +19,17 @@ import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.SessionFactory;
 
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static nl.knaw.dans.layerstore.Item.Type;
@@ -64,24 +70,39 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
     @Override
     public List<Item> listDirectory(String directoryPath) throws IOException {
         directoryPath = preprocessDirectoryArgument(directoryPath);
-        // Treating the root directory as a special case, to prevent the root directory itself from being returned
-        // as one of its own children.
-        if (directoryPath.isEmpty()) {
-            return namedTypedQuery("ItemRecord.listRootDirectory")
-                .setParameter("pathWithTwoComponents", "%/%")
-                .getResultList().stream().map(ItemRecord::toItem).toList();
-        }
-        return namedTypedQuery("ItemRecord.listDirectory")
-            .setParameter("path", directoryPath + "%")
-            .setParameter("pathWithTwoComponents", directoryPath + "%/%")
-            .getResultList().stream().map(ItemRecord::toItem).toList();
+        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        Predicate hasParentPath = cb.like(itemRecordRoot.get("path"), directoryPath + "%");
+        Predicate notSubdirectory = cb.notLike(itemRecordRoot.get("path"), directoryPath + "%/%");
+        Predicate notSamePath = cb.notEqual(itemRecordRoot.get("path"), directoryPath);
+        Predicate hasMaxLayerId = cb.equal(itemRecordRoot.get("layerId"), getMaxLayerIdSubquery(cq, cb, itemRecordRoot));
+        cq.where(cb.and(hasParentPath, notSubdirectory, notSamePath, hasMaxLayerId));
+
+        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
+        return query.getResultStream().map(ItemRecord::toItem).collect(Collectors.toList());
     }
 
     @Override
     public List<Item> listRecursive(String directoryPath) throws IOException {
-        return namedTypedQuery("ItemRecord.listRecursive")
-            .setParameter("path", preprocessDirectoryArgument(directoryPath) + "%")
-            .getResultList().stream().map(ItemRecord::toItem).toList();
+        directoryPath = preprocessDirectoryArgument(directoryPath);
+        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        Predicate hasParentPath = cb.like(itemRecordRoot.get("path"), directoryPath + "%");
+        Predicate notSamePath = cb.notEqual(itemRecordRoot.get("path"), directoryPath);
+        Predicate hasMaxLayerId = cb.equal(itemRecordRoot.get("layerId"), getMaxLayerIdSubquery(cq, cb, itemRecordRoot));
+        cq.where(cb.and(hasParentPath, notSamePath, hasMaxLayerId));
+
+        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
+        return query.getResultStream().map(ItemRecord::toItem).collect(Collectors.toList());
+    }
+
+    private static Subquery<Long> getMaxLayerIdSubquery(CriteriaQuery<ItemRecord> cq, CriteriaBuilder cb, Root<ItemRecord> itemRecordRoot) {
+        Subquery<Long> subquery = cq.subquery(Long.class);
+        Root<ItemRecord> subRoot = subquery.from(ItemRecord.class);
+        subquery.select(cb.max(subRoot.get("layerId"))).where(cb.equal(subRoot.get("path"), itemRecordRoot.get("path")));
+        return subquery;
     }
 
     @Override
@@ -98,7 +119,7 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
             }
             var recordsInLayer = records.stream().filter(r -> r.getLayerId() == layerId).toList();
             if (recordsInLayer.isEmpty()) {
-                ItemRecord newRecord = new ItemRecord.Builder()
+                ItemRecord newRecord = ItemRecord.builder()
                     .layerId(layerId)
                     .path(currentPath)
                     .type(Type.Directory)
@@ -118,36 +139,45 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
         return pathComponents;
     }
 
-    private long getTopLayerId() {
-        return namedTypedQuery("ItemRecord.getTopLayerId")
-            .getSingleResult().getLayerId();
-    }
-
     @Override
     public List<Long> findLayersContaining(String path) {
-        return namedQuery("ItemRecord.findLayersContaining")
-            .setParameter("path", path)
-            .getResultList().stream().map(o -> (Long) o).toList();
+        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(itemRecordRoot.get("layerId")).where(cb.equal(itemRecordRoot.get("path"), path)).distinct(true);
+        TypedQuery<Long> query = currentSession().createQuery(cq);
+        return query.getResultList();
     }
 
     @Override
     public List<ItemRecord> getRecordsByPath(String path) {
-        return namedTypedQuery("ItemRecord.getRecordsByPath")
-            .setParameter("path", path)
-            .getResultList();
+        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(itemRecordRoot).where(cb.equal(itemRecordRoot.get("path"), path));
+        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
+        return query.getResultList();
     }
 
     @Override
     public Stream<ItemRecord> getAllRecords() {
-        TypedQuery<ItemRecord> query = namedTypedQuery("ItemRecord.getAllRecords");
+        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(itemRecordRoot);
+
+        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
         return query.getResultStream();
     }
 
     @Override
     public boolean existsPathLike(String pathPattern) {
-        return namedQuery("ItemRecord.hasPathLike")
-            .setParameter("pathPattern", pathPattern)
-            .getResultList().stream().anyMatch(o -> (Boolean) o);
+        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaQuery<Boolean> cq = cb.createQuery(Boolean.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(cb.literal(true)).where(cb.like(itemRecordRoot.get("path"), pathPattern));
+        TypedQuery<Boolean> query = currentSession().createQuery(cq);
+        return query.getResultStream().findFirst().orElse(false);
     }
 
     private String preprocessDirectoryArgument(String directoryPath) throws NoSuchFileException, NotDirectoryException {

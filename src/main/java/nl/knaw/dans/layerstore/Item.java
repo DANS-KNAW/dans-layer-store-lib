@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -22,6 +23,7 @@ import lombok.Data;
  * content of a File item, you need to retrieve the ItemRecord with the highest layerId.
  */
 @Data
+@Builder
 public class Item {
     public enum Type {
         File,

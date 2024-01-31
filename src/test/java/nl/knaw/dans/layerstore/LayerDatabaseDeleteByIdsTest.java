@@ -21,7 +21,7 @@ import static nl.knaw.dans.layerstore.Item.Type;
 import static nl.knaw.dans.layerstore.Item.Type.Directory;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-public class LayerDatabaseDeleteByIdsTest extends AbtractLayerDatabaseTest {
+public class LayerDatabaseDeleteByIdsTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_accept_empty_list() {
