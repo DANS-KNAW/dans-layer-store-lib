@@ -15,7 +15,11 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;

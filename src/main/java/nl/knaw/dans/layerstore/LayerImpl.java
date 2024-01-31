@@ -121,6 +121,7 @@ class LayerImpl implements Layer {
         checkClosed();
         checkNotArchived();
         ensureStagingDirExists();
+        // TODO: check if database records consistent with contents of staging dir (or do this after archiving?)
         archive.archiveFrom(stagingDir);
         FileUtils.deleteDirectory(stagingDir.toFile());
     }

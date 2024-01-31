@@ -155,6 +155,7 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
         CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         cq.select(itemRecordRoot).where(cb.equal(itemRecordRoot.get("path"), path));
+        cq.orderBy(cb.desc(itemRecordRoot.get("layerId")));
         TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
         return query.getResultList();
     }
