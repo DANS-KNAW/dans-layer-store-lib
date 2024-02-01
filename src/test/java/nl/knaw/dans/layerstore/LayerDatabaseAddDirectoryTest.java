@@ -24,9 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
 
     @Test
-    public void should_add_directories() {
+    public void should_add_item_records_for_directories() {
         daoTestExtension.inTransaction(() -> dao.addDirectory(1L, "root/child/grandchild"));
-        // Check that the directories were added, ignoring the generatedId
         assertThat(dao.getAllRecords().toList())
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(
@@ -54,7 +53,7 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_not_add_directories_if_they_already_exist_in_the_same_layer() {
+    public void should_not_add_item_records_if_they_already_exist_in_the_same_layer() {
         var newRecords = daoTestExtension.inTransaction(() -> dao.addDirectory(1L, "root/child/grandchild"));
         assertThat(newRecords)
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
@@ -113,7 +112,7 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_add_directories_even_if_they_already_exist_in_another_layer() {
+    public void should_add_item_records_even_if_directories_already_exist_in_another_layer() {
         daoTestExtension.inTransaction(() -> dao.addDirectory(1L, "root/child/grandchild"));
         daoTestExtension.inTransaction(() -> dao.addDirectory(2L, "root/child/grandchild"));
         // Check that the directories were added, ignoring the generatedId

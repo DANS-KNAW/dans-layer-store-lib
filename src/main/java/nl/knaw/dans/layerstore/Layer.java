@@ -30,6 +30,8 @@ public interface Layer {
 
     /**
      * Changes the state of the layer to closed.
+     *
+     * @throws IllegalStateException if the layer is already closed
      */
     void close();
 

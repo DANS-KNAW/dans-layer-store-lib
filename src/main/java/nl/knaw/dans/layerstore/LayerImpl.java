@@ -98,6 +98,7 @@ class LayerImpl implements Layer {
 
     @Override
     public synchronized void close() {
+        checkOpen();
         closed = true;
     }
 
