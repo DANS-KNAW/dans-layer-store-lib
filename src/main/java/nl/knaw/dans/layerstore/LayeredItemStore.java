@@ -34,7 +34,7 @@ import java.util.List;
  * An implementation of FileStore that stores files and directories as a stack of layers. A layer can be staged or archived. Staged layers can be modified, archived layers are read-only. To transform
  * the layered file store into a regular file system directory, each layer must be unarchived (if it was archived) to a staging directory and the staging directories must be copied into a single
  * directory, starting with the oldest layer and ending with the newest layer. Files in newer layers overwrite files in older layers.
- *
+ * <p>
  * The LayeredFileStore is backed by a LayerDatabase to support storage of layers in a way that may not be fast enough for direct access, for example on tape. See the LayerDatabase interface for more
  * information.
  *
