@@ -15,5 +15,35 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class LayerFileExistsTest {
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+public class LayerFileExistsTest extends AbstractTestWithTestDir {
+
+    @Test
+    public void should_return_true_if_file_exists() throws Exception {
+        var stagingDir = testDir.resolve("staging");
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
+            !stagingDir.resolve("path/to/file1").toFile().createNewFile() ||
+            !stagingDir.resolve("path/to/file2").toFile().createNewFile()) {
+            throw new Exception("Could not create files to delete");
+        }
+
+        assertThat(layer.fileExists("path/to/file1")).isTrue();
+    }
+
+    @Test
+    public void should_return_false_if_file_does_not_exist() throws Exception {
+        var stagingDir = testDir.resolve("staging");
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
+            !stagingDir.resolve("path/to/file1").toFile().createNewFile() ||
+            !stagingDir.resolve("path/to/file2").toFile().createNewFile()) {
+            throw new Exception("Could not create files to delete");
+        }
+
+        assertThat(layer.fileExists("path/to/file3")).isFalse();
+    }
 }

@@ -15,5 +15,59 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 public class LayerDatabaseGetRecordsByPathTest extends AbstractLayerDatabaseTest {
+
+    @Test
+    public void should_return_empty_list_when_no_records_exist() {
+        var result = daoTestExtension.inTransaction(() -> dao.getRecordsByPath("file1.txt"));
+        assertThat(result).asList().isEmpty();
+    }
+
+    @Test
+    public void should_return_empty_list_when_no_records_exist_for_path() {
+        addToDb(1L, "file1.txt", Item.Type.File);
+        addToDb(2L, "file2.txt", Item.Type.File);
+        addToDb(3L, "file3.txt", Item.Type.File);
+        var result = daoTestExtension.inTransaction(() -> dao.getRecordsByPath("file4.txt"));
+        assertThat(result).asList().isEmpty();
+    }
+
+    @Test
+    public void should_return_one_record_when_one_record_exists_for_path() {
+        var record = addToDb(1L, "file1.txt", Item.Type.File);
+        addToDb(2L, "file2.txt", Item.Type.File);
+        addToDb(3L, "file3.txt", Item.Type.File);
+        var result = daoTestExtension.inTransaction(() -> dao.getRecordsByPath("file1.txt"));
+        assertThat(result).asList()
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
+            .containsExactly(record);
+    }
+
+    @Test
+    public void should_return_multiple_records_when_multiple_records_exist_for_path() {
+        var record1 = addToDb(1L, "file1.txt", Item.Type.File);
+        var record2 = addToDb(2L, "file1.txt", Item.Type.File);
+        var record3 = addToDb(3L, "file1.txt", Item.Type.File);
+        var result = daoTestExtension.inTransaction(() -> dao.getRecordsByPath("file1.txt"));
+        assertThat(result).asList()
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
+            .containsExactlyInAnyOrder(record1, record2, record3);
+    }
+
+    @Test
+    public void should_not_return_records_with_other_paths() {
+        addToDb(1L, "dir1", Item.Type.Directory);
+        addToDb(1L, "dir1/file1.txt", Item.Type.File);
+        var record = addToDb(2L, "dir1/file2.txt", Item.Type.File);
+        addToDb(2L, "dir2", Item.Type.Directory);
+        addToDb(3L, "dir2/file3.txt", Item.Type.File);
+        var result = daoTestExtension.inTransaction(() -> dao.getRecordsByPath("dir1/file2.txt"));
+        assertThat(result).asList()
+            .containsExactly(record);
+    }
+
 }
