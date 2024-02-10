@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.AllArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -24,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -40,11 +40,20 @@ import java.util.List;
  *
  * @see LayerDatabase
  */
-@AllArgsConstructor
 public class LayeredItemStore implements ItemStore {
     private final LayerDatabase database;
     private final LayerManager layerManager;
-    private final Filter<String> databaseBackedContentFilter = path -> false;
+    private final Filter<String> databaseBackedContentFilter;
+
+    public LayeredItemStore(LayerDatabase database, LayerManager layerManager, Filter<String> databaseBackedContentFilter) {
+        this.database = database;
+        this.layerManager = layerManager;
+        this.databaseBackedContentFilter = databaseBackedContentFilter;
+    }
+
+    public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
+        this(database, layerManager, path -> false);
+    }
 
     @Override
     public List<Item> listDirectory(String directoryPath) throws IOException {
@@ -65,11 +74,13 @@ public class LayeredItemStore implements ItemStore {
     public InputStream readFile(String path) throws IOException {
         // Check that the file exists and is a file
         if (!database.existsPathLike(path)) {
-            throw new IllegalArgumentException("File does not exist: " + path);
+            // Emulate the behavior of Files.readAllBytes(Path) by throwing a NoSuchFileException
+            throw new NoSuchFileException(path);
         }
         var latestRecord = database.getRecordsByPath(path).get(0);
         if (latestRecord.getType() == Item.Type.Directory) {
-            throw new IllegalArgumentException("Path is a directory: " + path);
+            // Emulate the behavior of Files.readAllBytes(Path) by throwing a generic IOException
+            throw new IOException("Path is a directory: " + path);
         }
         if (latestRecord.getContent() == null) {
             return layerManager.getLayer(latestRecord.getLayerId()).readFile(path);
@@ -82,13 +93,27 @@ public class LayeredItemStore implements ItemStore {
     @Override
     public void writeFile(String path, InputStream content) throws IOException {
         layerManager.getTopLayer().writeFile(path, content);
-        var record = ItemRecord.builder()
-            .path(path)
-            .type(Item.Type.File)
-            .layerId(layerManager.getTopLayer().getId())
-            .build();
+        // Get existing record for path in the top layer
+        var existingRecords = database.getRecordsByPath(path).stream().filter(r -> r.getLayerId() == layerManager.getTopLayer().getId()).toList();
+        ItemRecord record;
+        if (existingRecords.size() > 1) {
+            throw new IllegalStateException("Found multiple records for path " + path + " in layer " + layerManager.getTopLayer().getId());
+        }
+        else if (existingRecords.size() == 1) {
+            record = existingRecords.get(0);
+        }
+        else {
+            record = ItemRecord.builder()
+                .path(path)
+                .type(Item.Type.File)
+                .layerId(layerManager.getTopLayer().getId())
+                .build();
+        }
         if (databaseBackedContentFilter.accept(path)) {
-            record.setContent(content.readAllBytes());
+            // N.B. We read the content from the top layer, not from the InputStream, because it has already read when writing to the top layer.
+            try (var is = layerManager.getTopLayer().readFile(path)) {
+                record.setContent(IOUtils.toByteArray(is));
+            }
         }
         database.saveRecords(record); // TODO: roll back writeFile if saveRecords fails? How to do that?
     }

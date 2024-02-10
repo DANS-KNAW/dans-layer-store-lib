@@ -28,10 +28,8 @@ public class LayerManagerImpl implements LayerManager {
 
     private final Map<Long, Layer> layers = new HashMap<>();
 
-    @NonNull
     private final Path stagingRoot;
 
-    @NonNull
     private final Path archiveRoot;
 
     private final Executor archivingExecutor;
@@ -43,6 +41,10 @@ public class LayerManagerImpl implements LayerManager {
         this.archiveRoot = archiveRoot;
         this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
         newTopLayer();
+    }
+
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot) {
+        this(stagingRoot, archiveRoot, null);
     }
 
     @Override
