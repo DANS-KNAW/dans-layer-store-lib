@@ -36,6 +36,7 @@ public abstract class AbstractTestWithTestDir {
     public void setUp() throws Exception {
         FileUtils.deleteDirectory(testDir.toFile());
         Files.createDirectories(testDir);
+        Files.createDirectories(stagingDir);
         Files.createDirectories(archiveDir);
     }
 }

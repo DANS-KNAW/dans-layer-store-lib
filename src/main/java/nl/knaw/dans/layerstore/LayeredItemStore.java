@@ -120,7 +120,9 @@ public class LayeredItemStore implements ItemStore {
             // N.B. We read the content from the top layer, not from the InputStream, because it has already read when writing to the top layer.
             log.debug("Storing a copy of the content in the database for path {}", path);
             try (var is = layerManager.getTopLayer().readFile(path)) {
-                record.setContent(IOUtils.toByteArray(is));
+                byte[] bytes = IOUtils.toByteArray(is);
+                log.debug("Content size: {}", bytes.length);
+                record.setContent(bytes);
             }
         }
         database.saveRecords(record); // TODO: roll back writeFile if saveRecords fails? How to do that?

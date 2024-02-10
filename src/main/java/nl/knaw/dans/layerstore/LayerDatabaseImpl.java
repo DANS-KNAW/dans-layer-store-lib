@@ -16,6 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 import io.dropwizard.hibernate.AbstractDAO;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
 
 import javax.persistence.TypedQuery;
@@ -35,6 +36,8 @@ import java.util.stream.Stream;
 import static nl.knaw.dans.layerstore.Item.Type;
 
 // TODO: replace extending AbstractDAO with composition
+
+@Slf4j
 public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerDatabase {
 
     public LayerDatabaseImpl(SessionFactory sessionFactory) {
@@ -151,6 +154,7 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
 
     @Override
     public List<ItemRecord> getRecordsByPath(String path) {
+        log.debug("getRecordsByPath({})", path);
         CriteriaBuilder cb = currentSession().getCriteriaBuilder();
         CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
