@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -40,6 +41,7 @@ import java.util.List;
  *
  * @see LayerDatabase
  */
+@Slf4j
 public class LayeredItemStore implements ItemStore {
     private final LayerDatabase database;
     private final LayerManager layerManager;
@@ -83,15 +85,18 @@ public class LayeredItemStore implements ItemStore {
             throw new IOException("Path is a directory: " + path);
         }
         if (latestRecord.getContent() == null) {
+            log.debug("Reading file {} from layer {}", path, latestRecord.getLayerId());
             return layerManager.getLayer(latestRecord.getLayerId()).readFile(path);
         }
         else {
+            log.debug("Reading file {} from database", path);
             return new ByteArrayInputStream(latestRecord.getContent());
         }
     }
 
     @Override
     public void writeFile(String path, InputStream content) throws IOException {
+        log.debug("Writing file {} to top layer", path);
         layerManager.getTopLayer().writeFile(path, content);
         // Get existing record for path in the top layer
         var existingRecords = database.getRecordsByPath(path).stream().filter(r -> r.getLayerId() == layerManager.getTopLayer().getId()).toList();
@@ -100,9 +105,11 @@ public class LayeredItemStore implements ItemStore {
             throw new IllegalStateException("Found multiple records for path " + path + " in layer " + layerManager.getTopLayer().getId());
         }
         else if (existingRecords.size() == 1) {
+            log.debug("Updating existing record for path {} in layer {}", path, layerManager.getTopLayer().getId());
             record = existingRecords.get(0);
         }
         else {
+            log.debug("Creating new record for path {} in layer {}", path, layerManager.getTopLayer().getId());
             record = ItemRecord.builder()
                 .path(path)
                 .type(Item.Type.File)
@@ -111,6 +118,7 @@ public class LayeredItemStore implements ItemStore {
         }
         if (databaseBackedContentFilter.accept(path)) {
             // N.B. We read the content from the top layer, not from the InputStream, because it has already read when writing to the top layer.
+            log.debug("Storing a copy of the content in the database for path {}", path);
             try (var is = layerManager.getTopLayer().readFile(path)) {
                 record.setContent(IOUtils.toByteArray(is));
             }
