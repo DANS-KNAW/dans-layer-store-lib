@@ -56,7 +56,7 @@ public class LayerManagerImpl implements LayerManager {
             paths = pathStream.toList();
         }
         if (paths.isEmpty()) {
-            newTopLayer();
+            topLayer = createNewTopLayer();
         }
         else {
             long id = paths.stream()
@@ -69,16 +69,23 @@ public class LayerManagerImpl implements LayerManager {
         }
     }
 
+    private Layer createNewTopLayer() {
+        long id = System.currentTimeMillis();
+        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id) + ".zip")));
+    }
+
     @Override
     public void newTopLayer() {
         var oldTopLayer = topLayer;
-        long id = System.currentTimeMillis();
-        topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id) + ".zip")));
+        topLayer = createNewTopLayer();
         oldTopLayer.close();
+        archive(oldTopLayer);
+    }
+
+    private void archive(Layer layer) {
         archivingExecutor.execute(() -> {
             try {
-                oldTopLayer.archive();
-                // TODO: store the result of the archiving process in the database (use ExecutorService?)
+                layer.archive();
             }
             catch (Exception e) {
                 throw new RuntimeException(e);
