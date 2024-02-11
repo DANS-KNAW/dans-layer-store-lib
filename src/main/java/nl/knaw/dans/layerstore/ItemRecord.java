@@ -50,7 +50,7 @@ public class ItemRecord {
     @Column(nullable = false)
     private Item.Type type;
 
-    @Column
+    @Column(columnDefinition = "BLOB")
     @Lob
     private byte[] content;
 

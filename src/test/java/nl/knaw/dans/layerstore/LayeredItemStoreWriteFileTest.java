@@ -23,6 +23,13 @@ import java.nio.charset.StandardCharsets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
+    private static class StoreTxtContent extends NoopDatabaseBackedContentManager {
+        @Override
+        public boolean test(String path) {
+            return path.endsWith(".txt");
+        }
+    }
+
 
     @Test
     public void should_write_file_to_staging_dir_when_layer_is_open() throws Exception {
@@ -41,7 +48,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_write_copy_of_content_to_database_if_filter_applies() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, archiveDir);
-        var layeredStore = new LayeredItemStore(dao, layerManager, path -> path.endsWith(".txt"));
+        var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
 
         var testContent = "Hello world!";
         layeredStore.writeFile("test.txt", new ByteArrayInputStream(testContent.getBytes(StandardCharsets.UTF_8)));

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * An implementation of FileStore that stores files and directories as a stack of layers. A layer can be staged or archived. Staged layers can be modified, archived layers are read-only. To transform
@@ -45,16 +46,19 @@ import java.util.List;
 public class LayeredItemStore implements ItemStore {
     private final LayerDatabase database;
     private final LayerManager layerManager;
-    private final Filter<String> databaseBackedContentFilter;
+    private final DatabaseBackedContentManager databaseBackedContentManager;
 
-    public LayeredItemStore(LayerDatabase database, LayerManager layerManager, Filter<String> databaseBackedContentFilter) {
+    public LayeredItemStore(
+        LayerDatabase database,
+        LayerManager layerManager,
+        DatabaseBackedContentManager databaseBackedContentManager) {
         this.database = database;
         this.layerManager = layerManager;
-        this.databaseBackedContentFilter = databaseBackedContentFilter;
+        this.databaseBackedContentManager = Optional.ofNullable(databaseBackedContentManager).orElse(new NoopDatabaseBackedContentManager());
     }
 
     public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
-        this(database, layerManager, path -> false);
+        this(database, layerManager, null);
     }
 
     @Override
@@ -90,7 +94,7 @@ public class LayeredItemStore implements ItemStore {
         }
         else {
             log.debug("Reading file {} from database", path);
-            return new ByteArrayInputStream(latestRecord.getContent());
+            return new ByteArrayInputStream(databaseBackedContentManager.postRetrieve(path, latestRecord.getContent()));
         }
     }
 
@@ -116,11 +120,11 @@ public class LayeredItemStore implements ItemStore {
                 .layerId(layerManager.getTopLayer().getId())
                 .build();
         }
-        if (databaseBackedContentFilter.accept(path)) {
+        if (databaseBackedContentManager.test(path)) {
             // N.B. We read the content from the top layer, not from the InputStream, because it has already read when writing to the top layer.
             log.debug("Storing a copy of the content in the database for path {}", path);
             try (var is = layerManager.getTopLayer().readFile(path)) {
-                byte[] bytes = IOUtils.toByteArray(is);
+                byte[] bytes = databaseBackedContentManager.preStore(path, IOUtils.toByteArray(is));
                 log.debug("Content size: {}", bytes.length);
                 record.setContent(bytes);
             }
@@ -160,9 +164,9 @@ public class LayeredItemStore implements ItemStore {
                     .layerId(layerManager.getTopLayer().getId())
                     .path(destPath)
                     .type(getItemType(path)).build();
-                if (databaseBackedContentFilter.accept(destPath)) {
+                if (databaseBackedContentManager.test(destPath)) {
                     byte[] content = FileUtils.readFileToByteArray(path.toFile());
-                    r.setContent(content);
+                    r.setContent(databaseBackedContentManager.preStore(destPath, content));
                 }
                 records.add(r);
             }
