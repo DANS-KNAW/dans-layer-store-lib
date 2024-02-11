@@ -21,13 +21,10 @@ import lombok.SneakyThrows;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LayerManagerImpl implements LayerManager {
@@ -60,7 +57,8 @@ public class LayerManagerImpl implements LayerManager {
         }
         if (paths.isEmpty()) {
             newTopLayer();
-        } else {
+        }
+        else {
             long id = paths.stream()
                 .map(Path::getFileName)
                 .map(Path::toString)
@@ -76,18 +74,16 @@ public class LayerManagerImpl implements LayerManager {
         var oldTopLayer = topLayer;
         long id = System.currentTimeMillis();
         topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id) + ".zip")));
-        if (oldTopLayer != null) {
-            oldTopLayer.close();
-            archivingExecutor.execute(() -> {
-                try {
-                    oldTopLayer.archive();
-                    // TODO: store the result of the archiving process in the database (use ExecutorService?)
-                }
-                catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
+        oldTopLayer.close();
+        archivingExecutor.execute(() -> {
+            try {
+                oldTopLayer.archive();
+                // TODO: store the result of the archiving process in the database (use ExecutorService?)
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Override
