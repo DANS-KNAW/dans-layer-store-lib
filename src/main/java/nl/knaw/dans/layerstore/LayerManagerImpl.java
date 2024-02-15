@@ -33,20 +33,27 @@ public class LayerManagerImpl implements LayerManager {
 
     private final Path archiveRoot;
 
+    private final ArchiveProvider archiveFactory;
+
     private final Executor archivingExecutor;
 
     @Getter
     private Layer topLayer;
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot, Executor archivingExecutor) {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot, Executor archivingExecutor, ArchiveProvider archiveFactory) {
         this.stagingRoot = stagingRoot;
         this.archiveRoot = archiveRoot;
         this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
+        this.archiveFactory = Objects.requireNonNullElse(archiveFactory, new ZipArchiveProvider(archiveRoot));
         initTopLayer();
     }
 
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot, Executor archivingExecutor) {
+        this(stagingRoot, archiveRoot, archivingExecutor, null);
+    }
+
     public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot) {
-        this(stagingRoot, archiveRoot, null);
+        this(stagingRoot, archiveRoot, null, null);
     }
 
     @SneakyThrows
@@ -65,13 +72,13 @@ public class LayerManagerImpl implements LayerManager {
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElseThrow();
-            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id) + ".zip")));
+            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveFactory.createArchive(Long.toString(id)));
         }
     }
 
     private Layer createNewTopLayer() {
         long id = System.currentTimeMillis();
-        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id) + ".zip")));
+        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveFactory.createArchive(Long.toString(id)));
     }
 
     @Override

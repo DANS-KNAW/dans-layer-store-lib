@@ -46,12 +46,10 @@ public class ZipArchive implements Archive {
 
     private static class EntryInputStream extends InputStream implements Closeable {
         private final ZipFile zipFile;
-        private final ZipArchiveEntry entry;
         private final InputStream inputStream;
 
         public EntryInputStream(ZipFile zipFile, ZipArchiveEntry entry) throws IOException {
             this.zipFile = zipFile;
-            this.entry = entry;
             this.inputStream = zipFile.getInputStream(entry);
         }
 
