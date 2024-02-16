@@ -36,13 +36,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@RequiredArgsConstructor
 public class ZipArchive implements Archive {
     @NonNull
     private final Path zipFile;
 
-    @Getter
-    private boolean archived = false;
+    private boolean archived;
 
     private static class EntryInputStream extends InputStream implements Closeable {
         private final ZipFile zipFile;
@@ -63,6 +61,11 @@ public class ZipArchive implements Archive {
             inputStream.close();
             zipFile.close();
         }
+    }
+
+    public ZipArchive(Path zipFile) {
+        this.zipFile = zipFile;
+        this.archived = Files.exists(zipFile);
     }
 
     @Override
@@ -90,7 +93,6 @@ public class ZipArchive implements Archive {
                 }
                 entry = zipArchiveInputStream.getNextZipEntry();
             }
-            archived = false;
         }
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive zip file", e);
@@ -155,6 +157,11 @@ public class ZipArchive implements Archive {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean isArchived() {
+        return archived;
     }
 
     @Override

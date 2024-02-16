@@ -34,23 +34,24 @@ public interface Archive {
     InputStream readFile(String filePath) throws IOException;
 
     /**
-     * Unarchives the archive to the given staging directory.
+     * Unarchives the archive to the given staging directory. Note that the {@link #isArchived()} will <em>not</em> return {@code false} after this operation,
+     * as the archive file is not removed.
      *
      * @param stagingDir the directory to unarchive to
      */
     void unarchiveTo(Path stagingDir);
 
     /**
-     * Archives the given staging directory overwriting the backing file, if it exists.
+     * Archives the given staging directory overwriting the backing file, if it exists. If this the archive is created successfully, {@link #isArchived()} will return {@code true}.
      *
      * @param stagingDir the directory to archive
      */
     void archiveFrom(Path stagingDir);
 
     /**
-     * Returns whether the archive exists.
+     * Returns whether the archive has been created.
      *
-     * @return whether the archive exists
+     * @return whether the archive has been created.
      */
     boolean isArchived();
 

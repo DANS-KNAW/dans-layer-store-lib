@@ -15,9 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -32,22 +30,42 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@RequiredArgsConstructor
 public class TarArchive implements Archive {
     @NonNull
     private final Path tarFile;
 
-    private boolean archived = false;
+    private boolean archived;
+
+    public TarArchive(@NonNull Path tarFile) {
+        this.tarFile = tarFile;
+        // If the file exists, it is assumed to be a valid tar archive
+        this.archived = Files.exists(tarFile);
+    }
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
-        try (TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
+        // No try-with-resources on tarInput, so that we can use it to back the BoundedInputStream
+        TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile));
+        try {
             TarArchiveEntry entry;
             while ((entry = tarInput.getNextTarEntry()) != null) {
                 if (entry.getName().equals(filePath)) {
-                    return new BoundedInputStream(tarInput, entry.getSize());
+                    return new BoundedInputStream(tarInput, entry.getSize()) {
+
+                        @Override
+                        @SneakyThrows
+                        public void close() {
+                            // Close the backing stream.
+                            tarInput.close();
+                        }
+                    };
                 }
             }
+        }
+        catch (Exception e) {
+            // Close the backing stream in case of an exception.
+            tarInput.close();
+            throw e;
         }
         throw new IOException("File not found in tar archive: " + filePath);
     }
@@ -85,13 +103,13 @@ public class TarArchive implements Archive {
                             tarOutput.putArchiveEntry(entry);
                             Files.copy(path, tarOutput);
                             tarOutput.closeArchiveEntry();
-                            archived = true;
                         }
                         catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }
                     });
             }
+            archived = true;
         }
     }
 
