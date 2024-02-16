@@ -64,5 +64,6 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
         assertThat(actual).containsEntry("path/to/file2", file2Content);
         assertThat(actual).containsEntry("path/to/file3", file3Content);
         assertThat(actual).hasSize(3);
+        assertThat(tarArchive.isArchived()).isTrue();
     }
 }

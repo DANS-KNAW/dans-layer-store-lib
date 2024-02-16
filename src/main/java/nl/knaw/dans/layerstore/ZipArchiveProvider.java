@@ -27,4 +27,9 @@ public class ZipArchiveProvider implements ArchiveProvider {
     public Archive createArchive(String path) {
         return new ZipArchive(archiveRoot.resolve(path + ".zip"));
     }
+
+    @Override
+    public boolean exists(String path) {
+        return archiveRoot.resolve(path + ".zip").toFile().exists();
+    }
 }

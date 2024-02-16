@@ -29,4 +29,9 @@ public class DmfTarArchiveProvider implements ArchiveProvider {
     public Archive createArchive(String path) {
         return new DmfTarArchive(user, host, archiveRoot.resolve(path));
     }
+
+    @Override
+    public boolean exists(String path) {
+        return false; // TODO: implement this
+    }
 }

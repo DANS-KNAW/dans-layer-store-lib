@@ -16,6 +16,8 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -30,9 +32,12 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TarArchive implements Archive {
+    @NonNull
     private final Path tarFile;
+
+    private boolean archived = false;
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
@@ -80,6 +85,7 @@ public class TarArchive implements Archive {
                             tarOutput.putArchiveEntry(entry);
                             Files.copy(path, tarOutput);
                             tarOutput.closeArchiveEntry();
+                            archived = true;
                         }
                         catch (IOException e) {
                             throw new UncheckedIOException(e);
@@ -91,7 +97,7 @@ public class TarArchive implements Archive {
 
     @Override
     public boolean isArchived() {
-        return false;
+        return archived;
     }
 
     @Override

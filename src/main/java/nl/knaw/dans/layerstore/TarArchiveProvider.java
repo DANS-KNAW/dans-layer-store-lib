@@ -15,9 +15,21 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.AllArgsConstructor;
+
+import java.nio.file.Path;
+
+@AllArgsConstructor
 public class TarArchiveProvider implements ArchiveProvider {
+    private final Path archiveRoot;
+
     @Override
     public Archive createArchive(String path) {
-        return null;
+        return new TarArchive(archiveRoot.resolve(path + ".tar"));
+    }
+
+    @Override
+    public boolean exists(String path) {
+        return archiveRoot.resolve(path + ".tar").toFile().exists();
     }
 }

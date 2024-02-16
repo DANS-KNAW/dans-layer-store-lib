@@ -22,8 +22,17 @@ public interface ArchiveProvider {
 
     /**
      * Create a new {@link Archive} instance.
+     *
      * @param path the path to the archive file
      * @return the new archive
      */
     Archive createArchive(String path);
+
+    /**
+     * Check if an archive exists at the given path.
+     *
+     * @param path the path to the archive file
+     * @return true if the archive exists, false otherwise
+     */
+    boolean exists(String path);
 }

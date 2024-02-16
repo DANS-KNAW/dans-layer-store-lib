@@ -31,29 +31,22 @@ public class LayerManagerImpl implements LayerManager {
 
     private final Path stagingRoot;
 
-    private final Path archiveRoot;
-
-    private final ArchiveProvider archiveFactory;
+    private final ArchiveProvider archiveProvider;
 
     private final Executor archivingExecutor;
 
     @Getter
     private Layer topLayer;
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot, Executor archivingExecutor, ArchiveProvider archiveFactory) {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, Executor archivingExecutor) {
         this.stagingRoot = stagingRoot;
-        this.archiveRoot = archiveRoot;
         this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
-        this.archiveFactory = Objects.requireNonNullElse(archiveFactory, new ZipArchiveProvider(archiveRoot));
+        this.archiveProvider = archiveProvider;
         initTopLayer();
     }
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot, Executor archivingExecutor) {
-        this(stagingRoot, archiveRoot, archivingExecutor, null);
-    }
-
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot) {
-        this(stagingRoot, archiveRoot, null, null);
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) {
+        this(stagingRoot, archiveProvider, null);
     }
 
     @SneakyThrows
@@ -72,13 +65,13 @@ public class LayerManagerImpl implements LayerManager {
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElseThrow();
-            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveFactory.createArchive(Long.toString(id)));
+            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
         }
     }
 
     private Layer createNewTopLayer() {
         long id = System.currentTimeMillis();
-        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveFactory.createArchive(Long.toString(id)));
+        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
     }
 
     @Override
@@ -102,8 +95,8 @@ public class LayerManagerImpl implements LayerManager {
 
     @Override
     public Layer getLayer(long id) {
-        if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveRoot.resolve(Long.toString(id)).toFile().exists()) {
-            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id))));
+        if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {
+            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
         }
         else {
             throw new IllegalArgumentException("No layer found with id " + id);
