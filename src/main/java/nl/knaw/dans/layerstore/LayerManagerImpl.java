@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +28,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class LayerManagerImpl implements LayerManager {
 
     private final Path stagingRoot;
@@ -71,6 +73,7 @@ public class LayerManagerImpl implements LayerManager {
 
     private Layer createNewTopLayer() {
         long id = System.currentTimeMillis();
+        log.debug("Creating new top layer with id {}", id);
         return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
     }
 
@@ -79,6 +82,7 @@ public class LayerManagerImpl implements LayerManager {
         var oldTopLayer = topLayer;
         topLayer = createNewTopLayer();
         oldTopLayer.close();
+        log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
         archive(oldTopLayer);
     }
 
