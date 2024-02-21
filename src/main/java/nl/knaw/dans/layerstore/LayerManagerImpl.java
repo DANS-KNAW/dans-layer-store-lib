@@ -92,6 +92,7 @@ public class LayerManagerImpl implements LayerManager {
                 layer.archive();
             }
             catch (Exception e) {
+                log.error("Error archiving layer with id {}", layer.getId(), e);
                 throw new RuntimeException(e);
             }
         });

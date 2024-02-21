@@ -131,8 +131,11 @@ class LayerImpl implements Layer {
     }
 
     private void doArchive() throws IOException {
+        log.debug("Start archiving layer {}", id);
         archive.archiveFrom(stagingDir);
+        log.debug("Deleting staging directory {}", stagingDir);
         FileUtils.deleteDirectory(stagingDir.toFile());
+        log.debug("Staging directory {} deleted", stagingDir);
     }
 
     @Override

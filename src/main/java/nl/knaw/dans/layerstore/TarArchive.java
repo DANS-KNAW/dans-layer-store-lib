@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -30,6 +31,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@Slf4j
 public class TarArchive implements Archive {
     @NonNull
     private final Path tarFile;
@@ -94,6 +96,7 @@ public class TarArchive implements Archive {
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
         try (TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(Files.newOutputStream(tarFile))) {
+            tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
             try (var files = Files.walk(stagingDir)) {
                 files.filter(path -> !Files.isDirectory(path))
                     .forEach(path -> {
@@ -101,7 +104,9 @@ public class TarArchive implements Archive {
                         entry.setSize(path.toFile().length());
                         try {
                             tarOutput.putArchiveEntry(entry);
+                            log.debug("Adding file {} to tar archive", path);
                             Files.copy(path, tarOutput);
+                            log.debug("Closing entry for file");
                             tarOutput.closeArchiveEntry();
                         }
                         catch (IOException e) {
