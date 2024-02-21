@@ -44,7 +44,7 @@ public class ItemRecord {
     @Column(name = "layer_id", nullable = false)
     private Long layerId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 4096)
     private String path;
 
     @Column(nullable = false)
