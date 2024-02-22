@@ -16,42 +16,25 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 
 @AllArgsConstructor
-public class DmfTarArchive implements Archive {
-    @NonNull
-    private final DmfTar dmfTar;
+public class DmfTar {
+    private final Path dmfTarExecutable;
+    private final String user;
+    private final String host;
+    private final Path remoteBaseDir;
 
-    @NonNull
-    private final String path;
-
-    @Override
-    public InputStream readFile(String filePath) throws IOException {
-        return null;
-    }
-
-    @Override
-    public void unarchiveTo(Path stagingDir) {
+    public void tarDirectory(Path directory, String archiveName) {
+        var result = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
+            "-cf",
+            getRemotePath(archiveName), directory.toAbsolutePath().toString())
+            .run();
 
     }
 
-    @Override
-    public void archiveFrom(Path stagingDir) {
-        dmfTar.tarDirectory(stagingDir, path);
-    }
-
-    @Override
-    public boolean isArchived() {
-        return false;
-    }
-
-    @Override
-    public boolean fileExists(String filePath) {
-        return false;
+    private String getRemotePath(String archiveName) {
+        return user + "@" + host + ":" + remoteBaseDir.resolve(archiveName);
     }
 }

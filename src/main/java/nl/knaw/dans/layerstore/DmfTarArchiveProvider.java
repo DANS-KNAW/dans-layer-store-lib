@@ -17,17 +17,13 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
-import java.nio.file.Path;
-
 @AllArgsConstructor
 public class DmfTarArchiveProvider implements ArchiveProvider {
-    private final String user;
-    private final String host;
-    private final Path archiveRoot;
+    private final DmfTar dmfTar;
 
     @Override
     public Archive createArchive(String path) {
-        return new DmfTarArchive(user, host, archiveRoot.resolve(path));
+        return new DmfTarArchive(dmfTar, path);
     }
 
     @Override
