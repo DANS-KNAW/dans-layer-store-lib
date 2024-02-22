@@ -27,11 +27,17 @@ public class DmfTar {
     private final Path remoteBaseDir;
 
     public void tarDirectory(Path directory, String archiveName) {
-        var result = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
+        var runner = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
             "-cf",
-            getRemotePath(archiveName), directory.toAbsolutePath().toString())
-            .run();
-
+            getRemotePath(archiveName),
+            ".");
+        // Always tar relative to the current directory (.) and then set that to the storage root, so that the entries in the tar file are
+        // relative to the storage root
+        runner.setWorkingDirectory(directory.toAbsolutePath().toString());
+        var result = runner.run();  
+        if (result.getExitCode() != 0) {
+            throw new RuntimeException("Failed to create tar archive: " + result.getErrorOutput());
+        }
     }
 
     private String getRemotePath(String archiveName) {

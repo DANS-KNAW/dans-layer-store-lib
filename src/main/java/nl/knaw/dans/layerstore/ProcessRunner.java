@@ -18,6 +18,8 @@ package nl.knaw.dans.layerstore;
 import lombok.Value;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 // TODO: MOVE TO dans-java-utils
 /**
@@ -31,13 +33,17 @@ public class ProcessRunner {
         String errorOutput;
     }
 
-    private static final String[] FORBIDDEN_CHARS = new String[] { ";", "&", "|", "<", ">", "`", "(", ")", "$", "(", ")", "{", "}", "[", "]", "\\", "'", "\"", " ", "\t", "\n", "\r", "\f", "\b",
+    private static final String[] FORBIDDEN_CHARS = new String[] { ";", "&", "|", "<", ">", "`", "$", "(", ")", "{", "}", "[", "]", "\\", "'", "\"", " ", "\t", "\n", "\r", "\f", "\b",
         "\0" };
     private final ProcessBuilder processBuilder = new ProcessBuilder();
 
     public ProcessRunner(String... commandAndArgs) {
-        if (Arrays.stream(commandAndArgs).anyMatch(arg -> Arrays.stream(FORBIDDEN_CHARS).anyMatch(arg::contains))) {
-            throw new IllegalArgumentException("Command or arguments contain forbidden characters");
+        List<String> forbiddenFound = Arrays.stream(commandAndArgs)
+            .flatMap(arg -> Arrays.stream(FORBIDDEN_CHARS).filter(arg::contains))
+            .collect(Collectors.toList());
+
+        if (!forbiddenFound.isEmpty()) {
+            throw new IllegalArgumentException("Command or arguments contain forbidden characters: " + String.join(", ", forbiddenFound));
         }
         processBuilder.command(commandAndArgs);
     }
