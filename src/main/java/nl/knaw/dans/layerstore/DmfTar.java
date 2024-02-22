@@ -34,7 +34,7 @@ public class DmfTar {
         // Always tar relative to the current directory (.) and then set that to the storage root, so that the entries in the tar file are
         // relative to the storage root
         runner.setWorkingDirectory(directory.toAbsolutePath().toString());
-        var result = runner.run();  
+        var result = runner.run();
         if (result.getExitCode() != 0) {
             throw new RuntimeException("Failed to create tar archive: " + result.getErrorOutput());
         }
