@@ -15,19 +15,16 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.AllArgsConstructor;
+public class TestConditions {
 
-@AllArgsConstructor
-public class DmfTarArchiveProvider implements ArchiveProvider {
-    private final DmfTar dmfTar;
-
-    @Override
-    public Archive createArchive(String path) {
-        return new DmfTarArchive(dmfTar, path + ".dmftar");
+    public static boolean dmftarLiveTestConfigured() {
+        try {
+            var p = new LiveTestProperties();
+            return p.getDmfTarExecutable() != null && p.getRemoteBaseDir() != null && p.getUser() != null && p.getHost() != null;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
-    @Override
-    public boolean exists(String path) {
-        return false; // TODO: implement this
-    }
 }

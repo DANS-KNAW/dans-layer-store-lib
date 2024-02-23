@@ -36,7 +36,7 @@ public class ProcessRunnerTest extends AbstractTestWithTestDir {
 
         var runner = new ProcessRunner("ls", "-1");
         runner.setWorkingDirectory(subdir.toString());
-        var result = runner.run();
+        var result = runner.runToEnd();
         assertEquals(0, result.getExitCode());
         var files = result.getStandardOutput().split("\n");
         assertEquals(2, files.length);
@@ -45,6 +45,6 @@ public class ProcessRunnerTest extends AbstractTestWithTestDir {
 
     @Test // Whether the `ls` command is available is irrelevant here
     public void run_should_throw_an_exception_when_the_command_or_arguments_contain_forbidden_characters() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> new ProcessRunner("ls", ";", "echo", "evil", ">", "/tmp/somefile.txt").run());
+        assertThrows(IllegalArgumentException.class, () -> new ProcessRunner("ls", ";", "echo", "evil", ">", "/tmp/somefile.txt").runToEnd());
     }
 }

@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
+import java.io.InputStream;
 import java.nio.file.Path;
 
 @AllArgsConstructor
@@ -34,11 +35,21 @@ public class DmfTar {
         // Always tar relative to the current directory (.) and then set that to the storage root, so that the entries in the tar file are
         // relative to the storage root
         runner.setWorkingDirectory(directory.toAbsolutePath().toString());
-        var result = runner.run();
+        var result = runner.runToEnd();
         if (result.getExitCode() != 0) {
             throw new RuntimeException("Failed to create tar archive: " + result.getErrorOutput());
         }
     }
+
+    public InputStream readFile(String archiveName, String fileName) {
+        var runner = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
+            "-o=-O", // Send extra option to underlying tar command to write to stdout
+            "-q", // Suppress dmftar messages to stdout (sic!)
+            "-xf", // Extract files from archive
+            getRemotePath(archiveName), fileName);
+        return new ProcessInputStream(runner.start());
+    }
+
 
     private String getRemotePath(String archiveName) {
         return user + "@" + host + ":" + remoteBaseDir.resolve(archiveName);

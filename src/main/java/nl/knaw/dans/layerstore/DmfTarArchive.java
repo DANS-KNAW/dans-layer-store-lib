@@ -32,7 +32,7 @@ public class DmfTarArchive implements Archive {
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
-        return null;
+        return dmfTar.readFile(path, filePath);
     }
 
     @Override

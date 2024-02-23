@@ -52,13 +52,23 @@ public class ProcessRunner {
         processBuilder.directory(new java.io.File(directory));
     }
 
-    public Result run() {
+    public Result runToEnd() {
         try {
             Process process = processBuilder.start();
+            // we are assuming that the output is a string and is encoded with the default charset.
             String standardOutput = new String(process.getInputStream().readAllBytes());
             String errorOutput = new String(process.getErrorStream().readAllBytes());
             int exitCode = process.waitFor();
             return new Result(exitCode, standardOutput, errorOutput);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error running process", e);
+        }
+    }
+
+    public Process start() {
+        try {
+            return processBuilder.start();
         }
         catch (Exception e) {
             throw new RuntimeException("Error running process", e);
