@@ -17,11 +17,14 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 @AllArgsConstructor
-public class DmfTar {
+public class DmfTarRunner {
     private final Path dmfTarExecutable;
     private final String user;
     private final String host;
@@ -44,12 +47,26 @@ public class DmfTar {
     public InputStream readFile(String archiveName, String fileName) {
         var runner = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
             "-o=-O", // Send extra option to underlying tar command to write to stdout
-            "-q", // Suppress dmftar messages to stdout (sic!)
+            "-q", // Suppress dmftar messages to stdout
             "-xf", // Extract files from archive
             getRemotePath(archiveName), fileName);
         return new ProcessInputStream(runner.start());
     }
 
+    public boolean fileExists(String archiveName, String fileName) throws Exception {
+        var runner = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
+            "-tf", // List files in archive
+            "-q", // Suppress dmftar messages to stdout
+            getRemotePath(archiveName));
+        var reader = new BufferedReader(new InputStreamReader(new ProcessInputStream(runner.start()), StandardCharsets.UTF_8));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.equals(fileName)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private String getRemotePath(String archiveName) {
         return user + "@" + host + ":" + remoteBaseDir.resolve(archiveName);

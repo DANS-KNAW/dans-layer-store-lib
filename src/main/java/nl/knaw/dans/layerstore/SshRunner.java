@@ -17,18 +17,20 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
+import java.nio.file.Path;
+
 @AllArgsConstructor
-public class DmfTarArchiveProvider implements ArchiveProvider {
-    private final DmfTarRunner dmfTarRunner;
-    private final SshRunner sshRunner;
+public class SshRunner {
+    private final Path sshExecutable;
+    private final String user;
+    private final String host;
+    private final Path remoteBaseDir;
 
-    @Override
-    public Archive createArchive(String path) {
-        return new DmfTarArchive(dmfTarRunner, path + ".dmftar", exists(path));
-    }
-
-    @Override
-    public boolean exists(String path) {
-        return sshRunner.fileExists(path + ".dmftar");
+    public boolean fileExists(String archiveName) {
+        var runner = new ProcessRunner(sshExecutable.toAbsolutePath().toString(),
+            user + "@" + host,
+            "test", "-e", remoteBaseDir.resolve(archiveName).toString());
+        var result = runner.runToEnd();
+        return result.getExitCode() == 0;
     }
 }

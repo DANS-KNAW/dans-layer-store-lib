@@ -48,6 +48,7 @@ public interface Archive {
      */
     void archiveFrom(Path stagingDir);
 
+    // TODO: is it possible that archived changes back to false? What this exact meaning of this attribute?
     /**
      * Returns whether the archive has been created.
      *

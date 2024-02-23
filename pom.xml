@@ -134,6 +134,7 @@
                 <configuration combine.children="override">
                     <excludes combine.children="append">
                         <exclude>live-test.properties</exclude>
+                        <exclude>dmftar-cache.*/</exclude>
                     </excludes>
                 </configuration>
             </plugin>

@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jetty.util.IO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -45,15 +44,15 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  * </ul>
  */
 @Slf4j
-public class DmfTarLiveTest {
-    private DmfTar dmfTar;
+public class DmfTarRunnerLiveTest {
+    private DmfTarRunner dmfTarRunner;
 
     private Path inputDir = Path.of("src/test/resources/live-test-input-dir");
 
     @BeforeEach
     public void setUp() {
         var p = new LiveTestProperties();
-        dmfTar = new DmfTar(p.getDmfTarExecutable(), p.getUser(), p.getHost(), p.getRemoteBaseDir());
+        dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), p.getUser(), p.getHost(), p.getRemoteBaseDir());
         if (p.getInputDir() != null) {
             inputDir = p.getInputDir();
         }
@@ -64,8 +63,8 @@ public class DmfTarLiveTest {
     public void roundTrip() throws Exception {
         var tarFile = System.currentTimeMillis() + ".dmftar";
         log.debug("tarFile: {}", tarFile);
-        dmfTar.tarDirectory(inputDir, tarFile);
-        var actual = IOUtils.toString(dmfTar.readFile(tarFile, "./text/loro.txt"), StandardCharsets.UTF_8);
+        dmfTarRunner.tarDirectory(inputDir, tarFile);
+        var actual = IOUtils.toString(dmfTarRunner.readFile(tarFile, "./text/loro.txt"), StandardCharsets.UTF_8);
         var expected = FileUtils.readFileToString(new File("src/test/resources/live-test-input-dir/text/loro.txt"), StandardCharsets.UTF_8);
         assertThat(actual).isEqualTo(expected);
     }
