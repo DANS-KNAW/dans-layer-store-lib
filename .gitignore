@@ -7,4 +7,5 @@
 /.venv-mkdocs
 /release.properties
 /live-test.properties
+/live-test.properties.bak
 /dmftar-cache.*
