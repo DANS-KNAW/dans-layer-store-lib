@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,26 +28,27 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class LayerManagerImpl implements LayerManager {
 
     private final Path stagingRoot;
 
-    private final Path archiveRoot;
+    private final ArchiveProvider archiveProvider;
 
     private final Executor archivingExecutor;
 
     @Getter
     private Layer topLayer;
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot, Executor archivingExecutor) {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, Executor archivingExecutor) {
         this.stagingRoot = stagingRoot;
-        this.archiveRoot = archiveRoot;
         this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
+        this.archiveProvider = archiveProvider;
         initTopLayer();
     }
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull Path archiveRoot) {
-        this(stagingRoot, archiveRoot, null);
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) {
+        this(stagingRoot, archiveProvider, null);
     }
 
     @SneakyThrows
@@ -65,13 +67,14 @@ public class LayerManagerImpl implements LayerManager {
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElseThrow();
-            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id) + ".zip")));
+            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
         }
     }
 
     private Layer createNewTopLayer() {
         long id = System.currentTimeMillis();
-        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id) + ".zip")));
+        log.debug("Creating new top layer with id {}", id);
+        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
     }
 
     @Override
@@ -79,6 +82,7 @@ public class LayerManagerImpl implements LayerManager {
         var oldTopLayer = topLayer;
         topLayer = createNewTopLayer();
         oldTopLayer.close();
+        log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
         archive(oldTopLayer);
     }
 
@@ -88,6 +92,7 @@ public class LayerManagerImpl implements LayerManager {
                 layer.archive();
             }
             catch (Exception e) {
+                log.error("Error archiving layer with id {}", layer.getId(), e);
                 throw new RuntimeException(e);
             }
         });
@@ -95,8 +100,8 @@ public class LayerManagerImpl implements LayerManager {
 
     @Override
     public Layer getLayer(long id) {
-        if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveRoot.resolve(Long.toString(id)).toFile().exists()) {
-            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), new ZipArchive(archiveRoot.resolve(Long.toString(id))));
+        if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {
+            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
         }
         else {
             throw new IllegalArgumentException("No layer found with id " + id);

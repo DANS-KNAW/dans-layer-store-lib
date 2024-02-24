@@ -16,7 +16,6 @@
 package nl.knaw.dans.layerstore;
 
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -47,11 +46,11 @@ public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
 
         // Check that the zip file exists
         assertThat(zipFile).exists();
-        AssertionsForClassTypes.assertThat(zipArchive.isArchived()).isTrue();
+        assertThat(zipArchive.isArchived()).isTrue();
 
         // Check that the files are unarchived
-        AssertionsForClassTypes.assertThat(zipArchive.fileExists("file1")).isTrue();
-        AssertionsForClassTypes.assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
-        AssertionsForClassTypes.assertThat(zipArchive.fileExists("path/to/file3")).isTrue();
+        assertThat(zipArchive.fileExists("file1")).isTrue();
+        assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
+        assertThat(zipArchive.fileExists("path/to/file3")).isTrue();
     }
 }

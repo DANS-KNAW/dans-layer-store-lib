@@ -18,7 +18,7 @@ package nl.knaw.dans.layerstore;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
@@ -29,6 +29,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @RequiredArgsConstructor
+@Slf4j
 class LayerImpl implements Layer {
 
     @Getter
@@ -117,14 +118,24 @@ class LayerImpl implements Layer {
     }
 
     @Override
-    @SneakyThrows
     public synchronized void archive() {
         checkClosed();
         checkNotArchived();
-        ensureStagingDirExists();
-        // TODO: check if database records consistent with contents of staging dir (or do this after archiving?)
+        try {
+            doArchive();
+        }
+        catch (IOException e) {
+            log.error("Error archiving layer", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void doArchive() throws IOException {
+        log.debug("Start archiving layer {}", id);
         archive.archiveFrom(stagingDir);
+        log.debug("Deleting staging directory {}", stagingDir);
         FileUtils.deleteDirectory(stagingDir.toFile());
+        log.debug("Staging directory {} deleted", stagingDir);
     }
 
     @Override

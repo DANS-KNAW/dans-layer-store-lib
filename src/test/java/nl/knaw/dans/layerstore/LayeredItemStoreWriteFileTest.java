@@ -33,7 +33,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_write_file_to_staging_dir_when_layer_is_open() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, archiveDir);
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
 
         var testContent = "Hello world!";
@@ -47,7 +47,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_write_copy_of_content_to_database_if_filter_applies() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, archiveDir);
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
 
         var testContent = "Hello world!";

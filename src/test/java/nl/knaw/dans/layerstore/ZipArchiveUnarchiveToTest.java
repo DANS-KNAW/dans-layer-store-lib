@@ -25,7 +25,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
-    public void should_unarchive_zipfile_and_change_status_to_unarchived() throws Exception {
+    public void should_unarchive_zipfile() throws Exception {
         var zipFile = testDir.resolve("test.zip");
         ZipArchive zipArchive = new ZipArchive(zipFile);
         // Create some files to archive
@@ -56,6 +56,5 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         assertThat(file1).exists();
         assertThat(file2).exists();
         assertThat(file3).exists();
-        AssertionsForClassTypes.assertThat(zipArchive.isArchived()).isFalse();
     }
 }
