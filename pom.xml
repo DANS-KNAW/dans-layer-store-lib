@@ -25,11 +25,11 @@
         <relativePath />
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <name>Library for storing a file/folder hierarchy in layers</name>
     <inceptionYear>2024</inceptionYear>
     <scm>
-        <tag>v0.1.0</tag>
+        <tag>HEAD</tag>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
     </scm>
     <dependencies>
