@@ -26,13 +26,18 @@
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
     <version>0.1.1-SNAPSHOT</version>
-    <name>Library for storing a file/folder hierarchy in layers</name>
+    <name>DANS Layer Store Library</name>
+    <description>Library for storing a file/folder hierarchy in layers</description>
     <inceptionYear>2024</inceptionYear>
     <scm>
         <tag>HEAD</tag>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
     </scm>
     <dependencies>
+        <dependency>
+            <groupId>nl.knaw.dans</groupId>
+            <artifactId>dans-java-utils</artifactId>
+        </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -44,6 +49,10 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

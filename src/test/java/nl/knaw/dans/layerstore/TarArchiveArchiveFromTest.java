@@ -56,7 +56,7 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
         Map<String, String> actual = new HashMap<>();
         try (var tf = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
             TarArchiveEntry entry;
-            while ((entry = tf.getNextTarEntry()) != null) {
+            while ((entry = tf.getNextEntry()) != null) {
                 actual.put(entry.getName(), new String(tf.readNBytes((int) entry.getSize()), StandardCharsets.UTF_8));
             }
         }
