@@ -58,7 +58,7 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
             else {
                 // If the record has a generatedId, and it is in the database, then it is an existing record, and we must
                 // merge the changes into the database.
-                currentSession().merge(record);
+                currentSession().update(record);
             }
         }
     }
