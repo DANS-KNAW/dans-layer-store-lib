@@ -87,4 +87,6 @@ public interface Layer {
     void moveDirectoryInto(Path source, String destination) throws IOException;
 
     void moveDirectoryInternal(String source, String destination) throws IOException;
+
+    long getSizeInBytes() throws IOException;
 }

@@ -200,6 +200,17 @@ class LayerImpl implements Layer {
         FileUtils.deleteDirectory(stagingDir.resolve(path).toFile());
     }
 
+    @Override
+    public long getSizeInBytes() throws IOException {
+        if (Files.exists(stagingDir)) {
+            return FileUtils.sizeOfDirectory(stagingDir.toFile());
+        }
+        else {
+            // TODO: repace with implementation that reads total size from database?
+            throw new UnsupportedOperationException("Layer is not open");
+        }
+    }
+
     private void validatePath(String path) {
         if (path == null)
             throw new IllegalArgumentException("Path cannot be null");
