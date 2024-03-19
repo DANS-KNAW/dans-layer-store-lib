@@ -18,6 +18,8 @@ package nl.knaw.dans.layerstore;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
+import javax.persistence.OptimisticLockException;
+
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -161,6 +163,47 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
                     .type(Item.Type.Directory)
                     .build()
             );
+    }
+
+    @Test
+    public void should_find_generatedId_in_db() {
+        var e = assertThrows(OptimisticLockException.class, () ->
+                daoTestExtension.inTransaction(() -> {
+                    var record = ItemRecord.builder()
+                            .layerId(1L)
+                            .path("app")
+                            .type(Item.Type.Directory)
+                            .generatedId(21L)
+                            .build();
+                    dao.saveRecords(record);
+                })
+        );
+        AssertionsForClassTypes.assertThat(e.getMessage()).startsWith("Batch update returned unexpected row count from update [0]");
+    }
+    @Test
+    public void should_update_path() {
+        addToDb(1L, "james", Item.Type.Directory);
+        var r = dao.getRecordsByPath("james").get(0);
+        daoTestExtension.inTransaction(() -> {
+            var record = ItemRecord.builder()
+                    .layerId(1L)
+                    .path("bond")
+                    .type(Item.Type.Directory)
+                    .generatedId(r.getGeneratedId())
+                    .build();
+            dao.saveRecords(record);
+        });
+        assertThat(dao.getAllRecords().toList())
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactlyInAnyOrder(
+                        ItemRecord.builder()
+                                .layerId(2L)
+                                .path("bond")
+                                .type(Item.Type.Directory)
+                                .generatedId(r.getGeneratedId())
+                                .build()
+                );
+
     }
 
     @Test
