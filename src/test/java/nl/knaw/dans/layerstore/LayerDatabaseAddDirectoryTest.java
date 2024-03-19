@@ -185,19 +185,14 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "james", Item.Type.Directory);
         var r = dao.getRecordsByPath("james").get(0);
         daoTestExtension.inTransaction(() -> {
-            var record = ItemRecord.builder()
-                    .layerId(1L)
-                    .path("bond")
-                    .type(Item.Type.Directory)
-                    .generatedId(r.getGeneratedId())
-                    .build();
-            dao.saveRecords(record);
-        });
+            r.setPath("bond");
+            dao.saveRecords(r);
+         });
         assertThat(dao.getAllRecords().toList())
                 .usingRecursiveFieldByFieldElementComparator()
                 .containsExactlyInAnyOrder(
                         ItemRecord.builder()
-                                .layerId(2L)
+                                .layerId(1L)
                                 .path("bond")
                                 .type(Item.Type.Directory)
                                 .generatedId(r.getGeneratedId())
