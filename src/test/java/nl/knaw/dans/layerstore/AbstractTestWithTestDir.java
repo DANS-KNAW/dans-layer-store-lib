@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -38,5 +39,20 @@ public abstract class AbstractTestWithTestDir {
         Files.createDirectories(testDir);
         Files.createDirectories(stagingDir);
         Files.createDirectories(archiveDir);
+    }
+
+    public void createEmptyStagingDirFiles(String... paths) {
+        for (String path : paths) {
+            var message = "Could not create staging file: " + path;
+            var parent = stagingDir.resolve(path).getParent().toFile();
+            try {
+                if ((!parent.exists() && !parent.mkdirs()) ||
+                        !stagingDir.resolve(path).toFile().createNewFile()) {
+                    throw new RuntimeException(message);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(message, e);
+            }
+        }
     }
 }

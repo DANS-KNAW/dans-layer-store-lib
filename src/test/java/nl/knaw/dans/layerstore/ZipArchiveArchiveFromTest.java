@@ -30,9 +30,9 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
         var zipFile = testDir.resolve("test.zip");
         ZipArchive zipArchive = new ZipArchive(zipFile);
         // Create some files to archive
-        Path file1 = testDir.resolve("staging/file1");
-        Path file2 = testDir.resolve("staging/path/to/file2");
-        Path file3 = testDir.resolve("staging/path/to/file3");
+        Path file1 = stagingDir.resolve("file1");
+        Path file2 = stagingDir.resolve("path/to/file2");
+        Path file3 = stagingDir.resolve("path/to/file3");
 
         // Write some string content to the files
         String file1Content = "file1 content";
@@ -44,7 +44,7 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
         FileUtils.write(file3.toFile(), file3Content, "UTF-8");
 
         // Archive the files
-        zipArchive.archiveFrom(testDir.resolve("staging"));
+        zipArchive.archiveFrom(stagingDir);
 
         // Check that the zip file exists and contains the files and not more than that
         assertThat(zipFile).exists();

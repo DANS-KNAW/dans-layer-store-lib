@@ -24,7 +24,6 @@ public class LayerMoveDirectoryIntoTest extends AbstractTestWithTestDir {
     @Test
     public void should_move_directory_into_staging_dir_when_layer_is_open() throws Exception {
         var inputDir = testDir.resolve("input-roundtrip");
-        var stagingDir = testDir.resolve("staging");
 
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
 
@@ -55,7 +54,6 @@ public class LayerMoveDirectoryIntoTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_IllegalStateException_when_layer_is_closed() throws Exception {
         var inputDir = testDir.resolve("input-roundtrip");
-        var stagingDir = testDir.resolve("staging");
 
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
 

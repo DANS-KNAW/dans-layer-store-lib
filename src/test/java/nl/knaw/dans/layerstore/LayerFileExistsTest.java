@@ -17,31 +17,14 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class LayerFileExistsTest extends AbstractTestWithTestDir {
 
-    public void createStagingDirContents(String... paths) {
-        for (String path : paths) {
-            var message = "Could not create staging dir content: " + path;
-            var parent = stagingDir.resolve(path).getParent().toFile();
-            try {
-                if ((!parent.exists() && !parent.mkdirs()) ||
-                     !stagingDir.resolve(path).toFile().createNewFile()) {
-                    throw new RuntimeException(message);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(message, e);
-            }
-        }
-    }
-
     @Test
     public void should_return_true_if_file_exists() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
-        createStagingDirContents("path/to/file1", "path/to/file2");
+        createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(layer.fileExists("path/to/file1")).isTrue();
     }
@@ -49,7 +32,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
     @Test
     public void should_return_true_if_file_exists_in_archived_layer() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
-        createStagingDirContents("path/to/file1", "path/to/file2");
+        createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(stagingDir.resolve("path/to/file1").toFile()).exists();
         assertThat(stagingDir.resolve("test.zip").toFile()).doesNotExist();
@@ -65,7 +48,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
     @Test
     public void should_return_false_if_file_existed_in_destroyed_archived_layer() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
-        createStagingDirContents("path/to/file1", "path/to/file2");
+        createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         layer.close();
         layer.archive();
@@ -78,7 +61,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
     @Test
     public void should_return_false_if_file_does_not_exist() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
-        createStagingDirContents("path/to/file1", "path/to/file2");
+        createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(layer.fileExists("path/to/file3")).isFalse();
     }

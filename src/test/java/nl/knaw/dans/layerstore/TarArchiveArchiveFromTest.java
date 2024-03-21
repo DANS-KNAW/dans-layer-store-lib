@@ -35,9 +35,9 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
         TarArchive tarArchive = new TarArchive(tarFile);
 
         // Create some files to archive
-        var file1 = testDir.resolve("staging/file1");
-        var file2 = testDir.resolve("staging/path/to/file2");
-        var file3 = testDir.resolve("staging/path/to/file3");
+        var file1 = stagingDir.resolve("file1");
+        var file2 = stagingDir.resolve("path/to/file2");
+        var file3 = stagingDir.resolve("path/to/file3");
 
         // Write some string content to the files
         String file1Content = "file1 content";
@@ -49,7 +49,7 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
         FileUtils.write(file3.toFile(), file3Content, "UTF-8");
 
         // Archive the files
-        tarArchive.archiveFrom(testDir.resolve("staging"));
+        tarArchive.archiveFrom(stagingDir);
 
         // Check that the tar file exists and contains the files and not more than that
         assertThat(tarFile).exists();
