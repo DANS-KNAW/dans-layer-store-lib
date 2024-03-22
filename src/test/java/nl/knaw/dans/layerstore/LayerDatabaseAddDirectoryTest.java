@@ -15,11 +15,11 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
 import javax.persistence.OptimisticLockException;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -178,8 +178,9 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
                     dao.saveRecords(record);
                 })
         );
-        AssertionsForClassTypes.assertThat(e.getMessage()).startsWith("Batch update returned unexpected row count from update [0]");
+        assertThat(e.getMessage()).contains("actual row count: 0; expected: 1");
     }
+
     @Test
     public void should_update_path() {
         addToDb(1L, "james", Item.Type.Directory);
@@ -189,7 +190,6 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
             dao.saveRecords(r);
          });
         assertThat(dao.getAllRecords().toList())
-                .usingRecursiveFieldByFieldElementComparator()
                 .containsExactlyInAnyOrder(
                         ItemRecord.builder()
                                 .layerId(1L)
@@ -210,7 +210,7 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
         var e = assertThrows(IllegalArgumentException.class, () ->
             daoTestExtension.inTransaction(() -> dao.addDirectory(2L, "root/child/grandchild"))
         );
-        AssertionsForClassTypes.assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
+        assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
     }
 
     @Test
@@ -219,7 +219,7 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
         var e = assertThrows(IllegalArgumentException.class, () ->
             daoTestExtension.inTransaction(() -> dao.addDirectory(1L, "root/child/grandchild"))
         );
-        AssertionsForClassTypes.assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
+        assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
     }
 
 }
