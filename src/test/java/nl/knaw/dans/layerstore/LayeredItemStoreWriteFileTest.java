@@ -17,7 +17,6 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
@@ -39,7 +38,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(dao, layerManager);
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", new ByteArrayInputStream(testContent.getBytes(StandardCharsets.UTF_8)));
+        layeredStore.writeFile("test.txt", toInputStream(testContent));
 
         var topLayer = layerManager.getTopLayer();
 
@@ -54,12 +53,12 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", new ByteArrayInputStream(testContent.getBytes(StandardCharsets.UTF_8)));
+        layeredStore.writeFile("test.txt", toInputStream(testContent));
 
         // Check that the file content is in the database
         dao.getAllRecords().toList().forEach(itemRecord -> {
             if (itemRecord.getPath().equals("test.txt")) {
-                assertThat(itemRecord.getContent()).isEqualTo(testContent.getBytes(StandardCharsets.UTF_8));
+                assertThat(itemRecord.getContent()).isEqualTo(toBytes(testContent));
             }
         });
 

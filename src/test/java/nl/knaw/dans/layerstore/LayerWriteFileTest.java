@@ -17,7 +17,6 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -30,7 +29,7 @@ public class LayerWriteFileTest extends AbstractTestWithTestDir {
 
         // Write a file to the layer
         var testContent = "Hello world!";
-        layer.writeFile("test.txt", new ByteArrayInputStream(testContent.getBytes(StandardCharsets.UTF_8)));
+        layer.writeFile("test.txt", toInputStream(testContent));
 
         // Verify that the file is written to the staging dir and has
         assertThat(stagingDir.resolve("test.txt")).exists();
@@ -42,7 +41,7 @@ public class LayerWriteFileTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
         layer.close();
 
-        assertThatThrownBy(() -> layer.writeFile("whatever.txt", new ByteArrayInputStream("whatever".getBytes(StandardCharsets.UTF_8)))).
+        assertThatThrownBy(() -> layer.writeFile("whatever.txt", toInputStream("whatever"))).
             isInstanceOf(IllegalStateException.class)
             .hasMessage("Layer is closed, but must be open for this operation");
     }

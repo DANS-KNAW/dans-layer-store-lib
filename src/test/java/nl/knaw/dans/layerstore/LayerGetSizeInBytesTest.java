@@ -17,24 +17,17 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
 
-    private static ByteArrayInputStream getInputStream(String testContent) {
-        return new ByteArrayInputStream(testContent.getBytes(StandardCharsets.UTF_8));
-    }
-
     @Test
     public void should_add_up_file_sizes() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
-        layer.writeFile("test.txt", getInputStream("Hello world!"));
+        layer.writeFile("test.txt", toInputStream("Hello world!"));
         layer.createDirectory("path/to");
-        layer.writeFile("path/to/other.txt", getInputStream("Whatever"));
+        layer.writeFile("path/to/other.txt", toInputStream("Whatever"));
 
         assertThat(layer.getSizeInBytes()).isEqualTo(20L);
     }
