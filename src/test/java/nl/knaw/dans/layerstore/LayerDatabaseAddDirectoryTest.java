@@ -166,14 +166,14 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_find_generatedId_in_db() {
+    public void should_throw_not_found_generatedId() {
         var e = assertThrows(OptimisticLockException.class, () ->
                 daoTestExtension.inTransaction(() -> {
                     var record = ItemRecord.builder()
                             .layerId(1L)
                             .path("app")
                             .type(Item.Type.Directory)
-                            .generatedId(21L)
+                            .generatedId(21L) // not in DB
                             .build();
                     dao.saveRecords(record);
                 })
