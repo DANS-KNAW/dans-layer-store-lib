@@ -15,9 +15,11 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
+import javax.persistence.OptimisticLockException;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -164,6 +166,42 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
+    public void should_throw_not_found_generatedId() {
+        var e = assertThrows(OptimisticLockException.class, () ->
+                daoTestExtension.inTransaction(() -> {
+                    var record = ItemRecord.builder()
+                            .layerId(1L)
+                            .path("app")
+                            .type(Item.Type.Directory)
+                            .generatedId(21L) // not in DB
+                            .build();
+                    dao.saveRecords(record);
+                })
+        );
+        assertThat(e.getMessage()).contains("actual row count: 0; expected: 1");
+    }
+
+    @Test
+    public void should_update_path() {
+        addToDb(1L, "james", Item.Type.Directory);
+        var r = dao.getRecordsByPath("james").get(0);
+        daoTestExtension.inTransaction(() -> {
+            r.setPath("bond");
+            dao.saveRecords(r);
+         });
+        assertThat(dao.getAllRecords().toList())
+                .containsExactlyInAnyOrder(
+                        ItemRecord.builder()
+                                .layerId(1L)
+                                .path("bond")
+                                .type(Item.Type.Directory)
+                                .generatedId(r.getGeneratedId())
+                                .build()
+                );
+
+    }
+
+    @Test
     public void should_throw_an_IllegalArgumentException_if_the_path_contains_a_file_in_previous_layer() {
         addToDb(1L, "", Item.Type.Directory);
         addToDb(1L, "root", Item.Type.Directory);
@@ -172,7 +210,7 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
         var e = assertThrows(IllegalArgumentException.class, () ->
             daoTestExtension.inTransaction(() -> dao.addDirectory(2L, "root/child/grandchild"))
         );
-        AssertionsForClassTypes.assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
+        assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
     }
 
     @Test
@@ -181,7 +219,7 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
         var e = assertThrows(IllegalArgumentException.class, () ->
             daoTestExtension.inTransaction(() -> dao.addDirectory(1L, "root/child/grandchild"))
         );
-        AssertionsForClassTypes.assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
+        assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
     }
 
 }

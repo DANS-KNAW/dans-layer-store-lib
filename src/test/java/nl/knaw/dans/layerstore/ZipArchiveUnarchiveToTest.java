@@ -27,7 +27,7 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_unarchive_zipfile() throws Exception {
         var zipFile = testDir.resolve("test.zip");
-        ZipArchive zipArchive = new ZipArchive(zipFile);
+        var zipArchive = new ZipArchive(zipFile);
         // Create some files to archive
         Path file1 = testDir.resolve("staging/file1");
         Path file2 = testDir.resolve("staging/path/to/file2");
@@ -43,7 +43,7 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         FileUtils.write(file3.toFile(), file3Content, "UTF-8");
 
         // Archive the files
-        zipArchive.archiveFrom(testDir.resolve("staging"));
+        zipArchive.archiveFrom(stagingDir);
 
         // Check that the zip file exists
         assertThat(zipFile).exists();

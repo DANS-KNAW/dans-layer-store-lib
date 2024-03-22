@@ -17,12 +17,18 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class LayerDatabaseListRecursiveTest extends AbstractLayerDatabaseTest {
     @Test
     public void listRecursive_should_return_empty_list_if_nothing_found() throws Exception {
         assertThat(dao.listRecursive("")).asList().isEmpty();
+    }
+
+    @Test
+    public void listRecursive_should_throw_on_null_argument() {
+        assertThatIllegalArgumentException().isThrownBy(() -> dao.listRecursive(null));
     }
 
     @Test

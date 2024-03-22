@@ -23,15 +23,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class LayerCloseTest extends AbstractTestWithTestDir {
 
     @Test
-    public void throws_IllegalStateException_when_layer_is_already_closed() throws Exception {
-        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+    public void throws_IllegalStateException_when_layer_is_already_closed() {
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
         layer.close();
         assertThrows(IllegalStateException.class, layer::close);
     }
 
     @Test
-    public void should_close_layer() throws Exception {
-        var layer = new LayerImpl(1, testDir.resolve("staging"), new ZipArchive(testDir.resolve("test.zip")));
+    public void should_close_layer() {
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
         layer.close();
         assertThat(layer.isClosed()).isTrue();
     }
