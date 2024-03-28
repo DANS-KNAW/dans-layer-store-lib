@@ -201,12 +201,12 @@ class LayerImpl implements Layer {
     }
 
     @Override
-    public long getSizeInBytes() throws IOException {
+    public long getSizeInBytes() {
         if (Files.exists(stagingDir)) {
             return FileUtils.sizeOfDirectory(stagingDir.toFile());
         }
         else {
-            // TODO: repace with implementation that reads total size from database?
+            // TODO: replace with implementation that reads total size from database?
             throw new UnsupportedOperationException("Layer is not open");
         }
     }
