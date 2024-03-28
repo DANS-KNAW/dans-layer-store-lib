@@ -15,11 +15,13 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -43,6 +45,22 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         layeredStore.copyDirectoryOutOf("a/b/c/d", destination);
 
         assertThat(destination.resolve("a/b/c/d/e")).isEmptyDirectory();
+    }
+
+    @Test
+    public void should_overwrite_existing_files() throws Exception {
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layeredStore = new LayeredItemStore(dao, layerManager);
+        Files.createDirectories(archiveDir);
+        layeredStore.createDirectory("a/b/c/d/e");
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
+        var destination = testDir.resolve("copy");
+        FileUtils.writeLines(destination.resolve("a/b/c/d/test1.txt").toFile(), List.of("Hello there!"));
+
+        layeredStore.copyDirectoryOutOf("a/b/c/d", destination);
+
+        assertThat(destination.resolve("a/b/c/d/test1.txt")).hasContent("Hello world!");
     }
 
     @Test
