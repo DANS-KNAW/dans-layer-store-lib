@@ -43,7 +43,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
         var firstLayer = layerManager.getTopLayer();
         layerManager.newTopLayer();
-        layeredStore.writeFile("a/b/test32.txt", toInputStream("Hello once more!"));
+        layeredStore.writeFile("test32.txt", toInputStream("Hello once more!"));
 
         assertFalse(firstLayer.isOpen());
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt")))
