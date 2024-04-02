@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 /**
  * A test class that creates a test directory for each test method.
  */
@@ -60,5 +62,14 @@ public abstract class AbstractTestWithTestDir {
                 throw new RuntimeException(message, e);
             }
         }
+    }
+
+    /**
+     * Assume that a bug is not yet fixed. This allows to skip assertions while still showing the code covered by the test.
+        *
+        * @param message the message to display
+        */
+    public void assumeNotYetFixed (String message) {
+        assumeTrue(false, message);
     }
 }
