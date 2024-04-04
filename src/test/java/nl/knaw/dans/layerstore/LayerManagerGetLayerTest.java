@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -26,7 +27,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
 
     @Test
-    public void should_throw_exception_when_layer_id_does_not_exist() throws IOException {
+    public void should_throw_when_layer_id_does_not_exist() throws IOException {
         // Given
         var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
 
@@ -53,7 +54,21 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_find_the_not_yet_created_top_layer() throws IOException {
+    public void should_find_a_top_layer_with_content() throws IOException {
+        // Given
+        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var topLayer = layerManager.getTopLayer();
+        topLayer.writeFile("test.txt", toInputStream("Hello world!"));
+
+        // When
+        var layer = layerManager.getLayer(topLayer.getId());
+
+        // Then
+        assertThat(layer.getId()).isEqualTo(layerManager.getTopLayer().getId());
+    }
+
+    @Test
+    public void should_find_an_empty_top_layer() throws IOException {
         // Given
         var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
         long topLayerId = layerManager.getTopLayer().getId();
@@ -65,4 +80,38 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Then
         assertThat(layer.getId()).isEqualTo(layerManager.getTopLayer().getId());
     }
+
+    @Test
+    public void should_find_an_archived_layer() throws IOException {
+        // Given
+        Files.createDirectories(archiveDir);
+        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var layerId = layerManager.getTopLayer().getId();
+        layerManager.newTopLayer();
+        FileUtils.deleteDirectory(stagingDir.resolve(String.valueOf(layerId)).toFile());
+
+        // When
+        try {
+            layerManager.getLayer(layerId);
+        }
+        catch (IllegalArgumentException e) {
+            // Then
+            assertThat(e).hasMessageContaining("No layer found with id " + layerId);
+        }
+
+        // When again
+        try {
+            var layer = layerManager.getLayer(layerId);
+            // Then
+            assertThat(layer.getId()).isNotEqualTo(layerManager.getTopLayer().getId());
+
+            assumeNotYetFixed("Race condition or logic? Zip file exists at second attempt of getLayer (or when called in an assertThatThrownBy).");
+        }
+        catch (IllegalArgumentException e) {
+            // Then
+            assertThat(e).hasMessageContaining("No layer found with id " + layerId);
+            assumeNotYetFixed("Getting here proves the race condition. Usually the second attempt returns the layer.");
+        }
+    }
+
 }
