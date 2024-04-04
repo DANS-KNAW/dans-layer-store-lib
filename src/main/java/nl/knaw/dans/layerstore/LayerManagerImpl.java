@@ -95,7 +95,10 @@ public class LayerManagerImpl implements LayerManager {
 
     @Override
     public Layer getLayer(long id) {
-        if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {
+        if (id == topLayer.getId()) {
+            return topLayer;
+        }
+        else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {
             return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
         }
         else {

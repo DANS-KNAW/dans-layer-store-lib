@@ -48,6 +48,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
             .getTopLayer().getId();
         assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
+        assertThat(topLayerId).isNotEqualTo(123456789012L);
     }
 
     @Test
