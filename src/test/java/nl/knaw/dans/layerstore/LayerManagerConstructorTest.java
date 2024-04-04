@@ -17,47 +17,54 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
 
     @Test
-    public void should_have_a_not_existing_directory_as_top_layer() {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-
-        var topLayer = layerManager.getTopLayer();
+    public void should_create_the_staging_root() throws IOException {
+        assertThat(stagingDir).doesNotExist();
+        new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         assertThat(stagingDir).isEmptyDirectory();
-        assertThat(stagingDir.resolve(String.valueOf(topLayer.getId()))).doesNotExist();
     }
 
     @Test
-    public void should_use_the_existing_directory_as_top_layer() throws Exception {
-        Files.createDirectories(stagingDir.resolve("45"));
-        Files.createDirectories(stagingDir.resolve("123"));
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var topLayerId = layerManager.getTopLayer().getId();
-        assertThat(topLayerId).isEqualTo(123L);
+    public void should_use_the_existing_directory() throws IOException {
+        Files.createDirectories(stagingDir.resolve("1234567890123"));
+
+        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
+            .getTopLayer().getId();
+        assertThat(topLayerId).isEqualTo(1234567890123L);
     }
 
     @Test
-    public void should_throw_a_NumberFormatException_for_the_existing_alphanumeric_directory() throws Exception {
-        Files.createDirectories(stagingDir.resolve("12345"));
-        Files.createDirectories(stagingDir.resolve("abc"));
+    public void should_ignore_the_too_short_directory_name() throws IOException {
+        Files.createDirectories(stagingDir.resolve("123456789012"));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))).
-            isInstanceOf(NumberFormatException.class)
-            .hasMessage("For input string: \"abc\"");
+        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
+            .getTopLayer().getId();
+        assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
     }
 
     @Test
-    public void should_throw_a_NumberFormatException_for_the_existing_directory_with_a_dot_in_the_name() throws Exception {
+    public void should_ignore_an_alphanumeric_directory() throws IOException {
+        Files.createDirectories(stagingDir.resolve("abcdefghijklmnopqrstuvwxyz"));
+
+        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
+            .getTopLayer().getId();
+        assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
+    }
+
+    @Test
+    public void should_ignore_a_directory_with_a_dot_in_the_name() throws IOException {
         Files.createDirectories(stagingDir.resolve("1.2"));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))).
-            isInstanceOf(NumberFormatException.class)
-            .hasMessage("For input string: \"1.2\"");
+        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
+            .getTopLayer().getId();
+        assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
     }
 }

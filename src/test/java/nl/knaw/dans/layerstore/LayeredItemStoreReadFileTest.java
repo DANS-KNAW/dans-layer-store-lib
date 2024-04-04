@@ -76,7 +76,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_no_such_file() {
+    public void should_throw_no_such_file() throws IOException {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
 

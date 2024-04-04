@@ -20,6 +20,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -81,7 +82,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     }
 
     @Test
-    public void should_throw_parent_of_destination_does_not_exists() {
+    public void should_throw_parent_of_destination_does_not_exists() throws IOException {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
 

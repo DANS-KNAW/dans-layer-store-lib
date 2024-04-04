@@ -17,16 +17,14 @@ package nl.knaw.dans.layerstore;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
@@ -40,33 +38,30 @@ public class LayerManagerImpl implements LayerManager {
     @Getter
     private Layer topLayer;
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, Executor archivingExecutor) {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, Executor archivingExecutor) throws IOException {
         this.stagingRoot = stagingRoot;
         this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
         this.archiveProvider = archiveProvider;
         initTopLayer();
     }
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) throws IOException {
         this(stagingRoot, archiveProvider, null);
     }
 
-    @SneakyThrows
-    private void initTopLayer() {
-        List<Path> paths;
-        try (Stream<Path> pathStream = Files.list(stagingRoot)) {
-            paths = pathStream.toList();
+    private void initTopLayer() throws IOException {
+        if (Files.notExists(stagingRoot)) {
+            Files.createDirectories(stagingRoot);
         }
-        if (paths.isEmpty()) {
-            topLayer = createNewTopLayer();
-        }
-        else {
-            long id = paths.stream()
+        try (var pathStream = Files.list(stagingRoot)) {
+            long id = pathStream
                 .map(Path::getFileName)
+                .filter(p -> stagingRoot.resolve(p).toFile().isDirectory())
                 .map(Path::toString)
+                .filter(s -> s.matches("\\d{13,}"))
                 .mapToLong(Long::parseLong)
                 .max()
-                .orElseThrow();
+                .orElse(createNewTopLayer().getId());
             topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
         }
     }
