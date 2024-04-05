@@ -96,6 +96,7 @@ public class LayerManagerImpl implements LayerManager {
     @Override
     public Layer getLayer(long id) {
         if (id == topLayer.getId()) {
+            // an empty layer would not be found in the staging root
             return topLayer;
         }
         else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {
