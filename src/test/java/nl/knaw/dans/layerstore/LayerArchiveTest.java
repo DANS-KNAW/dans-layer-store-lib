@@ -17,6 +17,10 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -28,7 +32,8 @@ public class LayerArchiveTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void throws_IllegalStateException_when_layer_is_already_archived() {
+    public void throws_IllegalStateException_when_layer_is_already_archived() throws IOException {
+        Files.createDirectories(testDir);
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
         layer.close();
         layer.archive();
@@ -36,9 +41,24 @@ public class LayerArchiveTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void removes_staging_dir() {
+    public void throws_RuntimeException_caused_by_an_IOException() {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
         layer.close();
+
+        var cause = assertThrows(RuntimeException.class, layer::archive).getCause();
+        assertThat(cause).isInstanceOf(NoSuchFileException.class);
+        // misleading message: the problem is that the LayerArchiveTest dir does not exist
+        assertThat(cause.getMessage()).isEqualTo("target/test/LayerArchiveTest/test.zip");
+    }
+
+    @Test
+    public void removes_staging_dir() {
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        assertThat(stagingDir).doesNotExist();
+        createEmptyStagingDirFiles("path/to/file1");
+        assertThat(stagingDir).exists();
+        layer.close();
+
         layer.archive();
         assertThat(stagingDir).doesNotExist();
     }
