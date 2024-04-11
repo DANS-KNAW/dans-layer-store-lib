@@ -49,6 +49,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
 
     @Test
     public void should_overwrite_existing_files() throws Exception {
+        // As in https://github.com/OCFL/ocfl-java/blob/a4d4f17149640132bdfd9c00a170f414e1c7cf33/ocfl-java-core/src/main/java/io/ocfl/core/storage/filesystem/FileSystemStorage.java#L226C1-L243C6
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
         Files.createDirectories(archiveDir);
