@@ -55,15 +55,23 @@ public class LayerManagerImpl implements LayerManager {
         }
         try (var pathStream = Files.list(stagingRoot)) {
             long id = pathStream
-                .map(Path::getFileName)
-                .filter(p -> stagingRoot.resolve(p).toFile().isDirectory())
-                .map(Path::toString)
-                .filter(s -> s.matches("\\d{13,}"))
+                .map(this::toValidLayerName)
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElse(createNewTopLayer().getId());
             topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
         }
+    }
+
+    private String toValidLayerName(Path path) {
+        if (!path.toFile().isDirectory()) {
+            throw new IllegalStateException("Not a directory: " + path);
+        }
+        if(!path.getFileName().toString().matches("\\d{13,}")) {
+            // more than 13 digits in nov 2286
+            throw new IllegalStateException("Not a timestamp: " + path);
+        }
+        return path.getFileName().toString();
     }
 
     private Layer createNewTopLayer() {

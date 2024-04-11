@@ -32,7 +32,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_when_layer_id_does_not_exist() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
 
         // When
         assertThatThrownBy(() -> layerManager.getLayer(1234567890123L))
@@ -43,11 +43,11 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_find_a_directory_assumed_to_be_garbage_by_the_constructor() throws IOException {
+    public void should_find_garbage_in_stagingDir_created_after_creating_LayerManagerImpl_object() throws IOException {
         // Given
-        Files.createDirectories(testDir.resolve("0"));
-        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         assertThat(layerManager.getTopLayer().getId()).isNotEqualTo(0L);
+        Files.createDirectories(stagingDir.resolve("0"));
 
         //When
         var layer = layerManager.getLayer(0L);
@@ -59,7 +59,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_a_top_layer_with_content() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var topLayer = layerManager.getTopLayer();
         topLayer.writeFile("test.txt", toInputStream("Hello world!"));
 
@@ -73,7 +73,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_an_empty_top_layer() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         long topLayerId = layerManager.getTopLayer().getId();
         assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
 
@@ -88,69 +88,47 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_find_an_empty_archived_layer() throws Exception {
         // Given
         Files.createDirectories(archiveDir);
-        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var initialLayerId = layerManager.getTopLayer().getId();
-        assertThat(stagingDir).doesNotExist(); // no content in the current layer
+        assertThat(stagingDir).isEmptyDirectory(); // no content in the current layer
+        assertThat(archiveDir).isEmptyDirectory(); // nothing archived yet
         sleep(1L); // to make sure to get a layer with another time stamp
         layerManager.newTopLayer();
         AssertionsForClassTypes.assertThat(initialLayerId).isNotEqualTo(layerManager.getTopLayer().getId());
-        assertThat(archiveDir).isEmptyDirectory();
+        assertThat(stagingDir).isEmptyDirectory();
+        Thread.sleep(1L); // wait for creation of the zip file, strangely not required when running the test stand alone
+        assertThat(archiveDir).isNotEmptyDirectory();
 
         // When
-        try {
-            // an assertThatThrownBy archives the empty layer in time, and we would not get the exception
-            layerManager.getLayer(initialLayerId);
-        }
-        catch (IllegalArgumentException e) {
-            // Then
-            assertThat(e).hasMessageContaining("No layer found with id " + initialLayerId);
-            assertThat(archiveDir).isNotEmptyDirectory(); // apparently the empty layer was archived after returning from getLayer
-        }
+        var layer = layerManager.getLayer(initialLayerId);
+        // Then
 
-        // When again
-        try {
-            var layer = layerManager.getLayer(initialLayerId);
-            // Then
-            assertThat(layer.getId()).isNotEqualTo(layerManager.getTopLayer().getId());
-            assertThat(archiveDir).isNotEmptyDirectory();
-
-            assumeNotYetFixed("Race condition or logic? Zip file exists at second attempt of getLayer (or when called in an assertThatThrownBy).");
-        }
-        catch (IllegalArgumentException e) {
-            // Then
-            assertThat(e).hasMessageContaining("No layer found with id " + initialLayerId);
-            assumeNotYetFixed("Getting here proves the race condition. Usually the second attempt returns the layer then we don't get here.");
-        }
+        assertThat(layer.getId()).isNotEqualTo(layerManager.getTopLayer().getId());
+        assertThat(archiveDir).isNotEmptyDirectory();
     }
 
     @Test
     public void should_have_status_archived_for_the_found_layer() throws Exception {
         // Given
         Files.createDirectories(archiveDir);
-        var layerManager = new LayerManagerImpl(testDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!"));
         Layer initialLayer = layerManager.getTopLayer();
         var initialLayerId = initialLayer.getId();
         sleep(1L); // to make sure to get a layer with another time stamp
         layerManager.newTopLayer();
-        assertFalse(initialLayer.isArchived()); // TODO confusing, doesn't change when archived
+        Thread.sleep(1L); // wait for creation of the zip file, strangely not required when running the test stand alone
 
         // When
-        var layer1 = layerManager.getLayer(initialLayerId);
+        var layer = layerManager.getLayer(initialLayerId);
 
         // Then
-        assertThat(initialLayerId).isEqualTo(layer1.getId());
-        assumeNotYetFixed("different results when running the test stand alone or in a suite");
-        assertThat(archiveDir).isEmptyDirectory();
-        assertFalse(layer1.isArchived());
-
-        // When again
-        var layer2 = layerManager.getLayer(initialLayerId);
-
-        // Then
-        assertThat(initialLayerId).isEqualTo(layer2.getId());
+        assertThat(initialLayerId).isEqualTo(layer.getId());
         assertThat(archiveDir).isNotEmptyDirectory();
-        assertTrue(layer2.isArchived());
+        assertThat(archiveDir.resolve(initialLayerId + ".zip")).exists();
+        assumeNotYetFixed("The layer is archived, but neither the object of the initial top layer, nor the new layer object know it.");
+        assertFalse(initialLayer.isArchived());
+        assertFalse(layer.isArchived());
     }
 
 }

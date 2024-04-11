@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -42,30 +43,39 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_ignore_the_too_short_directory_name() throws IOException {
+    public void should_throw_on_a_plain_file() throws IOException {
+        Files.createDirectories(stagingDir);
+        Files.createFile(stagingDir.resolve("1234567890123"));
+
+        assertThatThrownBy ( () -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir)))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Not a directory: target/test/LayerManagerConstructorTest/layer_staging/1234567890123");
+    }
+
+    @Test
+    public void should_throw_on_the_too_short_directory_name() throws IOException {
         Files.createDirectories(stagingDir.resolve("123456789012"));
 
-        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
-            .getTopLayer().getId();
-        assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
-        assertThat(topLayerId).isNotEqualTo(123456789012L);
+        assertThatThrownBy ( () -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir)))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Not a timestamp: target/test/LayerManagerConstructorTest/layer_staging/123456789012");
     }
 
     @Test
-    public void should_ignore_an_alphanumeric_directory() throws IOException {
+    public void should_throw_on_an_alphanumeric_directory() throws IOException {
         Files.createDirectories(stagingDir.resolve("abcdefghijklmnopqrstuvwxyz"));
 
-        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
-            .getTopLayer().getId();
-        assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
+        assertThatThrownBy ( () -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir)))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Not a timestamp: target/test/LayerManagerConstructorTest/layer_staging/abcdefghijklmnopqrstuvwxyz");
     }
 
     @Test
-    public void should_ignore_a_directory_with_a_dot_in_the_name() throws IOException {
+    public void should_throw_on_a_directory_with_a_dot_in_the_name() throws IOException {
         Files.createDirectories(stagingDir.resolve("1.2"));
 
-        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
-            .getTopLayer().getId();
-        assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
+        assertThatThrownBy ( () -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir)))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Not a timestamp: target/test/LayerManagerConstructorTest/layer_staging/1.2");
     }
 }
