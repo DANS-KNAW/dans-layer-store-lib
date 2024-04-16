@@ -38,7 +38,10 @@ public abstract class AbstractTestWithTestDir {
 
     @BeforeEach
     public void setUp() throws Exception {
-        FileUtils.deleteDirectory(testDir.toFile());
+        if (testDir.toFile().exists()) {
+            // github stumbled: https://github.com/DANS-KNAW/dans-layer-store-lib/actions/runs/8705753485/job/23876831089?pr=7#step:4:106
+            FileUtils.deleteDirectory(testDir.toFile());
+        }
     }
 
     public static ByteArrayInputStream toInputStream(String testContent) {
