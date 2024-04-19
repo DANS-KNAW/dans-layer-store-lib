@@ -59,6 +59,13 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!"));
 
+        // precondition: show database content
+        var list1 = daoTestExtension.inTransaction(() ->
+            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/d/test1.txt", "a/b/c/test2.txt");
+
+        // method under test
         layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt"));
 
         // files are removed from the stagingDir
@@ -66,8 +73,11 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         assertThat(layerDir.resolve("a/b/c/d/test1.txt")).doesNotExist();
         assertThat(layerDir.resolve("a/b/c/test2.txt")).doesNotExist();
 
-        assumeNotYetFixed("TODO: files are not removed from the database (the code above shows coverage)");
-        assertThat(layeredStore.listRecursive("a").stream().map(Item::getPath))
-            .containsExactlyInAnyOrder("a/b", "a/b/c", "a/b/c/d");
+        // files are removed from the database
+        assumeNotYetFixed("TODO: txt files are not removed from the database (the code above shows coverage)");
+        var list2 = daoTestExtension.inTransaction(() ->
+            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assertThat(list2).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d");
     }
 }

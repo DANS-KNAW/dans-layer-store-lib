@@ -50,16 +50,25 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var layeredStore = new LayeredItemStore(dao, layerManager);
         layeredStore.createDirectory("a/b/c/d");
 
-        layeredStore.deleteDirectory("a/b/c");
+        // precondition: show database content
+        var list1 = daoTestExtension.inTransaction(() ->
+            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d");
 
+        // method under test
+        layeredStore.deleteDirectory("a/b/c");
 
         // directory is removed from the stagingDir
         var layerDir = stagingDir.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))));
         assertThat(layerDir.resolve("a/b")).isEmptyDirectory();
 
-        assumeNotYetFixed("TODO: files are not removed from the database (the code above shows coverage)");
-        assertThat(layeredStore.listRecursive("a").stream().map(Item::getPath))
-            .containsExactlyInAnyOrder("a", "a/b");
+        // directory is removed from the database
+        var list2 = daoTestExtension.inTransaction(() ->
+            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assumeNotYetFixed("TODO: 'c' is not removed from the database (the code above shows coverage)");
+        assertThat(list2).containsExactlyInAnyOrder("", "a", "a/b");
     }
 
     @Test
@@ -69,14 +78,26 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!"));
 
+        // precondition: show database content
+        var list1 = daoTestExtension.inTransaction(() ->
+            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/test.txt");
+
+        // method under test
         layeredStore.deleteDirectory("a/b");
 
         // files are removed from the stagingDir
-        var layerDir = stagingDir.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))));
+        var layerDir = daoTestExtension.inTransaction(() ->
+            stagingDir.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))))
+        );
         assertThat(layerDir.resolve("a")).isEmptyDirectory();
 
-        assumeNotYetFixed("TODO: files are not removed from the database (the code above shows coverage)");
-        assertThat(layeredStore.listRecursive("a").stream().map(Item::getPath))
-            .containsExactlyInAnyOrder("a");
+        // files are removed from the database
+        var list2 = daoTestExtension.inTransaction(() ->
+            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assumeNotYetFixed("TODO: 'b' is not removed from the database (the code above shows coverage)");
+        assertThat(list2).containsExactlyInAnyOrder("", "a");
     }
 }
