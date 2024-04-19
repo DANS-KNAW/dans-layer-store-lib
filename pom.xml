@@ -111,7 +111,6 @@
             <artifactId>dropwizard-hibernate</artifactId>
         </dependency>
     </dependencies>
-
     <repositories>
         <repository>
             <id>DANS</id>
