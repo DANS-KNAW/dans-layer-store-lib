@@ -224,17 +224,15 @@ public class LayeredItemStore implements ItemStore {
         checkAllSourceFilesOnlyInTopLayer(path, "deleteDirectory");
         layerManager.getTopLayer().deleteDirectory(path);
         var items = database.listRecursive(path);
-        long[] idsToDelete = new long[items.size()];
-        int i = 0;
-        for (var item : items) {
+        items.add(new Item(path, Item.Type.Directory));
+        var idsToDelete = items.stream().map(item -> {
             var records = database.getRecordsByPath(item.getPath());
             // If there are multiple records for the same path, something went wrong
             if (records.size() > 1) {
                 throw new IllegalStateException("Found multiple records for path " + item.getPath());
             }
-            idsToDelete[i++] = records.get(0).getGeneratedId();
-        }
-        // convert ids to array of Longs
+            return records.get(0).getGeneratedId();
+        }).mapToLong(Long::longValue).toArray();
         database.deleteRecordsById(idsToDelete);
     }
 
@@ -271,7 +269,7 @@ public class LayeredItemStore implements ItemStore {
         var items = database.listRecursive(source);
         // Sort by ascending path length, so that we start with the deepest directories
         items.sort(Comparator.comparingInt(listingRecord -> Path.of(listingRecord.getPath()).getNameCount()));
-        if(!items.isEmpty()) {
+        if (!items.isEmpty()) {
             var deepestDirectory = Path.of(items.get(0).getPath()).getParent();
             if (source.equals(deepestDirectory.toString())) {
                 // the source is a leaf directory

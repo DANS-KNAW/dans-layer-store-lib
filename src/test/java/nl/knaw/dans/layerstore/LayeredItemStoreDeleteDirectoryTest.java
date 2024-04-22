@@ -67,7 +67,6 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var list2 = daoTestExtension.inTransaction(() ->
             dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
-        assumeNotYetFixed("TODO: 'c' is not removed from the database (the code above shows coverage)");
         assertThat(list2).containsExactlyInAnyOrder("", "a", "a/b");
     }
 
@@ -97,7 +96,6 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var list2 = daoTestExtension.inTransaction(() ->
             dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
-        assumeNotYetFixed("TODO: 'b' is not removed from the database (the code above shows coverage)");
         assertThat(list2).containsExactlyInAnyOrder("", "a");
     }
 }
