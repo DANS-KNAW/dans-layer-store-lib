@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,7 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
     @Test
     public void should_not_move_dir_with_files_in_other_layer() throws Exception {
+        Files.createDirectories(archiveDir); // without this, a stack trace is logged from an archiving thread
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
 
