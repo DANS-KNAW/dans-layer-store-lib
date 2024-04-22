@@ -74,7 +74,6 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         assertThat(layerDir.resolve("a/b/c/test2.txt")).doesNotExist();
 
         // files are removed from the database
-        assumeNotYetFixed("TODO: txt files are not removed from the database (the code above shows coverage)");
         var list2 = daoTestExtension.inTransaction(() ->
             dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );

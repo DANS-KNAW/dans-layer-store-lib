@@ -225,15 +225,18 @@ public class LayeredItemStore implements ItemStore {
         layerManager.getTopLayer().deleteDirectory(path);
         var items = database.listRecursive(path);
         items.add(new Item(path, Item.Type.Directory));
-        var idsToDelete = items.stream().map(item -> {
-            var records = database.getRecordsByPath(item.getPath());
-            // If there are multiple records for the same path, something went wrong
-            if (records.size() > 1) {
-                throw new IllegalStateException("Found multiple records for path " + item.getPath());
-            }
-            return records.get(0).getGeneratedId();
-        }).mapToLong(Long::longValue).toArray();
+        var idsToDelete = items.stream().map(item -> getId(item.getPath()))
+            .mapToLong(Long::longValue).toArray();
         database.deleteRecordsById(idsToDelete);
+    }
+
+    private Long getId(String path1) {
+        var records = database.getRecordsByPath(path1);
+        // If there are multiple records for the same path, something went wrong
+        if (records.size() > 1) {
+            throw new IllegalStateException("Found multiple records for path " + path1);
+        }
+        return records.get(0).getGeneratedId();
     }
 
     @Override
@@ -256,6 +259,11 @@ public class LayeredItemStore implements ItemStore {
                 // TODO: implement deletion from closed layers, by reopening the layer, deleting the files, and closing and archiving the layer again
             }
         }
+
+        // Delete the records from the database
+        var idsToDelete = paths.stream().map(this::getId)
+            .mapToLong(Long::longValue).toArray();
+        database.deleteRecordsById(idsToDelete);
     }
 
     @Override
