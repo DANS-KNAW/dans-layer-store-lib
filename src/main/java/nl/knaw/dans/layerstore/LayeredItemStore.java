@@ -224,18 +224,19 @@ public class LayeredItemStore implements ItemStore {
         checkAllSourceFilesOnlyInTopLayer(path, "deleteDirectory");
         layerManager.getTopLayer().deleteDirectory(path);
         var items = database.listRecursive(path);
-        long[] idsToDelete = new long[items.size()];
-        int i = 0;
-        for (var item : items) {
-            var records = database.getRecordsByPath(item.getPath());
-            // If there are multiple records for the same path, something went wrong
-            if (records.size() > 1) {
-                throw new IllegalStateException("Found multiple records for path " + item.getPath());
-            }
-            idsToDelete[i++] = records.get(0).getGeneratedId();
-        }
-        // convert ids to array of Longs
+        items.add(new Item(path, Item.Type.Directory));
+        var idsToDelete = items.stream().map(item -> getId(item.getPath()))
+            .mapToLong(Long::longValue).toArray();
         database.deleteRecordsById(idsToDelete);
+    }
+
+    private Long getId(String path1) {
+        var records = database.getRecordsByPath(path1);
+        // If there are multiple records for the same path, something went wrong
+        if (records.size() > 1) {
+            throw new IllegalStateException("Found multiple records for path " + path1);
+        }
+        return records.get(0).getGeneratedId();
     }
 
     @Override
@@ -258,6 +259,11 @@ public class LayeredItemStore implements ItemStore {
                 // TODO: implement deletion from closed layers, by reopening the layer, deleting the files, and closing and archiving the layer again
             }
         }
+
+        // Delete the records from the database
+        var idsToDelete = paths.stream().map(this::getId)
+            .mapToLong(Long::longValue).toArray();
+        database.deleteRecordsById(idsToDelete);
     }
 
     @Override
@@ -271,7 +277,7 @@ public class LayeredItemStore implements ItemStore {
         var items = database.listRecursive(source);
         // Sort by ascending path length, so that we start with the deepest directories
         items.sort(Comparator.comparingInt(listingRecord -> Path.of(listingRecord.getPath()).getNameCount()));
-        if(!items.isEmpty()) {
+        if (!items.isEmpty()) {
             var deepestDirectory = Path.of(items.get(0).getPath()).getParent();
             if (source.equals(deepestDirectory.toString())) {
                 // the source is a leaf directory

@@ -56,6 +56,8 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
         layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!"));
         layerManager.newTopLayer();
 
+        // without this, a stack trace is logged from an archiving thread
+        Files.createDirectories(archiveDir);
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInternal("a/b/e/f", "a/b/c/d/x")).
             isInstanceOf(RuntimeException.class)
