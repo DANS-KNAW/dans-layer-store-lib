@@ -68,7 +68,7 @@ public class LayerManagerImpl implements LayerManager {
             throw new IllegalStateException("Not a directory: " + path);
         }
         if(!path.getFileName().toString().matches("\\d{13,}")) {
-            // more than 13 digits in nov 2286
+            // more than 13 digits in nov 2286, comma allows a longer future
             throw new IllegalStateException("Not a timestamp: " + path);
         }
         return path.getFileName().toString();
@@ -104,7 +104,7 @@ public class LayerManagerImpl implements LayerManager {
     @Override
     public Layer getLayer(long id) {
         if (id == topLayer.getId()) {
-            // an empty layer would not be found in the staging root
+            // safeguard/shortcut: a fresh top layer that never received content has no directory in the staging root
             return topLayer;
         }
         else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {

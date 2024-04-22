@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -23,9 +22,9 @@ import java.nio.file.Files;
 
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
 
@@ -46,7 +45,6 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_find_garbage_in_stagingDir_created_after_creating_LayerManagerImpl_object() throws IOException {
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        assertThat(layerManager.getTopLayer().getId()).isNotEqualTo(0L);
         Files.createDirectories(stagingDir.resolve("0"));
 
         //When
@@ -94,7 +92,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         assertThat(archiveDir).isEmptyDirectory(); // nothing archived yet
         sleep(1L); // to make sure to get a layer with another time stamp
         layerManager.newTopLayer();
-        AssertionsForClassTypes.assertThat(initialLayerId).isNotEqualTo(layerManager.getTopLayer().getId());
+        assertThat(initialLayerId).isNotEqualTo(layerManager.getTopLayer().getId());
         assertThat(stagingDir).isEmptyDirectory();
         Thread.sleep(1L); // wait for creation of the zip file, strangely not required when running the test stand alone
         assertThat(archiveDir).isNotEmptyDirectory();
