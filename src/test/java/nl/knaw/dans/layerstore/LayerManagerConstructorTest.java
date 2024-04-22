@@ -34,7 +34,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_use_the_existing_directory() throws IOException {
+    public void should_use_the_existing_staging_directory() throws IOException {
         Files.createDirectories(stagingDir.resolve("1234567890123"));
 
         var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir))
@@ -43,7 +43,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_on_a_plain_file() throws IOException {
+    public void should_throw_on_a_regular_file_in_the_staging_root() throws IOException {
         Files.createDirectories(stagingDir);
         Files.createFile(stagingDir.resolve("1234567890123"));
 
@@ -53,7 +53,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_on_the_too_short_directory_name() throws IOException {
+    public void should_throw_on_staging_directory_name_that_is_too_short_to_be_a_recent_timestamp() throws IOException {
         Files.createDirectories(stagingDir.resolve("123456789012"));
 
         assertThatThrownBy ( () -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir)))
@@ -62,7 +62,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_on_an_alphanumeric_directory() throws IOException {
+    public void should_throw_on_staging_directory_name_that_contains_letters() throws IOException {
         Files.createDirectories(stagingDir.resolve("abcdefghijklmnopqrstuvwxyz"));
 
         assertThatThrownBy ( () -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir)))
@@ -71,7 +71,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_on_a_directory_with_a_dot_in_the_name() throws IOException {
+    public void should_throw_on_staging_directory_name_that_contains_decimal_point() throws IOException {
         Files.createDirectories(stagingDir.resolve("1.2"));
 
         assertThatThrownBy ( () -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir)))
