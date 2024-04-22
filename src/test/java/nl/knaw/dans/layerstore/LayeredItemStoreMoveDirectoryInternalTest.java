@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +48,6 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
     @Test
     public void should_not_move_dir_with_files_in_other_layer() throws Exception {
-        Files.createDirectories(archiveDir); // without this, a stack trace is logged from an archiving thread
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
 
@@ -58,6 +56,8 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
         layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!"));
         layerManager.newTopLayer();
 
+        // without this, a stack trace is logged from an archiving thread
+        Files.createDirectories(archiveDir);
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInternal("a/b/e/f", "a/b/c/d/x")).
             isInstanceOf(RuntimeException.class)
