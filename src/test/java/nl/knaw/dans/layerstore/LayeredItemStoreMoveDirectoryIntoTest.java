@@ -36,9 +36,20 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
 
     @BeforeEach
     public void prepare() throws Exception {
-        Files.createDirectories(stagingDir);
         FileUtils.write(testDir.resolve("x/y/test1.txt").toFile(), "Hello world!", "UTF-8");
         FileUtils.write(testDir.resolve("x/test2.txt").toFile(), "Hello again!", "UTF-8");
+    }
+
+    @Test
+    public void should_refuse_to_move_link() throws Exception {
+        Files.createSymbolicLink(testDir.resolve("x/y/link"), testDir.resolve("x/test2.txt"));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
+        layeredStore.createDirectory("a/b");
+
+        assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c")).
+            isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Path is not a file or directory: target/test/LayeredItemStoreMoveDirectoryIntoTest/x/y/link");
     }
 
     @Test
