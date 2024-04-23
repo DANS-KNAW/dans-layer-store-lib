@@ -19,9 +19,8 @@ import org.junit.jupiter.api.Test;
 
 import javax.persistence.OptimisticLockException;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
 
@@ -167,18 +166,17 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_not_found_generatedId() {
-        var e = assertThrows(OptimisticLockException.class, () ->
-                daoTestExtension.inTransaction(() -> {
-                    var record = ItemRecord.builder()
-                            .layerId(1L)
-                            .path("app")
-                            .type(Item.Type.Directory)
-                            .generatedId(21L) // not in DB
-                            .build();
-                    dao.saveRecords(record);
-                })
-        );
-        assertThat(e.getMessage()).contains("actual row count: 0; expected: 1");
+        var record = ItemRecord.builder()
+            .layerId(1L)
+            .path("app")
+            .type(Item.Type.Directory)
+            .generatedId(21L) // not in DB
+            .build();
+        assertThatThrownBy(() -> daoTestExtension.inTransaction(() ->
+                dao.saveRecords(record)
+            )
+        ).isInstanceOf(OptimisticLockException.class)
+            .hasMessageContaining("actual row count: 0; expected: 1");
     }
 
     @Test
@@ -188,16 +186,17 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
         daoTestExtension.inTransaction(() -> {
             r.setPath("bond");
             dao.saveRecords(r);
-         });
+        });
+        var expectedItemRecord = ItemRecord.builder()
+            .layerId(1L)
+            .path("bond")
+            .type(Item.Type.Directory)
+            .generatedId(r.getGeneratedId())
+            .build();
         assertThat(dao.getAllRecords().toList())
-                .containsExactlyInAnyOrder(
-                        ItemRecord.builder()
-                                .layerId(1L)
-                                .path("bond")
-                                .type(Item.Type.Directory)
-                                .generatedId(r.getGeneratedId())
-                                .build()
-                );
+            .containsExactlyInAnyOrder(
+                expectedItemRecord
+            );
 
     }
 
@@ -207,19 +206,19 @@ public class LayerDatabaseAddDirectoryTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "root", Item.Type.Directory);
         addToDb(1L, "root/child", Item.Type.Directory);
         addToDb(1L, "root/child/grandchild", Item.Type.File);
-        var e = assertThrows(IllegalArgumentException.class, () ->
+        assertThatThrownBy(() ->
             daoTestExtension.inTransaction(() -> dao.addDirectory(2L, "root/child/grandchild"))
-        );
-        assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
+        ).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Cannot add directory root/child/grandchild because it is already occupied by a file.");
     }
 
     @Test
     public void should_throw_an_IllegalArgumentException_if_the_path_contains_a_file_in_the_same_layer() {
         addToDb(1L, "root/child/grandchild", Item.Type.File);
-        var e = assertThrows(IllegalArgumentException.class, () ->
+        assertThatThrownBy(() ->
             daoTestExtension.inTransaction(() -> dao.addDirectory(1L, "root/child/grandchild"))
-        );
-        assertThat(e.getMessage()).isEqualTo("Cannot add directory root/child/grandchild because it is already occupied by a file.");
+        ).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Cannot add directory root/child/grandchild because it is already occupied by a file.");
     }
 
 }

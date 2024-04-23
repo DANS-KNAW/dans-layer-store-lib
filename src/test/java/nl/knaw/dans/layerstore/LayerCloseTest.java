@@ -18,7 +18,7 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 public class LayerCloseTest extends AbstractTestWithTestDir {
 
@@ -26,7 +26,8 @@ public class LayerCloseTest extends AbstractTestWithTestDir {
     public void throws_IllegalStateException_when_layer_is_already_closed() {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
-        assertThrows(IllegalStateException.class, layer::close);
+        assertThatThrownBy(layer::close)
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test

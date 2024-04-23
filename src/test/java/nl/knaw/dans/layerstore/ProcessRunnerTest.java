@@ -22,8 +22,8 @@ import org.junit.jupiter.api.condition.OS;
 import java.nio.file.Files;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ProcessRunnerTest extends AbstractTestWithTestDir {
 
@@ -45,6 +45,8 @@ public class ProcessRunnerTest extends AbstractTestWithTestDir {
 
     @Test // Whether the `ls` command is available is irrelevant here
     public void run_should_throw_an_exception_when_the_command_or_arguments_contain_forbidden_characters() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> new ProcessRunner("ls", ";", "echo", "evil", ">", "/tmp/somefile.txt").runToEnd());
+        assertThatThrownBy(() -> new ProcessRunner("ls", ";", "echo", "evil", ">", "/tmp/somefile.txt"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Command or arguments contain forbidden characters: ;, >");
     }
 }

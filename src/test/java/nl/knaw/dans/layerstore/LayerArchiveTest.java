@@ -21,14 +21,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LayerArchiveTest extends AbstractTestWithTestDir {
     @Test
     public void throws_IllegalStateException_when_layer_is_closed() {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
-        assertThrows(IllegalStateException.class, layer::archive);
+        assertThatThrownBy(layer::archive)
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -37,7 +38,8 @@ public class LayerArchiveTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
         layer.archive();
-        assertThrows(IllegalStateException.class, layer::archive);
+        assertThatThrownBy(layer::archive)
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -45,10 +47,11 @@ public class LayerArchiveTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
 
-        var cause = assertThrows(RuntimeException.class, layer::archive).getCause();
-        assertThat(cause).isInstanceOf(NoSuchFileException.class);
-        // misleading message: the problem is that the LayerArchiveTest dir does not exist
-        assertThat(cause.getMessage()).isEqualTo("target/test/LayerArchiveTest/layer_archive/test.zip");
+        assertThatThrownBy(layer::archive)
+            .isInstanceOf(RuntimeException.class)
+            .hasRootCauseInstanceOf(NoSuchFileException.class)
+            .hasRootCauseMessage("target/test/LayerArchiveTest/layer_archive/test.zip");
+        // misleading message: the actual problem is that the LayerArchiveTest dir does not exist
     }
 
     @Test
