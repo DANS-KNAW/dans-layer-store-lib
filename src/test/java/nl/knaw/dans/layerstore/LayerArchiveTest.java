@@ -43,7 +43,7 @@ public class LayerArchiveTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void throws_RuntimeException_caused_by_an_IOException() throws IOException {
+    public void throws_RuntimeException_caused_by_an_IOException() {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
 

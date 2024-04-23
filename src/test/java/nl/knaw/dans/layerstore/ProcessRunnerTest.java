@@ -44,7 +44,7 @@ public class ProcessRunnerTest extends AbstractTestWithTestDir {
     }
 
     @Test // Whether the `ls` command is available is irrelevant here
-    public void run_should_throw_an_exception_when_the_command_or_arguments_contain_forbidden_characters() throws Exception {
+    public void run_should_throw_an_exception_when_the_command_or_arguments_contain_forbidden_characters() {
         assertThatThrownBy(() -> new ProcessRunner("ls", ";", "echo", "evil", ">", "/tmp/somefile.txt"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Command or arguments contain forbidden characters: ;, >");
