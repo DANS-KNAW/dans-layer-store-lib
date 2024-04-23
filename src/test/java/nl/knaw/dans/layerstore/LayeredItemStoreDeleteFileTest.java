@@ -45,7 +45,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         layerManager.newTopLayer();
         assertFalse(firstLayer.isOpen());
 
-        assumeNotYetFixed("TODO: getLayer returns a new layer object. New layer objects are open but it should be closed in this scenario.");
+        assumeNotYetFixed("getLayer returns a new layer object. New layer objects are open but it should be closed in this scenario.");
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt")))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Cannot delete files from closed layer");

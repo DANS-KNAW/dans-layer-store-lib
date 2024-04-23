@@ -101,29 +101,34 @@ public class LayeredItemStore implements ItemStore {
     @Override
     public void writeFile(String path, InputStream content) throws IOException {
         log.debug("Writing file {} to top layer", path);
-        layerManager.getTopLayer().writeFile(path, content);
-        // Get existing record for path in the top layer
-        var existingRecords = database.getRecordsByPath(path).stream().filter(r -> r.getLayerId() == layerManager.getTopLayer().getId()).toList();
+        var topLayer = layerManager.getTopLayer();
+        topLayer.writeFile(path, content);
+
+        var recordsInTopLayer = database.getRecordsByPath(path).stream()
+            .filter(r -> r.getLayerId() == topLayer.getId())
+            .toList();
+
         ItemRecord record;
-        if (existingRecords.size() > 1) {
-            throw new IllegalStateException("Found multiple records for path " + path + " in layer " + layerManager.getTopLayer().getId());
+        if (recordsInTopLayer.size() > 1) {
+            throw new IllegalStateException("Found multiple records for path " + path + " in layer " + topLayer.getId());
         }
-        else if (existingRecords.size() == 1) {
-            log.debug("Updating existing record for path {} in layer {}", path, layerManager.getTopLayer().getId());
-            record = existingRecords.get(0);
+        else if (recordsInTopLayer.size() == 1) {
+            log.debug("Updating existing record for path {} in layer {}", path, topLayer.getId());
+            record = recordsInTopLayer.get(0);
         }
         else {
-            log.debug("Creating new record for path {} in layer {}", path, layerManager.getTopLayer().getId());
+            log.debug("Creating new record for path {} in layer {}", path, topLayer.getId());
             record = ItemRecord.builder()
                 .path(path)
                 .type(Item.Type.File)
-                .layerId(layerManager.getTopLayer().getId())
+                .layerId(topLayer.getId())
                 .build();
         }
+
         if (databaseBackedContentManager.test(path)) {
             // N.B. We read the content from the top layer, not from the InputStream, because it has already read when writing to the top layer.
             log.debug("Storing a copy of the content in the database for path {}", path);
-            try (var is = layerManager.getTopLayer().readFile(path)) {
+            try (var is = topLayer.readFile(path)) {
                 byte[] bytes = databaseBackedContentManager.preStore(path, IOUtils.toByteArray(is));
                 log.debug("Content size: {}", bytes.length);
                 record.setContent(bytes);
@@ -215,7 +220,9 @@ public class LayeredItemStore implements ItemStore {
             }
         }
         if (!itemsWithRecordsInOtherLayers.isEmpty()) {
-            throw new IllegalStateException("Cannot " + methodName + " because the following items are in multiple layers: " + itemsWithRecordsInOtherLayers);
+            String message = "Cannot %s because the following items are in multiple layers: %s"
+                .formatted(methodName, itemsWithRecordsInOtherLayers);
+            throw new IllegalStateException(message);
         }
     }
 
@@ -225,16 +232,18 @@ public class LayeredItemStore implements ItemStore {
         layerManager.getTopLayer().deleteDirectory(path);
         var items = database.listRecursive(path);
         items.add(new Item(path, Item.Type.Directory));
-        var idsToDelete = items.stream().map(item -> getId(item.getPath()))
+        var idsToDelete = items.stream()
+            .map(item -> getIdFromDb(item.getPath()))
             .mapToLong(Long::longValue).toArray();
         database.deleteRecordsById(idsToDelete);
     }
 
-    private Long getId(String path1) {
-        var records = database.getRecordsByPath(path1);
-        // If there are multiple records for the same path, something went wrong
-        if (records.size() > 1) {
-            throw new IllegalStateException("Found multiple records for path " + path1);
+    private Long getIdFromDb(String path) {
+        var records = database.getRecordsByPath(path);
+        if (records.size() != 1) {
+            var message = "Expecting 1 but got %d records for %s"
+                .formatted(records.size(), path);
+            throw new IllegalStateException(message);
         }
         return records.get(0).getGeneratedId();
     }
@@ -257,11 +266,12 @@ public class LayeredItemStore implements ItemStore {
             else {
                 throw new IllegalStateException("Cannot delete files from closed layer " + layer.getId());
                 // TODO: implement deletion from closed layers, by reopening the layer, deleting the files, and closing and archiving the layer again
+                //  remember also to allow records in multiple layers by getIdFromDb
             }
         }
 
         // Delete the records from the database
-        var idsToDelete = paths.stream().map(this::getId)
+        var idsToDelete = paths.stream().map(this::getIdFromDb)
             .mapToLong(Long::longValue).toArray();
         database.deleteRecordsById(idsToDelete);
     }

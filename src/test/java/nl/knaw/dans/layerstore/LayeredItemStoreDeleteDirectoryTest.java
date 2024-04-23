@@ -19,7 +19,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -71,7 +73,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     }
 
     @Test
-    public void should_delete_directory_with_plain_file() throws Exception {
+    public void should_delete_directory_with_regular_file() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
         layeredStore.createDirectory("a/b/c/d");
@@ -97,5 +99,29 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
             dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list2).containsExactlyInAnyOrder("", "a");
+    }
+
+    @Test
+    public void should_throw_cannot_not_delete_file_form_closed_layer() throws Exception {
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layeredStore = new LayeredItemStore(dao, layerManager);
+        layeredStore.createDirectory("a/b/c/d");
+        layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!"));
+        Files.createDirectories(archiveDir);
+        layerManager.newTopLayer();
+
+        // precondition: show database content
+        var list1 = daoTestExtension.inTransaction(() ->
+            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/test.txt");
+
+        // method under test
+        assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
+            .isInstanceOf(NoSuchFileException.class); // this is a failure for the wrong reason
+        assumeNotYetFixed("deleteFiles gets new layer object. New layer objects are open but it should be closed in this scenario.");
+        assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageStartingWith("Cannot delete files from closed layer");
     }
 }
