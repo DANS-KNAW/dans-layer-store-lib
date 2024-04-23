@@ -27,33 +27,34 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class LayerArchiveTest extends AbstractTestWithTestDir {
     @Test
     public void throws_IllegalStateException_when_layer_is_closed() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         assertThrows(IllegalStateException.class, layer::archive);
     }
 
     @Test
     public void throws_IllegalStateException_when_layer_is_already_archived() throws IOException {
-        Files.createDirectories(testDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        Files.createDirectories(archiveDir);
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
         layer.archive();
         assertThrows(IllegalStateException.class, layer::archive);
     }
 
     @Test
-    public void throws_RuntimeException_caused_by_an_IOException() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+    public void throws_RuntimeException_caused_by_an_IOException() throws IOException {
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
 
         var cause = assertThrows(RuntimeException.class, layer::archive).getCause();
         assertThat(cause).isInstanceOf(NoSuchFileException.class);
         // misleading message: the problem is that the LayerArchiveTest dir does not exist
-        assertThat(cause.getMessage()).isEqualTo("target/test/LayerArchiveTest/test.zip");
+        assertThat(cause.getMessage()).isEqualTo("target/test/LayerArchiveTest/layer_archive/test.zip");
     }
 
     @Test
-    public void removes_staging_dir() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+    public void removes_staging_dir() throws IOException {
+        Files.createDirectories(archiveDir);
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         assertThat(stagingDir).doesNotExist();
         createEmptyStagingDirFiles("path/to/file1");
         assertThat(stagingDir).exists();

@@ -24,14 +24,14 @@ public class LayerCloseTest extends AbstractTestWithTestDir {
 
     @Test
     public void throws_IllegalStateException_when_layer_is_already_closed() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
         assertThrows(IllegalStateException.class, layer::close);
     }
 
     @Test
     public void should_close_layer() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
         assertThat(layer.isClosed()).isTrue();
     }
