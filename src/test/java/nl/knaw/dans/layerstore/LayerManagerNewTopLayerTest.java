@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -72,14 +71,6 @@ public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
         @Override
         public boolean exists(String path) {
             return false;
-        }
-    }
-
-    private static class DirectExecutor implements Executor {
-
-        @Override
-        public void execute(Runnable runnable) {
-            runnable.run();
         }
     }
 

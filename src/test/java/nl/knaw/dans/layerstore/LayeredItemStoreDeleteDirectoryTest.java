@@ -103,7 +103,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
     @Test
     public void should_throw_cannot_not_delete_file_form_closed_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutor());
         var layeredStore = new LayeredItemStore(dao, layerManager);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!"));
@@ -119,6 +119,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         // method under test
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
             .isInstanceOf(NoSuchFileException.class); // this is a failure for the wrong reason
+
         assumeNotYetFixed("deleteFiles gets new layer object. New layer objects are open but it should be closed in this scenario.");
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
             .isInstanceOf(IllegalStateException.class)
