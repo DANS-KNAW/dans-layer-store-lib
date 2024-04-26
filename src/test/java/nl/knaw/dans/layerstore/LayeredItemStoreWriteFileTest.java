@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static nl.knaw.dans.layerstore.TestUtils.toBytes;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,7 +60,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         // Check that the file content is in the database
         dao.getAllRecords().toList().forEach(itemRecord -> {
             if (itemRecord.getPath().equals("test.txt")) {
-                assertThat(itemRecord.getContent()).isEqualTo(toBytes(testContent));
+                assertThat(itemRecord.getContent()).isEqualTo(testContent.getBytes(UTF_8));
             }
         });
     }
@@ -78,7 +77,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         // Check that the file content is in the database
         dao.getAllRecords().toList().forEach(itemRecord -> {
             if (itemRecord.getPath().equals("test.txt")) {
-                assertThat(itemRecord.getContent()).isEqualTo(toBytes("Hello again!"));
+                assertThat(itemRecord.getContent()).isEqualTo("Hello again!".getBytes(UTF_8));
             }
         });
 

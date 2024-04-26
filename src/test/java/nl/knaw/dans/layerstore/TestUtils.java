@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class TestUtils {
@@ -42,10 +40,6 @@ public class TestUtils {
         var outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
         return outContent;
-    }
-
-    public static byte[] toBytes(String testContent) {
-        return testContent.getBytes(UTF_8);
     }
 
     /**
