@@ -19,10 +19,14 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -49,5 +53,14 @@ public class TestUtils {
      */
     public static void assumeNotYetFixed(String message) {
         assumeTrue(false, message);
+    }
+
+    static ZipFile zipFileFrom(Path zipFile) throws IOException {
+        // replaces deprecated constructor
+        return ZipFile.builder()
+            .setSeekableByteChannel(Files.newByteChannel(zipFile))
+            .setUseUnicodeExtraFields(true)
+            .setIgnoreLocalFileHeader(false)
+            .get();
     }
 }
