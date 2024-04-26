@@ -25,9 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -38,19 +36,6 @@ import static org.mockito.Mockito.when;
 
 public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
     private ListAppender<ILoggingEvent> listAppender;
-
-    private record ThrowingArchiveProvider(Archive archive) implements ArchiveProvider {
-
-        @Override
-            public Archive createArchive(String path) {
-                return archive;
-            }
-
-            @Override
-            public boolean exists(String path) {
-                return false;
-            }
-        }
 
     @BeforeEach
     public void captureLog() {
@@ -71,13 +56,18 @@ public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
     public void should_log_an_archive_failure() throws IOException {
 
         var mockedArchive = mock(Archive.class);
+        var mockedArchiveProvider = mock(ArchiveProvider.class);
         doThrow(new RuntimeException("archiveFrom failed"))
             .when(mockedArchive).archiveFrom(any());
-
-        var layerManager = new LayerManagerImpl(stagingDir, new ThrowingArchiveProvider(mockedArchive), new DirectExecutor());
-        var initialTopLayerId = layerManager.getTopLayer().getId();
+        when(mockedArchiveProvider.createArchive(any()))
+            .thenReturn(mockedArchive);
 
         var outContent = captureStdout();
+
+
+        var layerManager = new LayerManagerImpl(stagingDir, mockedArchiveProvider, new DirectExecutor());
+        var initialTopLayerId = layerManager.getTopLayer().getId();
+
 
         // Run the method under test
         assertThatThrownBy(layerManager::newTopLayer)
