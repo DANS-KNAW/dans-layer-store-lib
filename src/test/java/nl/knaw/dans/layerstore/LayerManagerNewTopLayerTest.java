@@ -31,48 +31,26 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
     private ListAppender<ILoggingEvent> listAppender;
 
-    private static class ThrowingArchiveProvider implements ArchiveProvider {
+    private record ThrowingArchiveProvider(Archive archive) implements ArchiveProvider {
 
         @Override
-        public Archive createArchive(String path) {
-            return new Archive() {
+            public Archive createArchive(String path) {
+                return archive;
+            }
 
-                @Override
-                public InputStream readFile(String filePath) {
-                    return null;
-                }
-
-                @Override
-                public void unarchiveTo(Path stagingDir) {
-
-                }
-
-                @Override
-                public void archiveFrom(Path stagingDir) {
-                    throw new RuntimeException("archiveFrom failed");
-                }
-
-                @Override
-                public boolean isArchived() {
-                    return false;
-                }
-
-                @Override
-                public boolean fileExists(String filePath) {
-                    return false;
-                }
-            };
+            @Override
+            public boolean exists(String path) {
+                return false;
+            }
         }
-
-        @Override
-        public boolean exists(String path) {
-            return false;
-        }
-    }
 
     @BeforeEach
     public void captureLog() {
@@ -92,7 +70,11 @@ public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_log_an_archive_failure() throws IOException {
 
-        var layerManager = new LayerManagerImpl(stagingDir, new ThrowingArchiveProvider(), new DirectExecutor());
+        var mockedArchive = mock(Archive.class);
+        doThrow(new RuntimeException("archiveFrom failed"))
+            .when(mockedArchive).archiveFrom(any());
+
+        var layerManager = new LayerManagerImpl(stagingDir, new ThrowingArchiveProvider(mockedArchive), new DirectExecutor());
         var initialTopLayerId = layerManager.getTopLayer().getId();
 
         var outContent = captureStdout();
