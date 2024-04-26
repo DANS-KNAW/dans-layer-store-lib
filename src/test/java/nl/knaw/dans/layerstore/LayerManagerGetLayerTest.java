@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import static java.lang.Thread.sleep;
+import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
+import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;

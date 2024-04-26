@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 
+import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LayeredItemStoreExistsPathLikeTest extends AbstractLayerDatabaseTest {

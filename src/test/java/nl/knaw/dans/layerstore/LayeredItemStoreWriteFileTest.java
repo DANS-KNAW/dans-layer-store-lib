@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
+import static nl.knaw.dans.layerstore.TestUtils.toBytes;
+import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {

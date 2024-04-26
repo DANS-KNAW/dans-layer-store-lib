@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabaseTest {

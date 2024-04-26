@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 

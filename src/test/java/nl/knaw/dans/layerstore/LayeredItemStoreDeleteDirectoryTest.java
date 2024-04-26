@@ -23,6 +23,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 
+import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
+import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 

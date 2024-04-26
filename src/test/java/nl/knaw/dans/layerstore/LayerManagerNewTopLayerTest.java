@@ -16,17 +16,12 @@
 package nl.knaw.dans.layerstore;
 
 import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 
+import static nl.knaw.dans.layerstore.TestUtils.captureLog;
+import static nl.knaw.dans.layerstore.TestUtils.captureStdout;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,22 +30,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
-    private ListAppender<ILoggingEvent> listAppender;
-
-    @BeforeEach
-    public void captureLog() {
-        var logger = (Logger) LoggerFactory.getLogger(LayerManagerImpl.class);
-        listAppender = new ListAppender<>();
-        listAppender.start();
-        logger.setLevel(Level.ERROR);
-        logger.addAppender(listAppender);
-    }
-
-    private static ByteArrayOutputStream captureStdout() {
-        var outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-        return outContent;
-    }
 
     @Test
     public void should_log_an_archive_failure() throws IOException {
@@ -63,7 +42,7 @@ public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
             .thenReturn(mockedArchive);
 
         var outContent = captureStdout();
-
+        var listAppender = captureLog();
 
         var layerManager = new LayerManagerImpl(stagingDir, mockedArchiveProvider, new DirectExecutor());
         var initialTopLayerId = layerManager.getTopLayer().getId();
