@@ -23,8 +23,9 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
-import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -79,7 +80,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
         layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
 
         // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
@@ -108,7 +109,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutor());
         var layeredStore = new LayeredItemStore(dao, layerManager);
         layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
         Files.createDirectories(archiveDir);
         layerManager.newTopLayer();
 

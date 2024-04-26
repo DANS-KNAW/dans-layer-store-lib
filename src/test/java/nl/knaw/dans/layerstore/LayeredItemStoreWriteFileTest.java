@@ -20,8 +20,9 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static nl.knaw.dans.layerstore.TestUtils.toBytes;
-import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
@@ -39,7 +40,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(dao, layerManager);
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", toInputStream(testContent));
+        layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
 
         var topLayer = layerManager.getTopLayer();
 
@@ -55,7 +56,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", toInputStream(testContent));
+        layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
 
         // Check that the file content is in the database
         dao.getAllRecords().toList().forEach(itemRecord -> {
@@ -71,8 +72,8 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
 
-        layeredStore.writeFile("test.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("test.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("test.txt", toInputStream("Hello again!", UTF_8));
 
         // Check that the file content is in the database
         dao.getAllRecords().toList().forEach(itemRecord -> {
@@ -90,11 +91,11 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
 
-        layeredStore.writeFile("test.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layerManager.newTopLayer();
-        layeredStore.writeFile("test.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello again!", UTF_8));
         layerManager.newTopLayer();
-        layeredStore.writeFile("test.txt", toInputStream("Hello once more!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello once more!", UTF_8));
 
         // Check that the file contents are in the database
         var list = dao.getAllRecords().map(itemRecord ->

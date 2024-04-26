@@ -21,11 +21,11 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class TestUtils {
@@ -44,12 +44,8 @@ public class TestUtils {
         return outContent;
     }
 
-    public static ByteArrayInputStream toInputStream(String testContent) {
-        return new ByteArrayInputStream(toBytes(testContent));
-    }
-
     public static byte[] toBytes(String testContent) {
-        return testContent.getBytes(StandardCharsets.UTF_8);
+        return testContent.getBytes(UTF_8);
     }
 
     /**

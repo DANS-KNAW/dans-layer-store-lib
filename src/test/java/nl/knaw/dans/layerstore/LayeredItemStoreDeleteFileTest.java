@@ -22,8 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
-import static nl.knaw.dans.layerstore.TestUtils.toInputStream;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,8 +42,8 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(dao, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         var firstLayer = layerManager.getTopLayer();
         layerManager.newTopLayer();
         assertFalse(firstLayer.isOpen());
@@ -58,8 +59,8 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(dao, layerManager);
         layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!", UTF_8));
 
         // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
