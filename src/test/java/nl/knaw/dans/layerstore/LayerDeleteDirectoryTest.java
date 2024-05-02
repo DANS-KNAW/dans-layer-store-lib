@@ -23,7 +23,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
     @Test
     public void should_delete_directory_in_staging_dir_when_layer_is_open() throws Exception {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
         createEmptyStagingDirFiles("path/too/file1", "path/too/file2");
 
@@ -42,7 +42,7 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_throw_IllegalStateException_when_layer_is_closed() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         // Create directories with files in it
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
         createEmptyStagingDirFiles("path/too/file1", "path/too/file2");
@@ -55,7 +55,7 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_throw_IllegalArgumentException_when_path_is_null() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         assertThatThrownBy(() -> layer.deleteDirectory(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Path cannot be null");

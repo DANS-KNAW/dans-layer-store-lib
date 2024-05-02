@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class LayeredItemStoreListDirectoryTest extends AbstractLayerDatabaseTest {
@@ -35,8 +37,8 @@ public class LayeredItemStoreListDirectoryTest extends AbstractLayerDatabaseTest
         var layeredStore = new LayeredItemStore(dao, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d/e/f");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
         var result = layeredStore.listDirectory("a/b/c").stream().map(Item::getPath);
 

@@ -21,8 +21,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import static java.lang.Thread.sleep;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -59,7 +61,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var topLayer = layerManager.getTopLayer();
-        topLayer.writeFile("test.txt", toInputStream("Hello world!"));
+        topLayer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
 
         // When
         var layer = layerManager.getLayer(topLayer.getId());
@@ -110,7 +112,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Given
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!"));
+        layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         Layer initialLayer = layerManager.getTopLayer();
         var initialLayerId = initialLayer.getId();
         sleep(1L); // to make sure to get a layer with another time stamp

@@ -23,6 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabaseTest {
@@ -38,8 +40,8 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         var layeredStore = new LayeredItemStore(dao, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d/e");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         var destination = testDir.resolve("copy");
 
         layeredStore.copyDirectoryOutOf("a/b/c/d", destination);
@@ -54,8 +56,8 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         var layeredStore = new LayeredItemStore(dao, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d/e");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         var destination = testDir.resolve("copy");
         FileUtils.writeLines(destination.resolve("a/b/c/d/test1.txt").toFile(), List.of("Hello there!"));
 
@@ -70,8 +72,8 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         var layeredStore = new LayeredItemStore(dao, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d/e");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         Path destination = testDir.resolve("copy");
 
         layeredStore.copyDirectoryOutOf("a/b/c/d/e", destination);
@@ -85,9 +87,9 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         var layeredStore = new LayeredItemStore(dao, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/d/test2.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test3.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/d/test2.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test3.txt", toInputStream("Hello again!", UTF_8));
         Path destination = testDir.resolve("copy");
 
         layeredStore.copyDirectoryOutOf("a/b/c/d", destination);
