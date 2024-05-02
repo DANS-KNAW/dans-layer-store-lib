@@ -105,7 +105,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     }
 
     @Test
-    public void should_throw_cannot_not_delete_file_form_closed_layer() throws Exception {
+    public void should_throw_cannot_delete_file_from_closed_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutor());
         var layeredStore = new LayeredItemStore(dao, layerManager);
         layeredStore.createDirectory("a/b/c/d");

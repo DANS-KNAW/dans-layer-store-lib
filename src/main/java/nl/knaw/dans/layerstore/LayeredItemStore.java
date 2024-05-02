@@ -257,8 +257,8 @@ public class LayeredItemStore implements ItemStore {
                 layerPaths.computeIfAbsent(layerId, k -> new ArrayList<>()).add(path);
             }
         }
-        // Delete the files in each layer
-        for (var entry : layerPaths.entrySet()) {
+        // Delete the files in each layer, assuming old layers are closed
+        for (var entry : layerPaths.entrySet().stream().sorted().toList()) {
             var layer = layerManager.getLayer(entry.getKey());
             if (layer.isOpen()) {
                 layer.deleteFiles(entry.getValue());

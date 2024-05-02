@@ -47,7 +47,8 @@ public class TestUtils {
     }
 
     /**
-     * Assume that a bug is not yet fixed. This allows to skip assertions while still showing the code is covered by the test.
+     * Assume that a bug is not yet fixed. This allows to execute as much of a test as possible
+     * to show code coverage, without creating false positives or false negatives.
      *
      * @param message the message to display
      */
