@@ -24,13 +24,13 @@ public class LayerDatabaseGetAllRecordsTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_return_empty_list_when_database_is_empty() {
-        assertThat(dao.getAllRecords().toList()).asList().isEmpty();
+        assertThat(db.getAllRecords().toList()).asList().isEmpty();
     }
 
     @Test
     public void should_return_one_record() {
         var record = addToDb(1L, "path", Type.Directory);
-        assertThat(dao.getAllRecords().toList()).asList()
+        assertThat(db.getAllRecords().toList()).asList()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(record);
     }
@@ -47,7 +47,7 @@ public class LayerDatabaseGetAllRecordsTest extends AbstractLayerDatabaseTest {
         var record8 = addToDb(8L, "path8", Type.File);
         var record9 = addToDb(9L, "path9", Type.Directory);
         var record10 = addToDb(10L, "path10", Type.File);
-        assertThat(dao.getAllRecords().toList()).asList()
+        assertThat(db.getAllRecords().toList()).asList()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(record1, record2, record3, record4, record5, record6, record7, record8, record9, record10);
     }

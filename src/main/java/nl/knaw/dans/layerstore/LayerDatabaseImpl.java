@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.lib.util.PersistenceProvider;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;

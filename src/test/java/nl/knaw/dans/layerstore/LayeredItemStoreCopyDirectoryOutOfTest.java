@@ -35,7 +35,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     @Test
     public void should_copy_an_empty_child_directory() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d/e");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
@@ -51,7 +51,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     public void should_overwrite_existing_files() throws Exception {
         // As in https://github.com/OCFL/ocfl-java/blob/a4d4f17149640132bdfd9c00a170f414e1c7cf33/ocfl-java-core/src/main/java/io/ocfl/core/storage/filesystem/FileSystemStorage.java#L226C1-L243C6
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d/e");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
@@ -67,7 +67,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     @Test
     public void should_not_copy_an_empty_source_directory() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d/e");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
@@ -82,7 +82,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     @Test
     public void should_copy_the_files_of_a_source_which_has_no_child_directories() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));

@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,7 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
     @Test
     public void should_move_dir_with_file() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
 
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.createDirectory("a/b/e/f");
@@ -48,8 +49,9 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
     @Test
     public void should_not_move_dir_with_files_in_other_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        Files.createDirectories(archiveDir);
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layeredStore = new LayeredItemStore(db, layerManager);
 
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.createDirectory("a/b/e/f");

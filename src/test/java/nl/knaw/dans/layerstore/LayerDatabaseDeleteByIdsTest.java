@@ -26,16 +26,16 @@ public class LayerDatabaseDeleteByIdsTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_accept_empty_list() {
         addToDb(1L, "path", Directory);
-        daoTestExtension.inTransaction(() -> dao.deleteRecordsById());
+        daoTestExtension.inTransaction(() -> db.deleteRecordsById());
         // Check that the record is still there
-        assertThat(dao.getAllRecords().toList()).asList().hasSize(1);
+        assertThat(db.getAllRecords().toList()).asList().hasSize(1);
     }
 
     @Test
     public void should_delete_one_record() {
         var record = addToDb(1L, "path", Directory);
-        daoTestExtension.inTransaction(() -> dao.deleteRecordsById(record.getGeneratedId()));
-        assertThat(dao.getAllRecords().toList()).asList().isEmpty();
+        daoTestExtension.inTransaction(() -> db.deleteRecordsById(record.getGeneratedId()));
+        assertThat(db.getAllRecords().toList()).asList().isEmpty();
     }
 
     @Test
@@ -43,8 +43,8 @@ public class LayerDatabaseDeleteByIdsTest extends AbstractLayerDatabaseTest {
         var record1 = addToDb(1L, "path1", Directory);
         var record2 = addToDb(2L, "path2", Type.File);
         var notDeletedRecord = addToDb(3L, "path3", Directory);
-        daoTestExtension.inTransaction(() -> dao.deleteRecordsById(record1.getGeneratedId(), record2.getGeneratedId()));
-        assertThat(dao.getAllRecords().toList()).asList()
+        daoTestExtension.inTransaction(() -> db.deleteRecordsById(record1.getGeneratedId(), record2.getGeneratedId()));
+        assertThat(db.getAllRecords().toList()).asList()
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(notDeletedRecord);
     }

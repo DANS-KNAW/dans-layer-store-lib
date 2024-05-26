@@ -28,12 +28,12 @@ public abstract class AbstractLayerDatabaseTest extends AbstractTestWithTestDir 
     protected final DAOTestExtension daoTestExtension = DAOTestExtension.newBuilder()
         .addEntityClass(ItemRecord.class)
         .build();
-    protected LayerDatabase dao;
+    protected LayerDatabase db;
 
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        dao = new LayerDatabaseImpl(new PersistenceProviderImpl(daoTestExtension.getSessionFactory()));
+        db = new LayerDatabaseImpl(new PersistenceProviderImpl<>(daoTestExtension.getSessionFactory(), ItemRecord.class));
     }
 
     protected ItemRecord addToDb(Long layerId, String path, Type type) {
@@ -43,7 +43,7 @@ public abstract class AbstractLayerDatabaseTest extends AbstractTestWithTestDir 
                 .path(path)
                 .type(type)
                 .build();
-            dao.saveRecords(record);
+            db.saveRecords(record);
             return record;
         });
     }

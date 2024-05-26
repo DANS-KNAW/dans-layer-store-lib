@@ -23,7 +23,7 @@ public class LayerDatabaseExistsPathLikeTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_return_false_when_no_records_exist() {
-        var result = daoTestExtension.inTransaction(() -> dao.existsPathLike("file1.txt"));
+        var result = daoTestExtension.inTransaction(() -> db.existsPathLike("file1.txt"));
         assertThat(result).isFalse();
     }
 
@@ -32,7 +32,7 @@ public class LayerDatabaseExistsPathLikeTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "file1.txt", Item.Type.File);
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
-        var result = daoTestExtension.inTransaction(() -> dao.existsPathLike("file4.txt"));
+        var result = daoTestExtension.inTransaction(() -> db.existsPathLike("file4.txt"));
         assertThat(result).isFalse();
     }
 
@@ -41,7 +41,7 @@ public class LayerDatabaseExistsPathLikeTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "file1.txt", Item.Type.File);
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
-        var result = daoTestExtension.inTransaction(() -> dao.existsPathLike("file1.txt"));
+        var result = daoTestExtension.inTransaction(() -> db.existsPathLike("file1.txt"));
         assertThat(result).isTrue();
     }
 
@@ -51,7 +51,7 @@ public class LayerDatabaseExistsPathLikeTest extends AbstractLayerDatabaseTest {
         addToDb(2L, "file456.txt", Item.Type.File);
         addToDb(3L, "file789.txt", Item.Type.File);
         addToDb(4L, "nomatch123.txt", Item.Type.File);
-        var result = daoTestExtension.inTransaction(() -> dao.existsPathLike("file%.txt"));
+        var result = daoTestExtension.inTransaction(() -> db.existsPathLike("file%.txt"));
         assertThat(result).isTrue();
     }
 

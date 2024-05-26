@@ -24,8 +24,8 @@ public class LayerDatabaseSaveRecordsTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_accept_empty_list() {
-        dao.saveRecords();
-        assertThat(dao.getAllRecords().toList()).asList().isEmpty();
+        db.saveRecords();
+        assertThat(db.getAllRecords().toList()).asList().isEmpty();
     }
 
     @Test
@@ -35,8 +35,8 @@ public class LayerDatabaseSaveRecordsTest extends AbstractLayerDatabaseTest {
             .path("path")
             .type(Type.Directory)
             .build();
-        daoTestExtension.inTransaction(() -> dao.saveRecords(record));
-        assertThat(dao.getAllRecords())
+        daoTestExtension.inTransaction(() -> db.saveRecords(record));
+        assertThat(db.getAllRecords())
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(record);
     }
@@ -53,8 +53,8 @@ public class LayerDatabaseSaveRecordsTest extends AbstractLayerDatabaseTest {
             .path("path2")
             .type(Type.Directory)
             .build();
-        daoTestExtension.inTransaction(() -> dao.saveRecords(record1, record2));
-        assertThat(dao.getAllRecords())
+        daoTestExtension.inTransaction(() -> db.saveRecords(record1, record2));
+        assertThat(db.getAllRecords())
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(record1, record2);
     }

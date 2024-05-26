@@ -34,7 +34,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_not_delete_a_directory_with_content_in_another_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
         layerManager.newTopLayer();
@@ -47,7 +47,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_delete_empty_directory() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
 
         layeredStore.deleteDirectory("a/b/c");
@@ -65,7 +65,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_delete_directory_with_plain_file() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!"));
 
