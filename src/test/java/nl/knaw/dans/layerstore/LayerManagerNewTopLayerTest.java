@@ -16,6 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 import ch.qos.logback.classic.Level;
+import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
         var outContent = captureStdout();
         var listAppender = captureLog();
 
-        var layerManager = new LayerManagerImpl(stagingDir, mockedArchiveProvider, new DirectExecutor());
+        var layerManager = new LayerManagerImpl(stagingDir, mockedArchiveProvider, new DirectExecutorService());
         var initialTopLayerId = layerManager.getTopLayer().getId();
 
 

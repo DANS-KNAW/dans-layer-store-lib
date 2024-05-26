@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -106,7 +107,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
     @Test
     public void should_throw_cannot_delete_file_from_closed_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutor());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
