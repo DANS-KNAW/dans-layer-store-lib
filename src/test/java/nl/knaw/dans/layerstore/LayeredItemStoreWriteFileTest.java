@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
@@ -37,7 +39,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(db, layerManager);
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", toInputStream(testContent));
+        layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
 
         var topLayer = layerManager.getTopLayer();
 
@@ -53,12 +55,12 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", toInputStream(testContent));
+        layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
 
         // Check that the file content is in the database
         db.getAllRecords().toList().forEach(itemRecord -> {
             if (itemRecord.getPath().equals("test.txt")) {
-                assertThat(itemRecord.getContent()).isEqualTo(toBytes(testContent));
+                assertThat(itemRecord.getContent()).isEqualTo(testContent.getBytes(UTF_8));
             }
         });
     }
@@ -69,13 +71,13 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 
-        layeredStore.writeFile("test.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("test.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("test.txt", toInputStream("Hello again!", UTF_8));
 
         // Check that the file content is in the database
         db.getAllRecords().toList().forEach(itemRecord -> {
             if (itemRecord.getPath().equals("test.txt")) {
-                assertThat(itemRecord.getContent()).isEqualTo(toBytes("Hello again!"));
+                assertThat(itemRecord.getContent()).isEqualTo("Hello again!".getBytes(UTF_8));
             }
         });
 
@@ -88,11 +90,11 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 
-        layeredStore.writeFile("test.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layerManager.newTopLayer();
-        layeredStore.writeFile("test.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello again!", UTF_8));
         layerManager.newTopLayer();
-        layeredStore.writeFile("test.txt", toInputStream("Hello once more!"));
+        layeredStore.writeFile("test.txt", toInputStream("Hello once more!", UTF_8));
 
         // Check that the file contents are in the database
         var list = db.getAllRecords().map(itemRecord ->

@@ -20,6 +20,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -35,9 +36,20 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
 
     @BeforeEach
     public void prepare() throws Exception {
-        Files.createDirectories(stagingDir);
         FileUtils.write(testDir.resolve("x/y/test1.txt").toFile(), "Hello world!", "UTF-8");
         FileUtils.write(testDir.resolve("x/test2.txt").toFile(), "Hello again!", "UTF-8");
+    }
+
+    @Test
+    public void should_refuse_to_move_link() throws Exception {
+        Files.createSymbolicLink(testDir.resolve("x/y/link"), testDir.resolve("x/test2.txt"));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.createDirectory("a/b");
+
+        assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c")).
+            isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Path is not a file or directory: target/test/LayeredItemStoreMoveDirectoryIntoTest/x/y/link");
     }
 
     @Test
@@ -81,7 +93,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     }
 
     @Test
-    public void should_throw_parent_of_destination_does_not_exists() {
+    public void should_throw_parent_of_destination_does_not_exists() throws IOException {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(db, layerManager);
 

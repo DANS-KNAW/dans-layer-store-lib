@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
@@ -44,7 +46,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(db, layerManager);
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", toInputStream(testContent));
+        layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
 
         try (var inputStream = layeredStore.readFile("test.txt")) {
             assertThat(inputStream).hasContent(testContent);
@@ -57,7 +59,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 
         var testContent = "Hello world!";
-        layeredStore.writeFile("test.txt", toInputStream(testContent));
+        layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
 
         try (var inputStream = layeredStore.readFile("test.txt")) {
             assertThat(inputStream).hasContent(testContent);
@@ -76,7 +78,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_no_such_file() {
+    public void should_throw_no_such_file() throws IOException {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 

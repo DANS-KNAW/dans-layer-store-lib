@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
@@ -38,7 +40,7 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.createDirectory("a/b/e/f");
-        layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!", UTF_8));
 
         layeredStore.moveDirectoryInternal("a/b/e/f", "a/b/c/d/x");
 
@@ -55,9 +57,11 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.createDirectory("a/b/e/f");
-        layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!", UTF_8));
         layerManager.newTopLayer();
 
+        // without this, a stack trace is logged from an archiving thread
+        Files.createDirectories(archiveDir);
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInternal("a/b/e/f", "a/b/c/d/x")).
             isInstanceOf(RuntimeException.class)

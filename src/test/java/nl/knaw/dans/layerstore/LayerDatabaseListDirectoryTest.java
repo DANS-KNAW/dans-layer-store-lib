@@ -114,7 +114,7 @@ public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_NotDirectoryException_when_path_is_not_a_directory() throws Exception {
+    public void should_throw_NotDirectoryException_when_path_is_not_a_directory() {
         addToDb(1L, "dir", Type.Directory);
         addToDb(1L, "dir/file", Type.File);
         assertThatThrownBy(() -> db.listDirectory("dir/file"))
@@ -123,7 +123,7 @@ public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
     }
 
     @Test
-    public void should_throw_NoSuchFileException_when_path_does_not_exist() throws Exception {
+    public void should_throw_NoSuchFileException_when_path_does_not_exist() {
         addToDb(1L, "dir", Type.Directory);
         addToDb(1L, "dir/file", Type.File);
         assertThatThrownBy(() -> db.listDirectory("dir/does-not-exist"))

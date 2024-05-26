@@ -22,6 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -39,13 +42,13 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         var firstLayer = layerManager.getTopLayer();
         layerManager.newTopLayer();
         assertFalse(firstLayer.isOpen());
 
-        assumeNotYetFixed("TODO: getLayer returns a new layer object. New layer objects are open but it should be closed in this scenario.");
+        assumeNotYetFixed("getLayer returns a new layer object. New layer objects are open but it should be closed in this scenario.");
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt")))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Cannot delete files from closed layer");
@@ -56,9 +59,16 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!"));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!"));
+        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!", UTF_8));
 
+        // precondition: show database content
+        var list1 = daoTestExtension.inTransaction(() ->
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/d/test1.txt", "a/b/c/test2.txt");
+
+        // method under test
         layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt"));
 
         // files are removed from the stagingDir
@@ -66,8 +76,10 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         assertThat(layerDir.resolve("a/b/c/d/test1.txt")).doesNotExist();
         assertThat(layerDir.resolve("a/b/c/test2.txt")).doesNotExist();
 
-        assumeNotYetFixed("TODO: files are not removed from the database (the code above shows coverage)");
-        assertThat(layeredStore.listRecursive("a").stream().map(Item::getPath))
-            .containsExactlyInAnyOrder("a/b", "a/b/c", "a/b/c/d");
+        // files are removed from the database
+        var list2 = daoTestExtension.inTransaction(() ->
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
+        );
+        assertThat(list2).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d");
     }
 }

@@ -15,13 +15,13 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.util.Collections;
 
+import static nl.knaw.dans.layerstore.TestUtils.zipFileFrom;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
@@ -48,7 +48,7 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
 
         // Check that the zip file exists and contains the files and not more than that
         assertThat(zipFile).exists();
-        try (var zf = new ZipFile(zipFile.toFile())) {
+        try (var zf = zipFileFrom(zipFile)) {
             assertThat(zf.getEntry("file1")).isNotNull();
             assertThat(zf.getEntry("path/to/file2")).isNotNull();
             assertThat(zf.getEntry("path/to/file3")).isNotNull();

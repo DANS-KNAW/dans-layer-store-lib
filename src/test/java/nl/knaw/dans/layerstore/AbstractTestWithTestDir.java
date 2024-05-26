@@ -18,12 +18,8 @@ package nl.knaw.dans.layerstore;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * A test class that creates a test directory for each test method.
@@ -38,15 +34,10 @@ public abstract class AbstractTestWithTestDir {
 
     @BeforeEach
     public void setUp() throws Exception {
-        FileUtils.deleteDirectory(testDir.toFile());
-    }
-
-    public static ByteArrayInputStream toInputStream(String testContent) {
-        return new ByteArrayInputStream(toBytes(testContent));
-    }
-
-    public static byte[] toBytes(String testContent) {
-        return testContent.getBytes(StandardCharsets.UTF_8);
+        if (testDir.toFile().exists()) {
+            // github stumbled: https://github.com/DANS-KNAW/dans-layer-store-lib/actions/runs/8705753485/job/23876831089?pr=7#step:4:106
+            FileUtils.deleteDirectory(testDir.toFile());
+        }
     }
 
     public void createEmptyStagingDirFiles(String... paths) {
@@ -62,14 +53,5 @@ public abstract class AbstractTestWithTestDir {
                 throw new RuntimeException(message, e);
             }
         }
-    }
-
-    /**
-     * Assume that a bug is not yet fixed. This allows to skip assertions while still showing the code covered by the test.
-        *
-        * @param message the message to display
-        */
-    public void assumeNotYetFixed (String message) {
-        assumeTrue(false, message);
     }
 }
