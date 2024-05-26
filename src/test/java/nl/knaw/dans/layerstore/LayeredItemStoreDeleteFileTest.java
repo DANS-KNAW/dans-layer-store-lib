@@ -39,7 +39,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_not_delete_a_file_in_a_closed_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
@@ -57,14 +57,14 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_delete_files_from_the_top_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!", UTF_8));
 
         // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
-            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/d/test1.txt", "a/b/c/test2.txt");
 
@@ -78,7 +78,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
 
         // files are removed from the database
         var list2 = daoTestExtension.inTransaction(() ->
-            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list2).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d");
     }

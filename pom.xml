@@ -25,7 +25,7 @@
         <relativePath />
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
     <name>DANS Layer Store Library</name>
     <description>Library for storing a file/folder hierarchy in layers</description>
     <inceptionYear>2024</inceptionYear>
@@ -33,10 +33,15 @@
         <tag>HEAD</tag>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
     </scm>
+    <properties>
+        <!-- TODO: move this to the parent pom -->
+        <dans-java-utils.version>0.14.0</dans-java-utils.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-java-utils</artifactId>
+            <version>${dans-java-utils.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -109,6 +114,7 @@
         <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-hibernate</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <repositories>

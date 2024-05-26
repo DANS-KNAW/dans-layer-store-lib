@@ -44,7 +44,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     public void should_refuse_to_move_link() throws Exception {
         Files.createSymbolicLink(testDir.resolve("x/y/link"), testDir.resolve("x/test2.txt"));
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
+        var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.createDirectory("a/b");
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c")).
@@ -55,7 +55,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     @Test
     public void should_add_directory_structure_and_files() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager, new StoreTxtContent());
+        var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.createDirectory("a/b");
 
         layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c");
@@ -80,7 +80,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     @Test
     public void should_create_parent_in_top_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b");
         Files.createDirectories(archiveDir);
         layerManager.newTopLayer();
@@ -95,7 +95,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     @Test
     public void should_throw_parent_of_destination_does_not_exists() throws IOException {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c")).
             isInstanceOf(IllegalArgumentException.class)
@@ -105,7 +105,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     @Test
     public void should_throw_destination_exists() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
 
         layeredStore.createDirectory("a/b/c");
 

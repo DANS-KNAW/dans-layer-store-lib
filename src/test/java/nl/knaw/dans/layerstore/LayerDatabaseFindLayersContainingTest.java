@@ -26,7 +26,7 @@ public class LayerDatabaseFindLayersContainingTest extends AbstractLayerDatabase
         addToDb(1L, "file1.txt", Item.Type.File);
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
-        var result = daoTestExtension.inTransaction(() -> dao.findLayersContaining("file4.txt"));
+        var result = daoTestExtension.inTransaction(() -> db.findLayersContaining("file4.txt"));
         assertThat(result).asList().isEmpty();
     }
 
@@ -35,7 +35,7 @@ public class LayerDatabaseFindLayersContainingTest extends AbstractLayerDatabase
         addToDb(1L, "file1.txt", Item.Type.File);
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
-        var result = daoTestExtension.inTransaction(() -> dao.findLayersContaining("file2.txt"));
+        var result = daoTestExtension.inTransaction(() -> db.findLayersContaining("file2.txt"));
         assertThat(result).asList().containsExactly(2L);
     }
 
@@ -45,7 +45,7 @@ public class LayerDatabaseFindLayersContainingTest extends AbstractLayerDatabase
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
         addToDb(4L, "file2.txt", Item.Type.File);
-        var result = daoTestExtension.inTransaction(() -> dao.findLayersContaining("file2.txt"));
+        var result = daoTestExtension.inTransaction(() -> db.findLayersContaining("file2.txt"));
         assertThat(result).asList().containsExactly(2L, 4L);
     }
 }

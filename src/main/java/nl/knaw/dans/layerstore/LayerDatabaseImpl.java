@@ -15,9 +15,9 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.hibernate.AbstractDAO;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.SessionFactory;
+import nl.knaw.dans.lib.util.PersistenceProvider;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -35,30 +35,26 @@ import java.util.stream.Stream;
 
 import static nl.knaw.dans.layerstore.Item.Type;
 
-// TODO: replace extending AbstractDAO with composition
-
+@AllArgsConstructor
 @Slf4j
-public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerDatabase {
-
-    public LayerDatabaseImpl(SessionFactory sessionFactory) {
-        super(sessionFactory);
-    }
-
+public class LayerDatabaseImpl implements LayerDatabase {
+    private PersistenceProvider<ItemRecord> persistenceProvider;
+    
     @Override
     public void saveRecords(ItemRecord... records) {
         for (var record : records) {
             // If the record has no generatedId, then it is new and we can persist it.
             if (record.getGeneratedId() == null) {
-                persist(record);
+                persistenceProvider.persist(record);
             }
             // If the record has a generatedId, but it is not in the database, then it is new and we can persist it.
-            else if (get(record.getGeneratedId()) == null) {
-                persist(record);
+            else if (persistenceProvider.get(record.getGeneratedId()) == null) {
+                persistenceProvider.persist(record);
             }
             else {
                 // If the record has a generatedId, and it is in the database, then it is an existing record, and we must
                 // merge the changes into the database.
-                currentSession().update(record);
+                persistenceProvider.update(record);
             }
         }
     }
@@ -66,14 +62,14 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
     @Override
     public void deleteRecordsById(long... id) {
         for (long i : id) {
-            currentSession().delete(get(i));
+            persistenceProvider.delete(persistenceProvider.get(i));
         }
     }
 
     @Override
     public List<Item> listDirectory(String directoryPath) throws IOException {
         directoryPath = preprocessDirectoryArgument(directoryPath);
-        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
         CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         Predicate hasParentPath = cb.like(itemRecordRoot.get("path"), directoryPath + "%");
@@ -82,14 +78,14 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
         Predicate hasMaxLayerId = cb.equal(itemRecordRoot.get("layerId"), getMaxLayerIdSubquery(cq, cb, itemRecordRoot));
         cq.where(cb.and(hasParentPath, notSubdirectory, notSamePath, hasMaxLayerId));
 
-        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
+        TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
         return query.getResultStream().map(ItemRecord::toItem).collect(Collectors.toList());
     }
 
     @Override
     public List<Item> listRecursive(String directoryPath) throws IOException {
         directoryPath = preprocessDirectoryArgument(directoryPath);
-        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
         CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         Predicate hasParentPath = cb.like(itemRecordRoot.get("path"), directoryPath + "%");
@@ -97,7 +93,7 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
         Predicate hasMaxLayerId = cb.equal(itemRecordRoot.get("layerId"), getMaxLayerIdSubquery(cq, cb, itemRecordRoot));
         cq.where(cb.and(hasParentPath, notSamePath, hasMaxLayerId));
 
-        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
+        TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
         return query.getResultStream().map(ItemRecord::toItem).collect(Collectors.toList());
     }
 
@@ -144,44 +140,44 @@ public class LayerDatabaseImpl extends AbstractDAO<ItemRecord> implements LayerD
 
     @Override
     public List<Long> findLayersContaining(String path) {
-        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         cq.select(itemRecordRoot.get("layerId")).where(cb.equal(itemRecordRoot.get("path"), path)).distinct(true);
-        TypedQuery<Long> query = currentSession().createQuery(cq);
+        TypedQuery<Long> query = persistenceProvider.createQuery(cq);
         return query.getResultList();
     }
 
     @Override
     public List<ItemRecord> getRecordsByPath(String path) {
         log.debug("getRecordsByPath({})", path);
-        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
         CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         cq.select(itemRecordRoot).where(cb.equal(itemRecordRoot.get("path"), path));
         cq.orderBy(cb.desc(itemRecordRoot.get("layerId")));
-        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
+        TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
         return query.getResultList();
     }
 
     @Override
     public Stream<ItemRecord> getAllRecords() {
-        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
         CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         cq.select(itemRecordRoot);
 
-        TypedQuery<ItemRecord> query = currentSession().createQuery(cq);
+        TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
         return query.getResultStream();
     }
 
     @Override
     public boolean existsPathLike(String pathPattern) {
-        CriteriaBuilder cb = currentSession().getCriteriaBuilder();
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
         CriteriaQuery<Boolean> cq = cb.createQuery(Boolean.class);
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         cq.select(cb.literal(true)).where(cb.like(itemRecordRoot.get("path"), pathPattern));
-        TypedQuery<Boolean> query = currentSession().createQuery(cq);
+        TypedQuery<Boolean> query = persistenceProvider.createQuery(cq);
         return query.getResultStream().findFirst().orElse(false);
     }
 

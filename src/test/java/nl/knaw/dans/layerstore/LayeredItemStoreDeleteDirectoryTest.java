@@ -39,7 +39,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_not_delete_a_directory_with_content_in_another_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
         layerManager.newTopLayer();
@@ -52,12 +52,12 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_delete_empty_directory() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
 
         // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
-            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d");
 
@@ -70,7 +70,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
         // directory is removed from the database
         var list2 = daoTestExtension.inTransaction(() ->
-            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list2).containsExactlyInAnyOrder("", "a", "a/b");
     }
@@ -78,13 +78,13 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_delete_directory_with_regular_file() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
 
         // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
-            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/test.txt");
 
@@ -99,7 +99,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
         // files are removed from the database
         var list2 = daoTestExtension.inTransaction(() ->
-            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list2).containsExactlyInAnyOrder("", "a");
     }
@@ -107,7 +107,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_throw_cannot_delete_file_from_closed_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutor());
-        var layeredStore = new LayeredItemStore(dao, layerManager);
+        var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
         Files.createDirectories(archiveDir);
@@ -115,7 +115,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
         // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
-            dao.getAllRecords().toList().stream().map(ItemRecord::getPath)
+            db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/test.txt");
 
