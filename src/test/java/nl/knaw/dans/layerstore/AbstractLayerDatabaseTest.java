@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import nl.knaw.dans.lib.util.PersistenceProviderImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -32,7 +33,7 @@ public abstract class AbstractLayerDatabaseTest extends AbstractTestWithTestDir 
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        dao = new LayerDatabaseImpl(daoTestExtension.getSessionFactory());
+        dao = new LayerDatabaseImpl(new PersistenceProviderImpl(daoTestExtension.getSessionFactory()));
     }
 
     protected ItemRecord addToDb(Long layerId, String path, Type type) {
