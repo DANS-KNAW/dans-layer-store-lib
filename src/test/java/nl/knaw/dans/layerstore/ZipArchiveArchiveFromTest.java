@@ -28,16 +28,16 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
     @Test
     public void should_create_zipfile_and_change_status_to_archived() throws Exception {
         var zipFile = testDir.resolve("test.zip");
-        ZipArchive zipArchive = new ZipArchive(zipFile);
+        var zipArchive = new ZipArchive(zipFile);
         // Create some files to archive
-        Path file1 = stagingDir.resolve("file1");
-        Path file2 = stagingDir.resolve("path/to/file2");
-        Path file3 = stagingDir.resolve("path/to/file3");
+        var file1 = stagingDir.resolve("file1");
+        var file2 = stagingDir.resolve("path/to/file2");
+        var file3 = stagingDir.resolve("path/to/file3");
 
         // Write some string content to the files
-        String file1Content = "file1 content";
-        String file2Content = "file2 content";
-        String file3Content = "file3 content";
+        var file1Content = "file1 content";
+        var file2Content = "file2 content";
+        var file3Content = "file3 content";
         FileUtils.forceMkdir(file2.getParent().toFile());
         FileUtils.write(file1.toFile(), file1Content, "UTF-8");
         FileUtils.write(file2.toFile(), file2Content, "UTF-8");
