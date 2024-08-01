@@ -19,40 +19,38 @@ import ch.qos.logback.classic.Level;
 import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.Test;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import static nl.knaw.dans.layerstore.TestUtils.captureLog;
 import static nl.knaw.dans.layerstore.TestUtils.captureStdout;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
 
+    // the method under test is also involved in tests for other LayerManagerImpl methods and LayeredItemStore methods
+
     @Test
-    public void should_log_an_archive_failure() throws IOException {
-
-        var mockedArchive = mock(Archive.class);
-        var mockedArchiveProvider = mock(ArchiveProvider.class);
-        doThrow(new RuntimeException("archiveFrom failed"))
-            .when(mockedArchive).archiveFrom(any());
-        when(mockedArchiveProvider.createArchive(any()))
-            .thenReturn(mockedArchive);
-
+    public void should_log_already_archived() throws IOException {
         var outContent = captureStdout();
         var listAppender = captureLog();
 
-        var layerManager = new LayerManagerImpl(stagingDir, mockedArchiveProvider, new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir,
+            new DmfTarArchiveProvider(
+                getDmfTarRunner(),
+                sshRunnerExpectsFileToExist(true)
+            ),
+            new DirectExecutorService()
+        );
         var initialTopLayerId = layerManager.getTopLayer().getId();
-
 
         // Run the method under test
         assertThatThrownBy(layerManager::newTopLayer)
             .isInstanceOf(RuntimeException.class)
-            .hasMessage("java.lang.RuntimeException: archiveFrom failed");
+            .hasMessage("java.lang.IllegalStateException: Layer is already archived");
 
         // Check the logs
         var loggingEvent = listAppender.list.get(0);
@@ -63,9 +61,27 @@ public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
         // Check stdout, different formats when running standalone or in a suite
         var contentString = outContent.toString();
         assertThat(contentString).contains("Error archiving layer with id " + initialTopLayerId);
-        assertThat(contentString).contains("java.lang.RuntimeException: archiveFrom failed");
+        assertThat(contentString).contains("java.lang.IllegalStateException: Layer is already archived");
         assertThat(contentString).contains("at nl.knaw.dans.layerstore.LayerManagerNewTopLayerTest");
     }
 
-    // the method is also involved in tests for other LayerManagerImpl methods and LayeredItemStore methods
+    private static @NotNull SshRunner sshRunnerExpectsFileToExist(boolean exists) {
+        return new SshRunner(Path.of("ssh"), "testuser", "dummyhost", Path.of("testarchive")) {
+
+            @Override
+            public boolean fileExists(String archiveName) {
+                return exists;
+            }
+        };
+    }
+
+    private static @NotNull DmfTarRunner getDmfTarRunner() {
+        return new DmfTarRunner(Path.of("dmftar"), "testuser", "dummyhost", Path.of("testarchive")) {
+
+            @Override
+            public void tarDirectory(Path directory, String archiveName) {
+                // Do nothing
+            }
+        };
+    }
 }
