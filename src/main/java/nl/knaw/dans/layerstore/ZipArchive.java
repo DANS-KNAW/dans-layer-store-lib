@@ -55,9 +55,14 @@ public class ZipArchive implements Archive {
             return inputStream.read();
         }
 
+        public boolean exists() throws IOException {
+            return inputStream != null;
+        }
+
         @Override
         public void close() throws IOException {
-            inputStream.close();
+            if (inputStream != null) // no inputStream if the entry did not exist
+                inputStream.close();
             zipFile.close();
         }
     }
@@ -151,8 +156,8 @@ public class ZipArchive implements Archive {
 
     @Override
     public boolean fileExists(String filePath) {
-        try (var is = readFile(filePath)) {
-            return is != null;
+        try (var is = (EntryInputStream) readFile(filePath)) {
+            return is.exists();
         }
         catch (IOException e) {
             return false;

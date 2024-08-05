@@ -15,5 +15,41 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class ZipArchiveReadFileTest {
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
+    Path zipFile = testDir.resolve("test.zip");
+
+    @Test
+    public void should_return_true_when_file_exists_in_archive() throws Exception {
+        ZipArchive zipArchive = new ZipArchive(zipFile);
+
+        createFileWithContent("file1");
+        createFileWithContent("path/to/file2");
+        createFileWithContent("path/to/file3");
+
+        // Archive the files
+        zipArchive.archiveFrom(stagingDir);
+
+        // Check that the zip file exists
+        assertThat(zipFile).exists();
+        assertThat(zipArchive.isArchived()).isTrue();
+
+        // Check that the content is archived
+        assertThat(zipArchive.readFile("path/to/file2").readAllBytes())
+            .isEqualTo("file2 content".getBytes());
+    }
+
+    private void createFileWithContent(String name) throws IOException {
+        var file = stagingDir.resolve(name);
+        var content = file.getFileName() + " content";
+        FileUtils.forceMkdir(file.getParent().toFile());
+        FileUtils.write(file.toFile(), content, "UTF-8");
+    }
 }

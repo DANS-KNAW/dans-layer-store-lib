@@ -16,4 +16,5 @@
 package nl.knaw.dans.layerstore;
 
 public class ZipArchiveIsArchivedTest {
+    // on the flight in other ZipArchive-Tests
 }

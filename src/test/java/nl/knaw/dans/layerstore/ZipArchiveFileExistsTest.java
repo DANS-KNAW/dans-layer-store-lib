@@ -21,17 +21,18 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
+    Path zipFile = testDir.resolve("test.zip");
+
     @Test
     public void should_return_true_when_file_exists_in_archive() throws Exception {
-        var zipFile = testDir.resolve("test.zip");
         ZipArchive zipArchive = new ZipArchive(zipFile);
 
         createFileWithContent("file1");
-        createFileWithContent("file2");
-        createFileWithContent("file3");
+        createFileWithContent("path/to/file2");
+        createFileWithContent("path/to/file3");
 
         // Archive the files
         zipArchive.archiveFrom(stagingDir);
@@ -40,15 +41,35 @@ public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
         assertThat(zipFile).exists();
         assertThat(zipArchive.isArchived()).isTrue();
 
-        // Check that the files are unarchived
+        // Check that the files are archived
         assertThat(zipArchive.fileExists("file1")).isTrue();
         assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
         assertThat(zipArchive.fileExists("path/to/file3")).isTrue();
     }
 
+    @Test
+    public void should_return_false_when_file_does_not_exiss_in_archive() throws Exception {
+        ZipArchive zipArchive = new ZipArchive(zipFile);
+
+        createFileWithContent("file1");
+        createFileWithContent("path/to/file2");
+
+        // Archive the files
+        zipArchive.archiveFrom(stagingDir);
+
+        // Check that the zip file exists
+        assertThat(zipFile).exists();
+        assertThat(zipArchive.isArchived()).isTrue();
+
+        // Check that the files are archived
+        assertThat(zipArchive.fileExists("file1")).isTrue();
+        assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
+        assertThat(zipArchive.fileExists("path/to/file3")).isFalse();
+    }
+
     private void createFileWithContent(String name) throws IOException {
-        var file = stagingDir.resolve("path/to/" + name);
-        var content = name + " content";
+        var file = stagingDir.resolve(name);
+        var content = file.getFileName() + " content";
         FileUtils.forceMkdir(file.getParent().toFile());
         FileUtils.write(file.toFile(), content, "UTF-8");
     }

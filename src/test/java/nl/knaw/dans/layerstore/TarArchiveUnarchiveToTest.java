@@ -38,13 +38,10 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var file3 = testDir.resolve("staging/path/to/file3");
 
         // Write some string content to the files
-        var file1Content = "file1 content";
-        var file2Content = "file2 content";
-        var file3Content = "file3 content";
         FileUtils.forceMkdir(file2.getParent().toFile());
-        FileUtils.write(file1.toFile(), file1Content, "UTF-8");
-        FileUtils.write(file2.toFile(), file2Content, "UTF-8");
-        FileUtils.write(file3.toFile(), file3Content, "UTF-8");
+        FileUtils.write(file1.toFile(), "file1 content", "UTF-8");
+        FileUtils.write(file2.toFile(), "file2 content", "UTF-8");
+        FileUtils.write(file3.toFile(), "file3 content", "UTF-8");
         Files.createDirectories(testDir.resolve("layer_staging"));
 
         // Archive the files
@@ -55,12 +52,13 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         AssertionsForClassTypes.assertThat(tarArchive.isArchived()).isTrue();
 
         // Unarchive the files
-        tarArchive.unarchiveTo(testDir.resolve("unarchived"));
+        var unarchived = testDir.resolve("unarchived");
+        tarArchive.unarchiveTo(unarchived);
 
         // Check that the files are unarchived
-        assertThat(file1).exists();
-        assertThat(file2).exists();
-        assertThat(file3).exists();
+        assertThat(unarchived.resolve("file1")).exists();
+        assertThat(unarchived.resolve("path/to/file2")).exists();
+        assertThat(unarchived.resolve("path/to/file3")).exists();
     }
 
     @Test
