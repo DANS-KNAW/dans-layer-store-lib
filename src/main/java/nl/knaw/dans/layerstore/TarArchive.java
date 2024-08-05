@@ -21,8 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.utils.BoundedInputStream;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,10 +47,10 @@ public class TarArchive implements Archive {
     @Override
     public InputStream readFile(String filePath) throws IOException {
         // No try-with-resources on tarInput, so that we can use it to back the BoundedInputStream
-        TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile));
+        var tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile));
         try {
             TarArchiveEntry entry;
-            while ((entry = tarInput.getNextTarEntry()) != null) {
+            while ((entry = tarInput.getNextEntry()) != null) {
                 if (entry.getName().equals(filePath)) {
                     return new BoundedInputStream(tarInput, entry.getSize()) {
 
@@ -77,7 +77,7 @@ public class TarArchive implements Archive {
     public void unarchiveTo(Path stagingDir) {
         try (TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
             TarArchiveEntry entry;
-            while ((entry = tarInput.getNextTarEntry()) != null) {
+            while ((entry = tarInput.getNextEntry()) != null) {
                 Path outputPath = stagingDir.resolve(entry.getName());
                 if (entry.isDirectory()) {
                     Files.createDirectories(outputPath);
@@ -128,7 +128,7 @@ public class TarArchive implements Archive {
     public boolean fileExists(String filePath) {
         try (TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
             TarArchiveEntry entry;
-            while ((entry = tarInput.getNextTarEntry()) != null) {
+            while ((entry = tarInput.getNextEntry()) != null) {
                 if (entry.getName().equals(filePath)) {
                     return true;
                 }

@@ -15,15 +15,13 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -31,10 +29,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ZipArchive implements Archive {
     @NonNull
@@ -70,18 +69,15 @@ public class ZipArchive implements Archive {
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
-        @SuppressWarnings("resource") // The caller is responsible for closing the stream
-        ZipFile zipFile = new ZipFile(this.zipFile.toFile());
-        ZipArchiveEntry entry = zipFile.getEntry(filePath);
+        var zipFile = new ZipFile.Builder().setCharset(UTF_8).setFile(this.zipFile.toFile()).get();
+        var entry = zipFile.getEntry(filePath);
         return new EntryInputStream(zipFile, entry);
     }
 
     @Override
     public void unarchiveTo(Path stagingDir) {
-        ZipArchiveInputStream zipArchiveInputStream = null;
-        try {
-            zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile.toFile()));
-            ZipArchiveEntry entry = zipArchiveInputStream.getNextZipEntry();
+        try (var zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile.toFile()))) {
+            var entry = zipArchiveInputStream.getNextEntry();
             while (entry != null) {
                 if (entry.isDirectory()) {
                     Files.createDirectories(stagingDir.resolve(entry.getName()));
@@ -91,14 +87,11 @@ public class ZipArchive implements Archive {
                     Files.createDirectories(file.getParent());
                     Files.copy(zipArchiveInputStream, file);
                 }
-                entry = zipArchiveInputStream.getNextZipEntry();
+                entry = zipArchiveInputStream.getNextEntry();
             }
         }
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive zip file", e);
-        }
-        finally {
-            IOUtils.closeQuietly(zipArchiveInputStream);
         }
     }
 
@@ -110,14 +103,11 @@ public class ZipArchive implements Archive {
     // See: https://simplesolution.dev/java-create-zip-file-using-apache-commons-compress/
     @SneakyThrows
     public void createZipFile(String zipFileName, String directoryToZip) {
-        BufferedOutputStream bufferedOutputStream = null;
-        ZipArchiveOutputStream zipArchiveOutputStream = null;
-        OutputStream outputStream = null;
-        try {
-            Path zipFilePath = Paths.get(zipFileName);
-            outputStream = Files.newOutputStream(zipFilePath);
-            bufferedOutputStream = new BufferedOutputStream(outputStream);
-            zipArchiveOutputStream = new ZipArchiveOutputStream(bufferedOutputStream);
+        var zipFilePath = Paths.get(zipFileName);
+        try (var outputStream = Files.newOutputStream(zipFilePath);
+            var bufferedOutputStream = new BufferedOutputStream(outputStream);
+            var zipArchiveOutputStream = new ZipArchiveOutputStream(bufferedOutputStream)
+        ) {
             File[] files = new File(directoryToZip).listFiles();
             if (files != null) {
                 for (File file : files) {
@@ -126,16 +116,11 @@ public class ZipArchive implements Archive {
             }
             archived = true;
         }
-        finally {
-            IOUtils.closeQuietly(zipArchiveOutputStream);
-            IOUtils.closeQuietly(bufferedOutputStream);
-            IOUtils.closeQuietly(outputStream);
-        }
     }
 
     private void addFileToZipStream(ZipArchiveOutputStream zipArchiveOutputStream, File fileToZip, String base) throws IOException {
-        String entryName = base + fileToZip.getName();
-        ZipArchiveEntry zipArchiveEntry = new ZipArchiveEntry(fileToZip, entryName);
+        var entryName = base + fileToZip.getName();
+        var zipArchiveEntry = new ZipArchiveEntry(fileToZip, entryName);
         zipArchiveOutputStream.putArchiveEntry(zipArchiveEntry);
         if (fileToZip.isFile()) {
             FileInputStream fileInputStream = null;
@@ -150,7 +135,7 @@ public class ZipArchive implements Archive {
         }
         else {
             zipArchiveOutputStream.closeArchiveEntry();
-            File[] files = fileToZip.listFiles();
+            var files = fileToZip.listFiles();
             if (files != null) {
                 for (File file : files) {
                     addFileToZipStream(zipArchiveOutputStream, file, entryName + "/");
