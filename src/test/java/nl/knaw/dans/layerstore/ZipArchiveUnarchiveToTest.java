@@ -33,9 +33,9 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var zipFile = testDir.resolve("test.zip");
         var zipArchive = new ZipArchive(zipFile);
 
-        createFileWithContent("file1");
-        createFileWithContent("path/to/file2");
-        createFileWithContent("path/to/file3");
+        createStagingFileWithContent("file1");
+        createStagingFileWithContent("path/to/file2");
+        createStagingFileWithContent("path/to/file3");
 
         // Archive the files
         zipArchive.archiveFrom(stagingDir);
@@ -78,7 +78,7 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         assertThat(zipArchive.isArchived()).isFalse();
         assertThatThrownBy(() -> zipArchive.unarchiveTo(testDir.resolve("unarchived")))
             .isInstanceOf(RuntimeException.class)
-            .hasMessage("Could not unarchive zip file")
+            .hasMessage("Could not unarchive target/test/ZipArchiveUnarchiveToTest/non-existing.zip")
             .hasCauseInstanceOf(IOException.class)
             .hasRootCauseMessage("target/test/ZipArchiveUnarchiveToTest/non-existing.zip (No such file or directory)");
     }
@@ -96,12 +96,5 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
 
         assumeNotYetFixed("unarchiveTo does not check if the target directory exists");
         assertThatThrownBy(() -> zipArchive.unarchiveTo(testDir.resolve("unarchived")));
-    }
-
-    private void createFileWithContent(String name) throws IOException {
-        var file = stagingDir.resolve(name);
-        var content = file.getFileName() + " content";
-        FileUtils.forceMkdir(file.getParent().toFile());
-        FileUtils.write(file.toFile(), content, "UTF-8");
     }
 }

@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -33,9 +34,9 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var tarFile = testDir.resolve("test.tar");
         var tarArchive = new TarArchive(tarFile);
         // Create some files to archive
-        var file1 = testDir.resolve("staging/file1");
-        var file2 = testDir.resolve("staging/path/to/file2");
-        var file3 = testDir.resolve("staging/path/to/file3");
+        var file1 = stagingDir.resolve("file1");
+        var file2 = stagingDir.resolve("path/to/file2");
+        var file3 = stagingDir.resolve("path/to/file3");
 
         // Write some string content to the files
         FileUtils.forceMkdir(file2.getParent().toFile());

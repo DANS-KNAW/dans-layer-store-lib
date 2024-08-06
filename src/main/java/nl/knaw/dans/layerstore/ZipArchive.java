@@ -27,6 +27,7 @@ import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -34,6 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.text.MessageFormat.format;
 
 public class ZipArchive implements Archive {
     @NonNull
@@ -55,10 +57,6 @@ public class ZipArchive implements Archive {
             return inputStream.read();
         }
 
-        public boolean exists() throws IOException {
-            return inputStream != null;
-        }
-
         @Override
         public void close() throws IOException {
             if (inputStream != null) // no inputStream if the entry did not exist
@@ -74,9 +72,13 @@ public class ZipArchive implements Archive {
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
-        var zipFile = new ZipFile.Builder().setCharset(UTF_8).setFile(this.zipFile.toFile()).get();
-        var entry = zipFile.getEntry(filePath);
-        return new EntryInputStream(zipFile, entry);
+        try (var zip = getZipFile()) {
+            var entries = zip.getEntries(filePath).iterator();
+            if (!entries.hasNext())
+                throw new FileNotFoundException(format("{0} not found in {1}", filePath, this.zipFile.toFile()));
+            return new EntryInputStream(zip, entries.next());
+
+        }
     }
 
     @Override
@@ -96,7 +98,7 @@ public class ZipArchive implements Archive {
             }
         }
         catch (IOException e) {
-            throw new RuntimeException("Could not unarchive zip file", e);
+            throw new RuntimeException("Could not unarchive " + zipFile.toFile(), e);
         }
     }
 
@@ -128,14 +130,9 @@ public class ZipArchive implements Archive {
         var zipArchiveEntry = new ZipArchiveEntry(fileToZip, entryName);
         zipArchiveOutputStream.putArchiveEntry(zipArchiveEntry);
         if (fileToZip.isFile()) {
-            FileInputStream fileInputStream = null;
-            try {
-                fileInputStream = new FileInputStream(fileToZip);
+            try (var fileInputStream = new FileInputStream(fileToZip)) {
                 IOUtils.copy(fileInputStream, zipArchiveOutputStream);
                 zipArchiveOutputStream.closeArchiveEntry();
-            }
-            finally {
-                IOUtils.closeQuietly(fileInputStream);
             }
         }
         else {
@@ -156,11 +153,22 @@ public class ZipArchive implements Archive {
 
     @Override
     public boolean fileExists(String filePath) {
-        try (var is = (EntryInputStream) readFile(filePath)) {
-            return is.exists();
+
+        try (var zip = getZipFile()) {
+            return zip.getEntries(filePath).iterator().hasNext();
         }
         catch (IOException e) {
             return false;
         }
     }
+
+    private ZipFile getZipFile() throws IOException {
+        return ZipFile.builder()
+            .setCharset(UTF_8) // as default for FileInputStream
+            .setUseUnicodeExtraFields(true) // as default for FileInputStream
+            .setIgnoreLocalFileHeader(false) // is this FileInputStream.allowStoredEntriesWithDataDescriptor?
+            .setFile(this.zipFile.toFile())
+            .get();
+    }
+
 }

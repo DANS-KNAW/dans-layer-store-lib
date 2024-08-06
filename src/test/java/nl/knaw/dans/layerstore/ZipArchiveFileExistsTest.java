@@ -15,10 +15,8 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,9 +28,9 @@ public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
     public void should_return_true_when_file_exists_in_archive() throws Exception {
         ZipArchive zipArchive = new ZipArchive(zipFile);
 
-        createFileWithContent("file1");
-        createFileWithContent("path/to/file2");
-        createFileWithContent("path/to/file3");
+        createStagingFileWithContent("file1");
+        createStagingFileWithContent("path/to/file2");
+        createStagingFileWithContent("path/to/file3");
 
         // Archive the files
         zipArchive.archiveFrom(stagingDir);
@@ -51,8 +49,8 @@ public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
     public void should_return_false_when_file_does_not_exiss_in_archive() throws Exception {
         ZipArchive zipArchive = new ZipArchive(zipFile);
 
-        createFileWithContent("file1");
-        createFileWithContent("path/to/file2");
+        createStagingFileWithContent("file1");
+        createStagingFileWithContent("path/to/file2");
 
         // Archive the files
         zipArchive.archiveFrom(stagingDir);
@@ -65,12 +63,5 @@ public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
         assertThat(zipArchive.fileExists("file1")).isTrue();
         assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
         assertThat(zipArchive.fileExists("path/to/file3")).isFalse();
-    }
-
-    private void createFileWithContent(String name) throws IOException {
-        var file = stagingDir.resolve(name);
-        var content = file.getFileName() + " content";
-        FileUtils.forceMkdir(file.getParent().toFile());
-        FileUtils.write(file.toFile(), content, "UTF-8");
     }
 }

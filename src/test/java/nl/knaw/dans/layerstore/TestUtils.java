@@ -28,6 +28,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class TestUtils {
@@ -59,9 +60,10 @@ public class TestUtils {
     static ZipFile zipFileFrom(Path zipFile) throws IOException {
         // replaces deprecated constructor
         return ZipFile.builder()
-            .setSeekableByteChannel(Files.newByteChannel(zipFile))
+            .setCharset(UTF_8)
             .setUseUnicodeExtraFields(true)
             .setIgnoreLocalFileHeader(false)
+            .setFile(zipFile.toFile())
             .get();
     }
 }

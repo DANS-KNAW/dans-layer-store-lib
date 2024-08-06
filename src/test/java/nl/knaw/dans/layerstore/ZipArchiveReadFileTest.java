@@ -15,24 +15,25 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
     Path zipFile = testDir.resolve("test.zip");
 
     @Test
-    public void should_return_true_when_file_exists_in_archive() throws Exception {
+    public void should_return_content_of_file_in_archive() throws Exception {
         ZipArchive zipArchive = new ZipArchive(zipFile);
 
-        createFileWithContent("file1");
-        createFileWithContent("path/to/file2");
-        createFileWithContent("path/to/file3");
+        createStagingFileWithContent("file1");
+        createStagingFileWithContent("path/to/file2");
+        createStagingFileWithContent("path/to/file3");
+        createStagingFileWithContent("another/path/to/file2");
 
         // Archive the files
         zipArchive.archiveFrom(stagingDir);
@@ -41,15 +42,33 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
         assertThat(zipFile).exists();
         assertThat(zipArchive.isArchived()).isTrue();
 
-        // Check that the content is archived
+        // Read the content of a file in the archive
         assertThat(zipArchive.readFile("path/to/file2").readAllBytes())
-            .isEqualTo("file2 content".getBytes());
+            .isEqualTo("path/to/file2 content".getBytes());
+
+        // getEntries in readFile returns only an exact match of the full path
+        assertThatThrownBy(() -> zipArchive.readFile("file2").readAllBytes())
+            .isInstanceOf(FileNotFoundException.class)
+            .hasMessage("file2 not found in target/test/ZipArchiveReadFileTest/test.zip");
     }
 
-    private void createFileWithContent(String name) throws IOException {
-        var file = stagingDir.resolve(name);
-        var content = file.getFileName() + " content";
-        FileUtils.forceMkdir(file.getParent().toFile());
-        FileUtils.write(file.toFile(), content, "UTF-8");
+    @Test
+    public void should_throw_when_reading_file_not_in_archive() throws Exception {
+        ZipArchive zipArchive = new ZipArchive(zipFile);
+
+        createStagingFileWithContent("file1");
+        createStagingFileWithContent("path/to/file3");
+
+        // Archive the files
+        zipArchive.archiveFrom(stagingDir);
+
+        // Check that the zip file exists
+        assertThat(zipFile).exists();
+        assertThat(zipArchive.isArchived()).isTrue();
+
+        // Read the content of a file that is not in the archive
+        assertThatThrownBy(() -> zipArchive.readFile("path/to/file2").readAllBytes())
+            .isInstanceOf(FileNotFoundException.class)
+            .hasMessage("path/to/file2 not found in target/test/ZipArchiveReadFileTest/test.zip");
     }
 }
