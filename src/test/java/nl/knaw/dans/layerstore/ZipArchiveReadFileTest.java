@@ -27,6 +27,7 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
     Path zipFile = testDir.resolve("test.zip");
 
     @Test
+    @SuppressWarnings("resource") // for assertThatThrownBy
     public void should_return_content_of_file_in_archive() throws Exception {
         ZipArchive zipArchive = new ZipArchive(zipFile);
 
@@ -43,16 +44,18 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
         assertThat(zipArchive.isArchived()).isTrue();
 
         // Read the content of a file in the archive
-        assertThat(zipArchive.readFile("path/to/file2").readAllBytes())
-            .isEqualTo("path/to/file2 content".getBytes());
-
+        try (var inputStream = zipArchive.readFile("path/to/file2")) {
+            assertThat(inputStream.readAllBytes())
+                .isEqualTo("path/to/file2 content".getBytes());
+        }
         // getEntries in readFile returns only an exact match of the full path
-        assertThatThrownBy(() -> zipArchive.readFile("file2").readAllBytes())
+        assertThatThrownBy(() -> zipArchive.readFile("file2"))
             .isInstanceOf(FileNotFoundException.class)
             .hasMessage("file2 not found in target/test/ZipArchiveReadFileTest/test.zip");
     }
 
     @Test
+    @SuppressWarnings("resource") // for assertThatThrownBy
     public void should_throw_when_reading_file_not_in_archive() throws Exception {
         ZipArchive zipArchive = new ZipArchive(zipFile);
 
@@ -67,7 +70,7 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
         assertThat(zipArchive.isArchived()).isTrue();
 
         // Read the content of a file that is not in the archive
-        assertThatThrownBy(() -> zipArchive.readFile("path/to/file2").readAllBytes())
+        assertThatThrownBy(() -> zipArchive.readFile("path/to/file2"))
             .isInstanceOf(FileNotFoundException.class)
             .hasMessage("path/to/file2 not found in target/test/ZipArchiveReadFileTest/test.zip");
     }

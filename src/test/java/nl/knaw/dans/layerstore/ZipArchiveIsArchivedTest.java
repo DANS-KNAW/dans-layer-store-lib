@@ -15,6 +15,19 @@
  */
 package nl.knaw.dans.layerstore;
 
-public class ZipArchiveIsArchivedTest {
-    // on the flight in other ZipArchive-Tests
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+public class ZipArchiveIsArchivedTest extends AbstractTestWithTestDir {
+    @Test
+    public void should_change_status_to_archived() throws Exception {
+        FileUtils.forceMkdir(testDir.toFile());
+        var zipFile = testDir.resolve("test.zip");
+        var zipArchive = new ZipArchive(zipFile);
+        zipArchive.archiveFrom(stagingDir);
+
+        assertThat(zipArchive.isArchived()).isTrue();
+    }
 }

@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -48,8 +47,7 @@ public class TestUtils {
     }
 
     /**
-     * Assume that a bug is not yet fixed. This allows to execute as much of a test as possible
-     * to show code coverage, without creating false positives or false negatives.
+     * Assume that a bug is not yet fixed. This allows to execute as much of a test as possible to show code coverage, without creating false positives or false negatives.
      *
      * @param message the message to display
      */

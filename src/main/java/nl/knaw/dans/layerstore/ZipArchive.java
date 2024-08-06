@@ -24,7 +24,6 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -43,28 +42,6 @@ public class ZipArchive implements Archive {
 
     private boolean archived;
 
-    private static class EntryInputStream extends InputStream implements Closeable {
-        private final ZipFile zipFile;
-        private final InputStream inputStream;
-
-        public EntryInputStream(ZipFile zipFile, ZipArchiveEntry entry) throws IOException {
-            this.zipFile = zipFile;
-            this.inputStream = zipFile.getInputStream(entry);
-        }
-
-        @Override
-        public int read() throws IOException {
-            return inputStream.read();
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (inputStream != null) // no inputStream if the entry did not exist
-                inputStream.close();
-            zipFile.close();
-        }
-    }
-
     public ZipArchive(Path zipFile) {
         this.zipFile = zipFile;
         this.archived = Files.exists(zipFile);
@@ -72,13 +49,11 @@ public class ZipArchive implements Archive {
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
-        try (var zip = getZipFile()) {
-            var entries = zip.getEntries(filePath).iterator();
-            if (!entries.hasNext())
-                throw new FileNotFoundException(format("{0} not found in {1}", filePath, this.zipFile.toFile()));
-            return new EntryInputStream(zip, entries.next());
-
-        }
+        var zip = getZipFile();
+        var entries = zip.getEntries(filePath).iterator();
+        if (!entries.hasNext())
+            throw new FileNotFoundException(format("{0} not found in {1}", filePath, zipFile.toFile()));
+        return zip.getInputStream(entries.next());
     }
 
     @Override

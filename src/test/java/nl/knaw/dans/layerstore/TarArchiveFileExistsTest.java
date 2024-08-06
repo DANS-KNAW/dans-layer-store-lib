@@ -15,16 +15,13 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TarArchiveFileExistsTest extends AbstractTestWithTestDir {
-
 
     @Test
     public void should_return_file_existence_in_archive() throws Exception {

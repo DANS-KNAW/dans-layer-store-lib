@@ -16,7 +16,6 @@
 package nl.knaw.dans.layerstore;
 
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -42,7 +41,7 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
 
         // Check that the zip file exists
         assertThat(zipFile).exists();
-        AssertionsForClassTypes.assertThat(zipArchive.isArchived()).isTrue();
+        assertThat(zipArchive.isArchived()).isTrue();
 
         // Unarchive the files
         var unarchived = testDir.resolve("unarchived");

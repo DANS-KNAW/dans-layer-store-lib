@@ -38,9 +38,14 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
 
         // Check that the zip file exists and contains the files and not more than that
         assertThat(zipFile).exists();
-        assertThat(Collections.list(zipFileFrom(zipFile).getEntries()).stream().map(ZipArchiveEntry::getName))
-            .containsExactlyInAnyOrder("file1", "path/to/file2", "path/to/file3", "path/", "path/to/");
+        try (var zip = zipFileFrom(zipFile)) {
+            assertThat(Collections.list(zip.getEntries()).stream().map(ZipArchiveEntry::getName))
+                .containsExactlyInAnyOrder("file1", "path/to/file2", "path/to/file3", "path/", "path/to/");
+        }
 
         assertThat(zipArchive.isArchived()).isTrue();
+
+        // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
+        assertThat(stagingDir).isNotEmptyDirectory();
     }
 }

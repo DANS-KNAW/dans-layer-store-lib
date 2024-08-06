@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -43,11 +42,14 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
         assertThat(tarArchive.isArchived()).isTrue();
 
         // Check that the content is archived
-        assertThat(tarArchive.readFile("path/to/file2").readAllBytes())
-            .isEqualTo("path/to/file2 content".getBytes());
+        try (var inputStream = tarArchive.readFile("path/to/file2")) {
+            assertThat(inputStream.readAllBytes())
+                .isEqualTo("path/to/file2 content".getBytes());
+        }
     }
 
     @Test
+    @SuppressWarnings("resource") // for assertThatThrownBy
     public void should_throw_when_reading_file_not_in_archive() throws Exception {
         TarArchive tarArchive = new TarArchive(tarFile);
 
