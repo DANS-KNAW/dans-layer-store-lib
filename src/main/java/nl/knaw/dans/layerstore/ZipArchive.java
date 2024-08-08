@@ -23,14 +23,12 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 
 import static java.text.MessageFormat.format;
@@ -91,46 +89,27 @@ public class ZipArchive implements Archive {
     }
 
     @Override
-    public void archiveFrom(Path stagingDir) {
-        createZipFile(zipFile.toString(), stagingDir.toString());
-    }
-
-    // See: https://simplesolution.dev/java-create-zip-file-using-apache-commons-compress/
     @SneakyThrows
-    public void createZipFile(String zipFileName, String directoryToZip) {
-        var zipFilePath = Paths.get(zipFileName);
-        try (var outputStream = Files.newOutputStream(zipFilePath);
+    public void archiveFrom(Path stagingDir) {
+        try (var outputStream = Files.newOutputStream(zipFile);
             var bufferedOutputStream = new BufferedOutputStream(outputStream);
-            var zipArchiveOutputStream = new ZipArchiveOutputStream(bufferedOutputStream)
+            var zipArchiveOutputStream = new ZipArchiveOutputStream(bufferedOutputStream);
+            var files = Files.walk(stagingDir)
         ) {
-            File[] files = new File(directoryToZip).listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    addFileToZipStream(zipArchiveOutputStream, file, "");
+            for (var fileToZip : files.toList()) {
+                if (!fileToZip.equals(stagingDir)) {
+                    var entry = new ZipArchiveEntry(fileToZip, stagingDir.relativize(fileToZip).toString());
+                    entry.setSize(fileToZip.toFile().length());
+                    zipArchiveOutputStream.putArchiveEntry(entry);
+                    if (fileToZip.toFile().isFile()) {
+                        try (var fileInputStream = new FileInputStream(fileToZip.toFile())) {
+                            IOUtils.copy(fileInputStream, zipArchiveOutputStream);
+                        }
+                    }
+                    zipArchiveOutputStream.closeArchiveEntry();
                 }
             }
             archived = true;
-        }
-    }
-
-    private void addFileToZipStream(ZipArchiveOutputStream zipArchiveOutputStream, File fileToZip, String base) throws IOException {
-        var entryName = base + fileToZip.getName();
-        var zipArchiveEntry = new ZipArchiveEntry(fileToZip, entryName);
-        zipArchiveOutputStream.putArchiveEntry(zipArchiveEntry);
-        if (fileToZip.isFile()) {
-            try (var fileInputStream = new FileInputStream(fileToZip)) {
-                IOUtils.copy(fileInputStream, zipArchiveOutputStream);
-                zipArchiveOutputStream.closeArchiveEntry();
-            }
-        }
-        else {
-            zipArchiveOutputStream.closeArchiveEntry();
-            var files = fileToZip.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    addFileToZipStream(zipArchiveOutputStream, file, entryName + "/");
-                }
-            }
         }
     }
 

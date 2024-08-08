@@ -60,6 +60,7 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         // Create an empty directory to archive
         Path emptyDir = testDir.resolve("staging/emptyDir");
         FileUtils.forceMkdir(emptyDir.toFile());
+        FileUtils.forceMkdir(stagingDir.toFile());
 
         // Archive the empty directory
         zipArchive.archiveFrom(stagingDir);
@@ -88,6 +89,7 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var zipArchive = new ZipArchive(zipFile);
         // Create a files to archive
         Files.createDirectories(testDir.resolve("staging"));
+        Files.createDirectories(stagingDir);
         Files.writeString(testDir.resolve("staging/file1"), "file1 content");
         zipArchive.archiveFrom(stagingDir);
 
