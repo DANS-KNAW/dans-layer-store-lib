@@ -68,7 +68,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_overwrite_content_in_the_database_if_filter_applies() throws Exception {
         Files.createDirectories(stagingDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 
         layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));

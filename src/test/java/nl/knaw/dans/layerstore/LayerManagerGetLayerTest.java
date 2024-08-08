@@ -111,7 +111,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_have_status_archived_for_the_found_layer() throws Exception {
         // Given
         Files.createDirectories(archiveDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir));
         layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         Layer initialLayer = layerManager.getTopLayer();
         var initialLayerId = initialLayer.getId();
@@ -125,7 +125,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Then
         assertThat(initialLayerId).isEqualTo(layer.getId());
         assertThat(archiveDir).isNotEmptyDirectory();
-        assertThat(archiveDir.resolve(initialLayerId + ".zip")).exists();
+        assertThat(archiveDir.resolve(initialLayerId + ".tar")).exists();
         assumeNotYetFixed("The layer is archived, but neither the object of the initial top layer, nor the new layer object know it.");
         assertFalse(initialLayer.isArchived());
         assertFalse(layer.isArchived());
