@@ -21,15 +21,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.commons.compress.archivers.tar.TarFile;
 import org.apache.commons.io.IOUtils;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static java.text.MessageFormat.format;
 
 @Slf4j
 public class TarArchive implements Archive {
@@ -45,31 +48,21 @@ public class TarArchive implements Archive {
     }
 
     @Override
+    @SuppressWarnings("resource") // closed by overridden method of returned stream
     public InputStream readFile(String filePath) throws IOException {
-        // No try-with-resources on tarInput, so that we can use it to back the BoundedInputStream
-        var tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile));
-        try {
-            TarArchiveEntry entry;
-            while ((entry = tarInput.getNextEntry()) != null) {
-                if (entry.getName().equals(filePath)) {
-                    return new BoundedInputStream(tarInput, entry.getSize()) {
+        var tar = new TarFile(tarFile.toFile());
+        var entry = tar.getEntries().stream()
+            .filter(e -> e.getName().equals(filePath))
+            .findFirst().orElseThrow(() -> new IOException(format("{0} not found in {1}", filePath, tarFile)));
+        return new FilterInputStream(tar.getInputStream(entry)) {
 
-                        @Override
-                        @SneakyThrows
-                        public void close() {
-                            // Close the backing stream.
-                            tarInput.close();
-                        }
-                    };
-                }
+            @Override
+            @SneakyThrows
+            public void close() {
+                // Close the backing stream.
+                tar.close();
             }
-        }
-        catch (Exception e) {
-            // Close the backing stream in case of an exception.
-            tarInput.close();
-            throw e;
-        }
-        throw new IOException("File not found in tar archive: " + filePath);
+        };
     }
 
     @Override

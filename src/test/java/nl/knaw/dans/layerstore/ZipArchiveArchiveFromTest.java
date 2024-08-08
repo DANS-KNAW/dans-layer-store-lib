@@ -26,24 +26,23 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
     @Test
     public void should_create_zipfile_and_change_status_to_archived() throws Exception {
-        var zipFile = testDir.resolve("test.zip");
-        var zipArchive = new ZipArchive(zipFile);
+        var archiveFile = testDir.resolve("test.zip");
+        var archive = new ZipArchive(archiveFile);
 
         createStagingFileWithContent("file1");
         createStagingFileWithContent("path/to/file2");
         createStagingFileWithContent("path/to/file3");
 
         // Archive the files
-        zipArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         // Check that the zip file exists and contains the files and not more than that
-        assertThat(zipFile).exists();
-        try (var zip = zipFileFrom(zipFile)) {
+        assertThat(archiveFile).exists();
+        try (var zip = zipFileFrom(archiveFile)) {
             assertThat(Collections.list(zip.getEntries()).stream().map(ZipArchiveEntry::getName))
                 .containsExactlyInAnyOrder("file1", "path/to/file2", "path/to/file3", "path/", "path/to/");
         }
-
-        assertThat(zipArchive.isArchived()).isTrue();
+        assertThat(archive.isArchived()).isTrue();
 
         // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
         assertThat(stagingDir).isNotEmptyDirectory();

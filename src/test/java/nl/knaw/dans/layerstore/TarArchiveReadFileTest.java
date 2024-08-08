@@ -27,7 +27,7 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
     Path tarFile = testDir.resolve("test.tar");
 
     @Test
-    public void should_content_of_file__in_archive() throws Exception {
+    public void should_return_content_of_file_in_archive() throws Exception {
         TarArchive tarArchive = new TarArchive(tarFile);
 
         createStagingFileWithContent("file1");
@@ -66,6 +66,6 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
         // Check that the content is archived
         assertThatThrownBy(() -> tarArchive.readFile("path/to/file2").readAllBytes())
             .isInstanceOf(IOException.class)
-            .hasMessage("File not found in tar archive: path/to/file2");
+            .hasMessage("path/to/file2 not found in target/test/TarArchiveReadFileTest/test.tar");
     }
 }

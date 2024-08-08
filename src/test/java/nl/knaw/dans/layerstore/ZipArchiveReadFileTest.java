@@ -17,7 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +50,7 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
         }
         // getEntries in readFile returns only an exact match of the full path
         assertThatThrownBy(() -> zipArchive.readFile("file2"))
-            .isInstanceOf(FileNotFoundException.class)
+            .isInstanceOf(IOException.class)
             .hasMessage("file2 not found in target/test/ZipArchiveReadFileTest/test.zip");
     }
 
@@ -71,7 +71,7 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
 
         // Read the content of a file that is not in the archive
         assertThatThrownBy(() -> zipArchive.readFile("path/to/file2"))
-            .isInstanceOf(FileNotFoundException.class)
+            .isInstanceOf(IOException.class)
             .hasMessage("path/to/file2 not found in target/test/ZipArchiveReadFileTest/test.zip");
     }
 }

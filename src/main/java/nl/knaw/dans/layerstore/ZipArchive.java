@@ -26,14 +26,14 @@ import org.apache.commons.io.IOUtils;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.StreamSupport;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.text.MessageFormat.format;
 
 public class ZipArchive implements Archive {
@@ -49,11 +49,21 @@ public class ZipArchive implements Archive {
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
-        var zip = getZipFile();
-        var entries = zip.getEntries(filePath).iterator();
-        if (!entries.hasNext())
-            throw new FileNotFoundException(format("{0} not found in {1}", filePath, zipFile.toFile()));
-        return zip.getInputStream(entries.next());
+        var zip = ZipFile.builder()
+            .setFile(this.zipFile.toFile())
+            .get();
+        var entry = StreamSupport.stream(zip.getEntries(filePath).spliterator(), false)
+            .findFirst()
+            .orElseThrow(() -> new IOException(format("{0} not found in {1}", filePath, zipFile.toFile())));
+        return new FilterInputStream(zip.getInputStream(entry)) {
+
+            @Override
+            @SneakyThrows
+            public void close() {
+                // Close the backing stream.
+                zip.close();
+            }
+        };
     }
 
     @Override
@@ -129,21 +139,12 @@ public class ZipArchive implements Archive {
     @Override
     public boolean fileExists(String filePath) {
 
-        try (var zip = getZipFile()) {
+        try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
             return zip.getEntries(filePath).iterator().hasNext();
         }
         catch (IOException e) {
             return false;
         }
-    }
-
-    private ZipFile getZipFile() throws IOException {
-        return ZipFile.builder()
-            .setCharset(UTF_8) // as default for FileInputStream
-            .setUseUnicodeExtraFields(true) // as default for FileInputStream
-            .setIgnoreLocalFileHeader(false) // is this FileInputStream.allowStoredEntriesWithDataDescriptor?
-            .setFile(this.zipFile.toFile())
-            .get();
     }
 
 }
