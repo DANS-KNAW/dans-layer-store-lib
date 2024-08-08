@@ -26,7 +26,6 @@ import org.apache.commons.io.IOUtils;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -91,24 +90,21 @@ public class TarArchive implements Archive {
     @Override
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
-        try (TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(Files.newOutputStream(tarFile))) {
+        try (var outputStream = Files.newOutputStream(tarFile);
+            var tarOutput = new TarArchiveOutputStream(outputStream);
+            var files = Files.walk(stagingDir)
+        ) {
             tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-            try (var files = Files.walk(stagingDir)) {
-                files.filter(path -> !Files.isDirectory(path))
-                    .forEach(path -> {
-                        TarArchiveEntry entry = new TarArchiveEntry(stagingDir.relativize(path).toString());
-                        entry.setSize(path.toFile().length());
-                        try {
-                            tarOutput.putArchiveEntry(entry);
-                            log.debug("Adding file {} to tar archive", path);
-                            Files.copy(path, tarOutput);
-                            log.debug("Closing entry for file");
-                            tarOutput.closeArchiveEntry();
-                        }
-                        catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+            for (var fileToZip : files.toList()) {
+                if (fileToZip.toFile().isFile()) {
+                    var entry = new TarArchiveEntry(stagingDir.relativize(fileToZip).toString());
+                    entry.setSize(fileToZip.toFile().length());
+                    tarOutput.putArchiveEntry(entry);
+                    log.debug("Adding file {} to tar archive", fileToZip);
+                    Files.copy(fileToZip, tarOutput);
+                    log.debug("Closing entry for file");
+                    tarOutput.closeArchiveEntry();
+                }
             }
             archived = true;
         }
