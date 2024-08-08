@@ -57,6 +57,7 @@ public class TarArchive implements Archive {
             @Override
             @SneakyThrows
             public void close() {
+                super.close();
                 // Close the backing stream.
                 tar.close();
             }

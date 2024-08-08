@@ -59,6 +59,7 @@ public class ZipArchive implements Archive {
             @Override
             @SneakyThrows
             public void close() {
+                super.close();
                 // Close the backing stream.
                 zip.close();
             }
