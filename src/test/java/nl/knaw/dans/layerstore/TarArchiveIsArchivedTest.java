@@ -23,7 +23,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class TarArchiveIsArchivedTest extends AbstractTestWithTestDir {
     @Test
     public void should_change_status_to_archived() throws Exception {
-        FileUtils.forceMkdir(testDir.toFile());
         FileUtils.forceMkdir(stagingDir.toFile());
         var archive = new TarArchive(testDir.resolve("test.tar"));
         archive.archiveFrom(stagingDir);

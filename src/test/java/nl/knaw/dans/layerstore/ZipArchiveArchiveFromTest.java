@@ -15,12 +15,16 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.Map;
 
-import static nl.knaw.dans.layerstore.TestUtils.zipFileFrom;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Map.entry;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
@@ -38,13 +42,29 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
 
         // Check that the zip file exists and contains the files and not more than that
         assertThat(archiveFile).exists();
-        try (var zip = zipFileFrom(archiveFile)) {
-            assertThat(Collections.list(zip.getEntries()).stream().map(ZipArchiveEntry::getName))
-                .containsExactlyInAnyOrder("file1", "path/to/file2", "path/to/file3", "path/", "path/to/");
+        try (var zip = ZipFile.builder()
+            .setFile(archiveFile.toFile())
+            .get()) {
+            assertThat(Collections.list(zip.getEntries()).stream()
+                .map(archiveEntry -> getEntry(archiveEntry, zip))
+            ).containsExactlyInAnyOrder(
+                entry("file1", "file1 content"),
+                entry("path/", ""),
+                entry("path/to/", ""),
+                entry("path/to/file2", "path/to/file2 content"),
+                entry("path/to/file3", "path/to/file3 content")
+            );
         }
         assertThat(archive.isArchived()).isTrue();
 
         // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
         assertThat(stagingDir).isNotEmptyDirectory();
+    }
+
+    @SneakyThrows
+    private static Map.Entry<String, String> getEntry(ZipArchiveEntry tarArchiveEntry, ZipFile zip) {
+        var bytes = zip.getInputStream(tarArchiveEntry)
+            .readNBytes((int) tarArchiveEntry.getSize());
+        return entry(tarArchiveEntry.getName(), new String(bytes, UTF_8));
     }
 }

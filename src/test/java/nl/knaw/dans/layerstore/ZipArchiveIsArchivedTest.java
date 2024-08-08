@@ -23,7 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class ZipArchiveIsArchivedTest extends AbstractTestWithTestDir {
     @Test
     public void should_change_status_to_archived() throws Exception {
-        FileUtils.forceMkdir(testDir.toFile());
+        FileUtils.forceMkdir(stagingDir.toFile());
         var archive = new ZipArchive(testDir.resolve("test.zip"));
         archive.archiveFrom(stagingDir);
 

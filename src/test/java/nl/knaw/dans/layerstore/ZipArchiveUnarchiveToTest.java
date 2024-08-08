@@ -18,8 +18,8 @@ package nl.knaw.dans.layerstore;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
@@ -78,8 +78,8 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         assertThatThrownBy(() -> zipArchive.unarchiveTo(testDir.resolve("unarchived")))
             .isInstanceOf(RuntimeException.class)
             .hasMessage("Could not unarchive target/test/ZipArchiveUnarchiveToTest/non-existing.zip")
-            .hasCauseInstanceOf(IOException.class)
-            .hasRootCauseMessage("target/test/ZipArchiveUnarchiveToTest/non-existing.zip (No such file or directory)");
+            .hasCauseInstanceOf(NoSuchFileException.class)
+            .hasRootCauseMessage("target/test/ZipArchiveUnarchiveToTest/non-existing.zip");
     }
 
     @Test

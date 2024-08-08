@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
@@ -32,7 +31,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.stream.StreamSupport;
+import java.util.Collections;
 
 import static java.text.MessageFormat.format;
 
@@ -52,9 +51,9 @@ public class ZipArchive implements Archive {
         var zip = ZipFile.builder()
             .setFile(this.zipFile.toFile())
             .get();
-        var entry = StreamSupport.stream(zip.getEntries(filePath).spliterator(), false)
-            .findFirst()
-            .orElseThrow(() -> new IOException(format("{0} not found in {1}", filePath, zipFile.toFile())));
+        var entry = Collections.list(zip.getEntries()).stream()
+            .filter(e -> e.getName().equals(filePath))
+            .findFirst().orElseThrow(() -> new IOException(format("{0} not found in {1}", filePath, zipFile.toFile())));
         return new FilterInputStream(zip.getInputStream(entry)) {
 
             @Override
@@ -68,19 +67,22 @@ public class ZipArchive implements Archive {
 
     @Override
     public void unarchiveTo(Path stagingDir) {
-        try (var zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile.toFile()))) {
-            var entry = zipArchiveInputStream.getNextEntry();
-            while (entry != null) {
-                if (entry.isDirectory()) {
-                    Files.createDirectories(stagingDir.resolve(entry.getName()));
+        try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
+            Collections.list(zip.getEntries()).forEach(entry -> {
+                try {
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(stagingDir.resolve(entry.getName()));
+                    }
+                    else {
+                        Path file = stagingDir.resolve(entry.getName());
+                        Files.createDirectories(file.getParent());
+                        IOUtils.copy(zip.getInputStream(entry), Files.newOutputStream(file));
+                    }
                 }
-                else {
-                    Path file = stagingDir.resolve(entry.getName());
-                    Files.createDirectories(file.getParent());
-                    Files.copy(zipArchiveInputStream, file);
+                catch (IOException e) {
+                    throw new RuntimeException("Could not unarchive " + zipFile.toFile(), e);
                 }
-                entry = zipArchiveInputStream.getNextEntry();
-            }
+            });
         }
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive " + zipFile.toFile(), e);
@@ -140,7 +142,9 @@ public class ZipArchive implements Archive {
     public boolean fileExists(String filePath) {
 
         try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
-            return zip.getEntries(filePath).iterator().hasNext();
+            return Collections.list(zip.getEntries()).stream().anyMatch(e ->
+                e.getName().equals(filePath)
+            );
         }
         catch (IOException e) {
             return false;

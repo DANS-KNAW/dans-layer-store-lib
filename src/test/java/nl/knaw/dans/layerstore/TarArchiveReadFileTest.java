@@ -28,21 +28,21 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_content_of_file_in_archive() throws Exception {
-        TarArchive tarArchive = new TarArchive(tarFile);
+        TarArchive archive = new TarArchive(tarFile);
 
         createStagingFileWithContent("file1");
         createStagingFileWithContent("path/to/file2");
         createStagingFileWithContent("path/to/file3");
 
         // Archive the files
-        tarArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         // Check that the tar file exists
         assertThat(tarFile).exists();
-        assertThat(tarArchive.isArchived()).isTrue();
+        assertThat(archive.isArchived()).isTrue();
 
         // Check that the content is archived
-        try (var inputStream = tarArchive.readFile("path/to/file2")) {
+        try (var inputStream = archive.readFile("path/to/file2")) {
             assertThat(inputStream.readAllBytes())
                 .isEqualTo("path/to/file2 content".getBytes());
         }
@@ -51,20 +51,20 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
     @Test
     @SuppressWarnings("resource") // for assertThatThrownBy
     public void should_throw_when_reading_file_not_in_archive() throws Exception {
-        TarArchive tarArchive = new TarArchive(tarFile);
+        TarArchive archive = new TarArchive(tarFile);
 
         createStagingFileWithContent("file1");
         createStagingFileWithContent("path/to/file3");
 
         // Archive the files
-        tarArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         // Check that the tar file exists
         assertThat(tarFile).exists();
-        assertThat(tarArchive.isArchived()).isTrue();
+        assertThat(archive.isArchived()).isTrue();
 
-        // Check that the content is archived
-        assertThatThrownBy(() -> tarArchive.readFile("path/to/file2").readAllBytes())
+        // Read the content of a file that is not in the archive
+        assertThatThrownBy(() -> archive.readFile("path/to/file2").readAllBytes())
             .isInstanceOf(IOException.class)
             .hasMessage("path/to/file2 not found in target/test/TarArchiveReadFileTest/test.tar");
     }

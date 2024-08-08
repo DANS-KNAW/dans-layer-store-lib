@@ -85,8 +85,11 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         assertThat(tarFile).doesNotExist();
         assertThat(tarArchive.isArchived()).isFalse();
         assertThatThrownBy(() -> tarArchive.unarchiveTo(testDir.resolve("unarchived")))
-            .isInstanceOf(NoSuchFileException.class)
-            .hasMessage("target/test/TarArchiveUnarchiveToTest/non-existing.tar");
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Could not unarchive target/test/TarArchiveUnarchiveToTest/non-existing.tar")
+            .hasCauseInstanceOf(NoSuchFileException.class)
+            .hasRootCauseMessage("target/test/TarArchiveUnarchiveToTest/non-existing.tar");
+
     }
 
     @Test

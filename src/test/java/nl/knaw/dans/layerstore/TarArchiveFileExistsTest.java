@@ -25,22 +25,22 @@ public class TarArchiveFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_file_existence_in_archive() throws Exception {
-        Path tarFile = testDir.resolve("test.tar");
-        TarArchive tarArchive = new TarArchive(tarFile);
+        Path archiveFile = testDir.resolve("test.tar");
+        TarArchive archive = new TarArchive(archiveFile);
 
         createStagingFileWithContent("file1");
         createStagingFileWithContent("path/to/file2");
 
         // Archive the files
-        tarArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
-        // Check that the tar file exists
-        assertThat(tarFile).exists();
-        assertThat(tarArchive.isArchived()).isTrue();
+        // Check that the archive file exists
+        assertThat(archiveFile).exists();
+        assertThat(archive.isArchived()).isTrue();
 
         // Check that the files are archived
-        assertThat(tarArchive.fileExists("file1")).isTrue();
-        assertThat(tarArchive.fileExists("path/to/file2")).isTrue();
-        assertThat(tarArchive.fileExists("path/to/file3")).isFalse();
+        assertThat(archive.fileExists("file1")).isTrue();
+        assertThat(archive.fileExists("path/to/file2")).isTrue();
+        assertThat(archive.fileExists("path/to/file3")).isFalse();
     }
 }

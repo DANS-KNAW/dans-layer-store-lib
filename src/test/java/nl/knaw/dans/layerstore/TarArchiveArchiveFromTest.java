@@ -51,6 +51,10 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
                 entry("path/to/file3", "path/to/file3 content")
             );
         }
+        assertThat(archive.isArchived()).isTrue();
+
+        // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
+        assertThat(stagingDir).isNotEmptyDirectory();
     }
 
     @SneakyThrows

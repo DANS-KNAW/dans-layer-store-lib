@@ -22,46 +22,25 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
-    Path zipFile = testDir.resolve("test.zip");
+    Path archiveFile = testDir.resolve("test.zip");
 
     @Test
-    public void should_return_true_when_file_exists_in_archive() throws Exception {
-        ZipArchive zipArchive = new ZipArchive(zipFile);
-
-        createStagingFileWithContent("file1");
-        createStagingFileWithContent("path/to/file2");
-        createStagingFileWithContent("path/to/file3");
-
-        // Archive the files
-        zipArchive.archiveFrom(stagingDir);
-
-        // Check that the zip file exists
-        assertThat(zipFile).exists();
-        assertThat(zipArchive.isArchived()).isTrue();
-
-        // Check that the files are archived
-        assertThat(zipArchive.fileExists("file1")).isTrue();
-        assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
-        assertThat(zipArchive.fileExists("path/to/file3")).isTrue();
-    }
-
-    @Test
-    public void should_return_false_when_file_does_not_exiss_in_archive() throws Exception {
-        ZipArchive zipArchive = new ZipArchive(zipFile);
+    public void should_return_file_existence_in_archive() throws Exception {
+        ZipArchive archive = new ZipArchive(archiveFile);
 
         createStagingFileWithContent("file1");
         createStagingFileWithContent("path/to/file2");
 
         // Archive the files
-        zipArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
-        // Check that the zip file exists
-        assertThat(zipFile).exists();
-        assertThat(zipArchive.isArchived()).isTrue();
+        // Check that the archive file exists
+        assertThat(archiveFile).exists();
+        assertThat(archive.isArchived()).isTrue();
 
         // Check that the files are archived
-        assertThat(zipArchive.fileExists("file1")).isTrue();
-        assertThat(zipArchive.fileExists("path/to/file2")).isTrue();
-        assertThat(zipArchive.fileExists("path/to/file3")).isFalse();
+        assertThat(archive.fileExists("file1")).isTrue();
+        assertThat(archive.fileExists("path/to/file2")).isTrue();
+        assertThat(archive.fileExists("path/to/file3")).isFalse();
     }
 }

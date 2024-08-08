@@ -19,7 +19,6 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarFile;
 import org.apache.commons.io.IOUtils;
@@ -27,7 +26,6 @@ import org.apache.commons.io.IOUtils;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,22 +64,26 @@ public class TarArchive implements Archive {
     }
 
     @Override
-    @SneakyThrows
     public void unarchiveTo(Path stagingDir) {
-        try (TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
-            TarArchiveEntry entry;
-            while ((entry = tarInput.getNextEntry()) != null) {
-                Path outputPath = stagingDir.resolve(entry.getName());
-                if (entry.isDirectory()) {
-                    Files.createDirectories(outputPath);
-                }
-                else {
-                    Files.createDirectories(outputPath.getParent());
-                    try (OutputStream outputFileStream = Files.newOutputStream(outputPath)) {
-                        IOUtils.copy(tarInput, outputFileStream);
+        try (var tar = new TarFile(tarFile.toFile())) {
+            tar.getEntries().forEach(entry -> {
+                try {
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(stagingDir.resolve(entry.getName()));
+                    }
+                    else {
+                        Path file = stagingDir.resolve(entry.getName());
+                        Files.createDirectories(file.getParent());
+                        IOUtils.copy(tar.getInputStream(entry), Files.newOutputStream(file));
                     }
                 }
-            }
+                catch (IOException e) {
+                    throw new RuntimeException("Could not unarchive " + tarFile.toFile(), e);
+                }
+            });
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Could not unarchive " + tarFile.toFile(), e);
         }
     }
 
@@ -119,14 +121,13 @@ public class TarArchive implements Archive {
     @Override
     @SneakyThrows
     public boolean fileExists(String filePath) {
-        try (TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
-            TarArchiveEntry entry;
-            while ((entry = tarInput.getNextEntry()) != null) {
-                if (entry.getName().equals(filePath)) {
-                    return true;
-                }
-            }
+        try (var tar = new TarFile(tarFile.toFile())) {
+            return tar.getEntries().stream().anyMatch(e ->
+                e.getName().equals(filePath)
+            );
         }
-        return false;
+        catch (IOException e) {
+            return false;
+        }
     }
 }
