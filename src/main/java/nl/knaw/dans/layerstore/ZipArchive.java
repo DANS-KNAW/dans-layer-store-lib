@@ -69,13 +69,15 @@ public class ZipArchive implements Archive {
         try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
             var entries = Collections.list(zip.getEntries());
             for (var entry : entries) {
-                // prevent extracting anything in case of Zip Slip
-                if (isZipSlip(stagingDir, entry))
+                // prevent extracting anything in case of a Zip Slip
+                var filePath = stagingDir.resolve(entry.getName());
+                if (!filePath.normalize().startsWith(stagingDir)) {
                     throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), zipFile));
+                }
             }
             for (var entry : entries) {
-                if (!isZipSlip(stagingDir, entry)) { // keep CodeQL happy
-                    var filePath = stagingDir.resolve(entry.getName());
+                var filePath = stagingDir.resolve(entry.getName());
+                if (filePath.normalize().startsWith(stagingDir)) { // keep CodeQL happy
                     if (entry.isDirectory()) {
                         Files.createDirectories(stagingDir.resolve(filePath));
                     }
@@ -89,11 +91,6 @@ public class ZipArchive implements Archive {
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive " + zipFile.toFile(), e);
         }
-    }
-
-    private boolean isZipSlip(Path stagingDir, ZipArchiveEntry entry) throws IOException {
-        var filePath = stagingDir.resolve(entry.getName());
-        return (!filePath.normalize().startsWith(stagingDir));
     }
 
     @Override

@@ -68,13 +68,15 @@ public class TarArchive implements Archive {
         try (var tar = new TarFile(tarFile.toFile())) {
             var entries = tar.getEntries();
             for (var entry : entries) {
-                // prevent extracting anything in case of Zip Slip
-                if (isZipSlip(stagingDir, entry))
+                // prevent extracting anything in case of a Zip Slip
+                var filePath = stagingDir.resolve(entry.getName());
+                if (!filePath.normalize().startsWith(stagingDir)) {
                     throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), tarFile));
+                }
             }
-            for (var entry : entries) {
-                if (!isZipSlip(stagingDir, entry)) { // keep CodeQL happy
-                    var filePath = stagingDir.resolve(entry.getName());
+            for (TarArchiveEntry entry : entries) {
+                var filePath = stagingDir.resolve(entry.getName());
+                if (filePath.normalize().startsWith(stagingDir)) {
                     if (entry.isDirectory()) {
                         Files.createDirectories(filePath);
                     }
@@ -88,11 +90,6 @@ public class TarArchive implements Archive {
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive " + tarFile.toFile(), e);
         }
-    }
-
-    private boolean isZipSlip(Path stagingDir, TarArchiveEntry entry) throws IOException {
-        var filePath = stagingDir.resolve(entry.getName());
-        return (!filePath.normalize().startsWith(stagingDir));
     }
 
     @Override

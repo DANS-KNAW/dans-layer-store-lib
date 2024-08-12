@@ -113,7 +113,7 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var unarchived = testDir.resolve("unarchived");
         assertThatThrownBy(() -> archive.unarchiveTo(unarchived))
             .hasCauseInstanceOf(IOException.class)
-            .hasRootCauseMessage("Detected Zip Slip: ../target/test/ZipArchiveUnarchiveToTest/violating/path/ in target/test/ZipArchiveUnarchiveToTest/test.tar");
+            .hasRootCauseMessage("Detected Zip Slip: ../target/test/TarArchiveUnarchiveToTest/violating/path/ in target/test/TarArchiveUnarchiveToTest/test.tar");
     }
 
     @Test
