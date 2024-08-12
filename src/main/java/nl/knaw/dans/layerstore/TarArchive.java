@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 
 import static java.text.MessageFormat.format;
 
@@ -66,21 +67,19 @@ public class TarArchive implements Archive {
     @Override
     public void unarchiveTo(Path stagingDir) {
         try (var tar = new TarFile(tarFile.toFile())) {
-            tar.getEntries().forEach(entry -> {
-                try {
-                    if (entry.isDirectory()) {
-                        Files.createDirectories(stagingDir.resolve(entry.getName()));
-                    }
-                    else {
-                        Path file = stagingDir.resolve(entry.getName());
-                        Files.createDirectories(file.getParent());
-                        IOUtils.copy(tar.getInputStream(entry), Files.newOutputStream(file));
-                    }
+            for (TarArchiveEntry entry : tar.getEntries()) {
+                var filePath = stagingDir.resolve(entry.getName());
+                if (!filePath.normalize().startsWith(stagingDir)) {
+                    throw new IOException(format("Detected Zip Slip vulnerability: {0} in {1}", entry.getName(), tarFile));
                 }
-                catch (IOException e) {
-                    throw new RuntimeException("Could not unarchive " + tarFile.toFile(), e);
+                if (entry.isDirectory()) {
+                    Files.createDirectories(filePath);
                 }
-            });
+                else {
+                    Files.createDirectories(filePath.getParent());
+                    IOUtils.copy(tar.getInputStream(entry), Files.newOutputStream(filePath));
+                }
+            }
         }
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive " + tarFile.toFile(), e);
