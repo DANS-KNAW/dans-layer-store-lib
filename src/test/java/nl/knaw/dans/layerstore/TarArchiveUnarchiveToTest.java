@@ -15,10 +15,14 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -76,6 +80,40 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         // Unarchive the files
         tarArchive.unarchiveTo(testDir.resolve("unarchived"));
         assertThat(emptyDir).exists();
+    }
+
+    @Test
+    public void should_report_zip_slip() throws Exception {
+        var tarFile = testDir.resolve("test.tar");
+        var archive = new TarArchive(tarFile);
+        // Create some files to archive
+        var file1 = stagingDir.resolve("file1");
+
+        // Write some string content to the files
+        FileUtils.write(file1.toFile(), "file1 content", "UTF-8");
+        Files.createDirectories(testDir.resolve("layer_staging"));
+
+        // Archive the files
+        archive.archiveFrom(stagingDir);
+
+        // Check that the tar file exists
+        assertThat(tarFile).exists();
+        AssertionsForClassTypes.assertThat(archive.isArchived()).isTrue();
+
+        // add malicious file to the archive
+        try (var zip = new TarArchiveOutputStream(new FileOutputStream(tarFile.toFile()))) {
+            var maliciousDir = testDir.resolve("violating/path");
+            Files.createDirectories(maliciousDir);
+            var entry = new TarArchiveEntry(maliciousDir, "../" + maliciousDir);
+            zip.putArchiveEntry(entry);
+            zip.closeArchiveEntry();
+        }
+
+        // Unarchive the files
+        var unarchived = testDir.resolve("unarchived");
+        assertThatThrownBy(() -> archive.unarchiveTo(unarchived))
+            .hasCauseInstanceOf(IOException.class)
+            .hasRootCauseMessage("Detected Zip Slip: ../target/test/ZipArchiveUnarchiveToTest/violating/path/ in target/test/ZipArchiveUnarchiveToTest/test.tar");
     }
 
     @Test

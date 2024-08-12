@@ -68,26 +68,32 @@ public class ZipArchive implements Archive {
     public void unarchiveTo(Path stagingDir) {
         try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
             var entries = Collections.list(zip.getEntries());
-            for (ZipArchiveEntry entry : entries) {
-                var filePath = stagingDir.resolve(entry.getName());
-                if (!filePath.normalize().startsWith(stagingDir)) {
+            for (var entry : entries) {
+                // prevent extracting anything in case of Zip Slip
+                if (isZipSlip(stagingDir, entry))
                     throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), zipFile));
-                }
             }
-            for (ZipArchiveEntry entry : entries) {
-                var filePath = stagingDir.resolve(entry.getName());
-                if (entry.isDirectory()) {
-                    Files.createDirectories(stagingDir.resolve(filePath));
-                }
-                else {
-                    Files.createDirectories(filePath.getParent());
-                    IOUtils.copy(zip.getInputStream(entry), Files.newOutputStream(filePath));
+            for (var entry : entries) {
+                if (!isZipSlip(stagingDir, entry)) { // keep CodeQL happy
+                    var filePath = stagingDir.resolve(entry.getName());
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(stagingDir.resolve(filePath));
+                    }
+                    else {
+                        Files.createDirectories(filePath.getParent());
+                        IOUtils.copy(zip.getInputStream(entry), Files.newOutputStream(filePath));
+                    }
                 }
             }
         }
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive " + zipFile.toFile(), e);
         }
+    }
+
+    private boolean isZipSlip(Path stagingDir, ZipArchiveEntry entry) throws IOException {
+        var filePath = stagingDir.resolve(entry.getName());
+        return (!filePath.normalize().startsWith(stagingDir));
     }
 
     @Override

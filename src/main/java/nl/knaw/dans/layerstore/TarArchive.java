@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.MessageFormat;
 
 import static java.text.MessageFormat.format;
 
@@ -67,23 +66,33 @@ public class TarArchive implements Archive {
     @Override
     public void unarchiveTo(Path stagingDir) {
         try (var tar = new TarFile(tarFile.toFile())) {
-            for (TarArchiveEntry entry : tar.getEntries()) {
-                var filePath = stagingDir.resolve(entry.getName());
-                if (!filePath.normalize().startsWith(stagingDir)) {
-                    throw new IOException(format("Detected Zip Slip vulnerability: {0} in {1}", entry.getName(), tarFile));
-                }
-                if (entry.isDirectory()) {
-                    Files.createDirectories(filePath);
-                }
-                else {
-                    Files.createDirectories(filePath.getParent());
-                    IOUtils.copy(tar.getInputStream(entry), Files.newOutputStream(filePath));
+            var entries = tar.getEntries();
+            for (var entry : entries) {
+                // prevent extracting anything in case of Zip Slip
+                if (isZipSlip(stagingDir, entry))
+                    throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), tarFile));
+            }
+            for (var entry : entries) {
+                if (!isZipSlip(stagingDir, entry)) { // keep CodeQL happy
+                    var filePath = stagingDir.resolve(entry.getName());
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(filePath);
+                    }
+                    else {
+                        Files.createDirectories(filePath.getParent());
+                        IOUtils.copy(tar.getInputStream(entry), Files.newOutputStream(filePath));
+                    }
                 }
             }
         }
         catch (IOException e) {
             throw new RuntimeException("Could not unarchive " + tarFile.toFile(), e);
         }
+    }
+
+    private boolean isZipSlip(Path stagingDir, TarArchiveEntry entry) throws IOException {
+        var filePath = stagingDir.resolve(entry.getName());
+        return (!filePath.normalize().startsWith(stagingDir));
     }
 
     @Override

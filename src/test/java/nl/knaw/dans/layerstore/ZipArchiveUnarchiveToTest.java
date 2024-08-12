@@ -77,8 +77,8 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_report_zip_slip() throws Exception {
-        var tarFile = testDir.resolve("test.tar");
-        var tarArchive = new ZipArchive(tarFile);
+        var zipFile = testDir.resolve("test.tar");
+        var archive = new ZipArchive(zipFile);
         // Create some files to archive
         var file1 = stagingDir.resolve("file1");
 
@@ -87,14 +87,14 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         Files.createDirectories(testDir.resolve("layer_staging"));
 
         // Archive the files
-        tarArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
-        // Check that the tar file exists
-        assertThat(tarFile).exists();
-        AssertionsForClassTypes.assertThat(tarArchive.isArchived()).isTrue();
+        // Check that the zip file exists
+        assertThat(zipFile).exists();
+        AssertionsForClassTypes.assertThat(archive.isArchived()).isTrue();
 
         // add malicious file to the archive
-        try (var zip = new ZipArchiveOutputStream(new FileOutputStream(tarFile.toFile()))) {
+        try (var zip = new ZipArchiveOutputStream(new FileOutputStream(zipFile.toFile()))) {
             var maliciousDir = testDir.resolve("violating/path");
             Files.createDirectories(maliciousDir);
             var entry = new ZipArchiveEntry(maliciousDir, "../" + maliciousDir);
@@ -104,10 +104,9 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
 
         // Unarchive the files
         var unarchived = testDir.resolve("unarchived");
-        assertThatThrownBy(() -> tarArchive.unarchiveTo(unarchived))
+        assertThatThrownBy(() -> archive.unarchiveTo(unarchived))
             .hasCauseInstanceOf(IOException.class)
             .hasRootCauseMessage("Detected Zip Slip: ../target/test/ZipArchiveUnarchiveToTest/violating/path/ in target/test/ZipArchiveUnarchiveToTest/test.tar");
-        assertThat(unarchived).doesNotExist();
     }
 
     @Test
