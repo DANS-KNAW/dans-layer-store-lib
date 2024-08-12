@@ -116,7 +116,6 @@ public class TarArchive implements Archive {
     }
 
     @Override
-    @SneakyThrows
     public boolean fileExists(String filePath) {
         try (var tar = new TarFile(tarFile.toFile())) {
             return tar.getEntries().stream().anyMatch(e ->

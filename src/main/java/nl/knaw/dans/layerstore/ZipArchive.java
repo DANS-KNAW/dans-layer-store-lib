@@ -130,5 +130,4 @@ public class ZipArchive implements Archive {
             return false;
         }
     }
-
 }
