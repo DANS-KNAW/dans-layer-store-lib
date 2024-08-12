@@ -67,11 +67,15 @@ public class ZipArchive implements Archive {
     @Override
     public void unarchiveTo(Path stagingDir) {
         try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
-            for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
+            var entries = Collections.list(zip.getEntries());
+            for (ZipArchiveEntry entry : entries) {
                 var filePath = stagingDir.resolve(entry.getName());
                 if (!filePath.normalize().startsWith(stagingDir)) {
-                    throw new IOException(format("Detected Zip Slip vulnerability: {0} in {1}", entry.getName(), zipFile));
+                    throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), zipFile));
                 }
+            }
+            for (ZipArchiveEntry entry : entries) {
+                var filePath = stagingDir.resolve(entry.getName());
                 if (entry.isDirectory()) {
                     Files.createDirectories(stagingDir.resolve(filePath));
                 }
