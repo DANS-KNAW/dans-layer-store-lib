@@ -76,7 +76,7 @@ public class TarArchive implements Archive {
             }
             for (TarArchiveEntry entry : entries) {
                 var filePath = stagingDir.resolve(entry.getName());
-                if (filePath.normalize().startsWith(stagingDir)) {
+                if (filePath.normalize().startsWith(stagingDir)) { // keep CodeQL happy
                     if (entry.isDirectory()) {
                         Files.createDirectories(filePath);
                     }
