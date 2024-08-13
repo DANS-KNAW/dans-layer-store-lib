@@ -54,14 +54,4 @@ public class TestUtils {
     public static void assumeNotYetFixed(String message) {
         assumeTrue(false, message);
     }
-
-    static ZipFile zipFileFrom(Path zipFile) throws IOException {
-        // replaces deprecated constructor
-        return ZipFile.builder()
-            .setCharset(UTF_8)
-            .setUseUnicodeExtraFields(true)
-            .setIgnoreLocalFileHeader(false)
-            .setFile(zipFile.toFile())
-            .get();
-    }
 }
