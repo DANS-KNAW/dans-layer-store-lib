@@ -79,7 +79,7 @@ public class ZipArchive implements Archive {
                 var filePath = stagingDir.resolve(entry.getName());
                 if (filePath.normalize().startsWith(stagingDir)) { // keep CodeQL happy
                     if (entry.isDirectory()) {
-                        Files.createDirectories(stagingDir.resolve(filePath));
+                        Files.createDirectories(filePath);
                     }
                     else {
                         Files.createDirectories(filePath.getParent());
@@ -98,20 +98,23 @@ public class ZipArchive implements Archive {
     public void archiveFrom(Path stagingDir) {
         try (var outputStream = Files.newOutputStream(zipFile);
             var bufferedOutputStream = new BufferedOutputStream(outputStream);
-            var zipArchiveOutputStream = new ZipArchiveOutputStream(bufferedOutputStream);
+            var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
             var files = Files.walk(stagingDir)
         ) {
-            for (var fileToZip : files.toList()) {
-                if (!fileToZip.equals(stagingDir)) {
-                    var entry = new ZipArchiveEntry(fileToZip, stagingDir.relativize(fileToZip).toString());
-                    entry.setSize(fileToZip.toFile().length());
-                    zipArchiveOutputStream.putArchiveEntry(entry);
-                    if (fileToZip.toFile().isFile()) {
-                        try (var fileInputStream = new FileInputStream(fileToZip.toFile())) {
-                            IOUtils.copy(fileInputStream, zipArchiveOutputStream);
+            for (var fileToArchive : files.toList()) {
+                if (!fileToArchive.equals(stagingDir)) {
+                    var entry = new ZipArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
+                    var regularFile = Files.isRegularFile(fileToArchive);
+                    if (regularFile) {
+                        entry.setSize(fileToArchive.toFile().length());
+                    }
+                    zipOutput.putArchiveEntry(entry);
+                    if (regularFile) {
+                        try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
+                            IOUtils.copy(fileInputStream, zipOutput);
                         }
                     }
-                    zipArchiveOutputStream.closeArchiveEntry();
+                    zipOutput.closeArchiveEntry();
                 }
             }
             archived = true;

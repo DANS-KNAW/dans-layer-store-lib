@@ -47,6 +47,8 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
                 getEntry(tarArchiveEntry, tar)
             )).containsExactlyInAnyOrder(
                 entry("file1", "file1 content"),
+                entry("path/", ""),
+                entry("path/to/", ""),
                 entry("path/to/file2", "path/to/file2 content"),
                 entry("path/to/file3", "path/to/file3 content")
             );

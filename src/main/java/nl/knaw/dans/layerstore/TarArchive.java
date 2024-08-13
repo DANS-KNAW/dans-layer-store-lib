@@ -23,6 +23,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarFile;
 import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +76,7 @@ public class TarArchive implements Archive {
                     throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), tarFile));
                 }
             }
-            for (TarArchiveEntry entry : entries) {
+            for (var entry : entries) {
                 var filePath = stagingDir.resolve(entry.getName());
                 if (filePath.normalize().startsWith(stagingDir)) { // keep CodeQL happy
                     if (entry.isDirectory()) {
@@ -96,18 +98,24 @@ public class TarArchive implements Archive {
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
         try (var outputStream = Files.newOutputStream(tarFile);
-            var tarOutput = new TarArchiveOutputStream(outputStream);
+            var bufferedOutputStream = new BufferedOutputStream(outputStream);
+            var tarOutput = new TarArchiveOutputStream(bufferedOutputStream);
             var files = Files.walk(stagingDir)
         ) {
             tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-            for (var fileToZip : files.toList()) {
-                if (fileToZip.toFile().isFile()) {
-                    var entry = new TarArchiveEntry(stagingDir.relativize(fileToZip).toString());
-                    entry.setSize(fileToZip.toFile().length());
+            for (var fileToArchive : files.toList()) {
+                if (!fileToArchive.equals(stagingDir)) {
+                    var entry = new TarArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
+                    var regularFile = Files.isRegularFile(fileToArchive);
+                    if (regularFile) {
+                        entry.setSize(fileToArchive.toFile().length());
+                    }
                     tarOutput.putArchiveEntry(entry);
-                    log.debug("Adding file {} to tar archive", fileToZip);
-                    Files.copy(fileToZip, tarOutput);
-                    log.debug("Closing entry for file");
+                    if (regularFile) {
+                        try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
+                            IOUtils.copy(fileInputStream, tarOutput);
+                        }
+                    }
                     tarOutput.closeArchiveEntry();
                 }
             }
