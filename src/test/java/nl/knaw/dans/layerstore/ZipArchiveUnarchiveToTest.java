@@ -37,9 +37,9 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var zipFile = testDir.resolve("test.zip");
         var zipArchive = new ZipArchive(zipFile);
 
-        createStagingFileWithContent("file1");
-        createStagingFileWithContent("path/to/file2");
-        createStagingFileWithContent("path/to/file3");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
         zipArchive.archiveFrom(stagingDir);
@@ -63,9 +63,8 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var zipFile = testDir.resolve("test.zip");
         var zipArchive = new ZipArchive(zipFile);
         // Create an empty directory to archive
-        Path emptyDir = testDir.resolve("staging/emptyDir");
+        Path emptyDir = stagingDir.resolve("emptyDir");
         FileUtils.forceMkdir(emptyDir.toFile());
-        FileUtils.forceMkdir(stagingDir.toFile());
 
         // Archive the empty directory
         zipArchive.archiveFrom(stagingDir);
@@ -79,12 +78,8 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     public void should_report_zip_slip() throws Exception {
         var zipFile = testDir.resolve("test.tar");
         var archive = new ZipArchive(zipFile);
-        // Create some files to archive
-        var file1 = stagingDir.resolve("file1");
 
-        // Write some string content to the files
-        FileUtils.write(file1.toFile(), "file1 content", "UTF-8");
-        Files.createDirectories(testDir.resolve("layer_staging"));
+        createStagingFileWithContent("file1", "file1 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);
@@ -126,7 +121,8 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     public void should_throw_exception_when_unarchiving_to_non_empty_directory() throws Exception {
         var zipFile = testDir.resolve("test.zip");
         var zipArchive = new ZipArchive(zipFile);
-        // Create a files to archive
+
+        // Create a file to archive
         Files.createDirectories(stagingDir);
         Files.writeString(stagingDir.resolve("file1"), "file1 content");
         zipArchive.archiveFrom(stagingDir);

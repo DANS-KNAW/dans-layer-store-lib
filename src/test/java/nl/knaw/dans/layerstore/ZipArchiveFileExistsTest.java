@@ -28,8 +28,8 @@ public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
     public void should_return_file_existence_in_archive() throws Exception {
         ZipArchive archive = new ZipArchive(archiveFile);
 
-        createStagingFileWithContent("file1");
-        createStagingFileWithContent("path/to/file2");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);

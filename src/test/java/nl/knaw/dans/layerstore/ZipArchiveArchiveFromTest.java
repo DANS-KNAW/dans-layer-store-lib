@@ -33,9 +33,9 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
         var archiveFile = testDir.resolve("test.zip");
         var archive = new ZipArchive(archiveFile);
 
-        createStagingFileWithContent("file1");
-        createStagingFileWithContent("path/to/file2");
-        createStagingFileWithContent("path/to/file3");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);

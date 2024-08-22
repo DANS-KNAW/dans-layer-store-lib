@@ -33,9 +33,9 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
         var archiveFile = testDir.resolve("test.tar");
         var archive = new TarArchive(archiveFile);
 
-        createStagingFileWithContent("file1");
-        createStagingFileWithContent("path/to/file2");
-        createStagingFileWithContent("path/to/file3");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);

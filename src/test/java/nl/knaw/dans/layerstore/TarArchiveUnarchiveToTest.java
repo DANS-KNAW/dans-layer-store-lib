@@ -36,17 +36,10 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     public void should_unarchive_tarfile() throws Exception {
         var tarFile = testDir.resolve("test.tar");
         var tarArchive = new TarArchive(tarFile);
-        // Create some files to archive
-        var file1 = stagingDir.resolve("file1");
-        var file2 = stagingDir.resolve("path/to/file2");
-        var file3 = stagingDir.resolve("path/to/file3");
 
-        // Write some string content to the files
-        FileUtils.forceMkdir(file2.getParent().toFile());
-        FileUtils.write(file1.toFile(), "file1 content", "UTF-8");
-        FileUtils.write(file2.toFile(), "file2 content", "UTF-8");
-        FileUtils.write(file3.toFile(), "file3 content", "UTF-8");
-        Files.createDirectories(testDir.resolve("layer_staging"));
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
         tarArchive.archiveFrom(stagingDir);
@@ -70,9 +63,8 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var tarFile = testDir.resolve("test.tar");
         var tarArchive = new TarArchive(tarFile);
         // Create an empty directory to archive
-        Path emptyDir = testDir.resolve("staging/emptyDir");
+        Path emptyDir = stagingDir.resolve("emptyDir");
         FileUtils.forceMkdir(emptyDir.toFile());
-        Files.createDirectories(testDir.resolve("layer_staging"));
 
         // Archive the empty directory
         tarArchive.archiveFrom(stagingDir);
@@ -86,12 +78,8 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     public void should_report_zip_slip() throws Exception {
         var tarFile = testDir.resolve("test.tar");
         var archive = new TarArchive(tarFile);
-        // Create some files to archive
-        var file1 = stagingDir.resolve("file1");
 
-        // Write some string content to the files
-        FileUtils.write(file1.toFile(), "file1 content", "UTF-8");
-        Files.createDirectories(testDir.resolve("layer_staging"));
+        createStagingFileWithContent("file1", "file1 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);
@@ -134,10 +122,9 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     public void should_throw_exception_when_unarchiving_to_non_empty_directory() throws Exception {
         var tarFile = testDir.resolve("test.tar");
         var tarArchive = new TarArchive(tarFile);
-        // Create a files to archive
-        Files.createDirectories(testDir.resolve("staging"));
-        Files.createDirectories(testDir.resolve("layer_staging"));
-        Files.writeString(testDir.resolve("staging/file1"), "file1 content");
+        // Create a file to archive
+        Files.createDirectories(stagingDir);
+        Files.writeString(stagingDir.resolve("file1"), "file1 content");
         tarArchive.archiveFrom(stagingDir);
 
         Files.createDirectories(testDir.resolve("unarchived/content"));

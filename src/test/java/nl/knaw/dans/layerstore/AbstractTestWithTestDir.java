@@ -32,10 +32,10 @@ public abstract class AbstractTestWithTestDir {
 
     protected final Path archiveDir = testDir.resolve("layer_archive");
 
-    public void createStagingFileWithContent(String path) throws IOException {
+    public void createStagingFileWithContent(String path, String content) throws IOException {
         var filePath = stagingDir.resolve(path);
         FileUtils.forceMkdir(filePath.getParent().toFile());
-        FileUtils.write(filePath.toFile(), path + " content", "UTF-8");
+        FileUtils.write(filePath.toFile(), content, "UTF-8");
     }
 
     @BeforeEach

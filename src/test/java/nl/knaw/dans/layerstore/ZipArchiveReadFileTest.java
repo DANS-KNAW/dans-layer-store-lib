@@ -30,10 +30,10 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
     public void should_return_content_of_file_in_archive() throws Exception {
         ZipArchive archive = new ZipArchive(zipFile);
 
-        createStagingFileWithContent("file1");
-        createStagingFileWithContent("path/to/file2");
-        createStagingFileWithContent("path/to/file3");
-        createStagingFileWithContent("another/path/to/file2");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
+        createStagingFileWithContent("another/path/to/file2", "another/path/to/file2 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);
@@ -54,8 +54,8 @@ public class ZipArchiveReadFileTest extends AbstractTestWithTestDir {
     public void should_throw_when_reading_file_not_in_archive() throws Exception {
         ZipArchive archive = new ZipArchive(zipFile);
 
-        createStagingFileWithContent("file1");
-        createStagingFileWithContent("path/to/file3");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);
