@@ -127,9 +127,8 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var zipFile = testDir.resolve("test.zip");
         var zipArchive = new ZipArchive(zipFile);
         // Create a files to archive
-        Files.createDirectories(testDir.resolve("staging"));
         Files.createDirectories(stagingDir);
-        Files.writeString(testDir.resolve("staging/file1"), "file1 content");
+        Files.writeString(stagingDir.resolve("file1"), "file1 content");
         zipArchive.archiveFrom(stagingDir);
 
         Files.createDirectories(testDir.resolve("unarchived/content"));
