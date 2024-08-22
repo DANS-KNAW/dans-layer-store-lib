@@ -33,6 +33,7 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
         createStagingFileWithContent("path/to/file3", "path/to/file3 content");
+        createStagingFileWithContent("another/path/to/file2", "another/path/to/file2 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);

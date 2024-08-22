@@ -35,22 +35,22 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_unarchive_zipfile() throws Exception {
         var zipFile = testDir.resolve("test.zip");
-        var zipArchive = new ZipArchive(zipFile);
+        var archive = new ZipArchive(zipFile);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
         createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
-        zipArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         // Check that the zip file exists
         assertThat(zipFile).exists();
-        assertThat(zipArchive.isArchived()).isTrue();
+        assertThat(archive.isArchived()).isTrue();
 
         // Unarchive the files
         var unarchived = testDir.resolve("unarchived");
-        zipArchive.unarchiveTo(unarchived);
+        archive.unarchiveTo(unarchived);
 
         // Check that the files are unarchived
         assertThat(unarchived.resolve("file1")).exists();
@@ -61,16 +61,16 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_unarchive_zipfile_with_empty_directory() throws Exception {
         var zipFile = testDir.resolve("test.zip");
-        var zipArchive = new ZipArchive(zipFile);
+        var archive = new ZipArchive(zipFile);
         // Create an empty directory to archive
         Path emptyDir = stagingDir.resolve("emptyDir");
         FileUtils.forceMkdir(emptyDir.toFile());
 
         // Archive the empty directory
-        zipArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         // Unarchive the files
-        zipArchive.unarchiveTo(testDir.resolve("unarchived"));
+        archive.unarchiveTo(testDir.resolve("unarchived"));
         assertThat(emptyDir).exists();
     }
 
@@ -107,10 +107,10 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_exception_when_unarchiving_non_existing_zipfile() {
         var zipFile = testDir.resolve("non-existing.zip");
-        var zipArchive = new ZipArchive(zipFile);
+        var archive = new ZipArchive(zipFile);
         assertThat(zipFile).doesNotExist();
-        assertThat(zipArchive.isArchived()).isFalse();
-        assertThatThrownBy(() -> zipArchive.unarchiveTo(testDir.resolve("unarchived")))
+        assertThat(archive.isArchived()).isFalse();
+        assertThatThrownBy(() -> archive.unarchiveTo(testDir.resolve("unarchived")))
             .isInstanceOf(RuntimeException.class)
             .hasMessage("Could not unarchive target/test/ZipArchiveUnarchiveToTest/non-existing.zip")
             .hasCauseInstanceOf(NoSuchFileException.class)
@@ -120,16 +120,16 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_exception_when_unarchiving_to_non_empty_directory() throws Exception {
         var zipFile = testDir.resolve("test.zip");
-        var zipArchive = new ZipArchive(zipFile);
+        var archive = new ZipArchive(zipFile);
 
         // Create a file to archive
         Files.createDirectories(stagingDir);
         Files.writeString(stagingDir.resolve("file1"), "file1 content");
-        zipArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         Files.createDirectories(testDir.resolve("unarchived/content"));
 
         assumeNotYetFixed("unarchiveTo does not check if the target directory exists");
-        assertThatThrownBy(() -> zipArchive.unarchiveTo(testDir.resolve("unarchived")));
+        assertThatThrownBy(() -> archive.unarchiveTo(testDir.resolve("unarchived")));
     }
 }
