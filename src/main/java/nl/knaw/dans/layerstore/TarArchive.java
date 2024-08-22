@@ -25,10 +25,12 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 import static java.text.MessageFormat.format;
@@ -129,13 +131,14 @@ public class TarArchive implements Archive {
     }
 
     @Override
+    @SneakyThrows
     public boolean fileExists(String filePath) {
         try (var tar = new TarFile(tarFile.toFile())) {
             return tar.getEntries().stream().anyMatch(e ->
                 e.getName().equals(filePath)
             );
         }
-        catch (IOException e) {
+        catch (NoSuchFileException | FileNotFoundException e) {
             return false;
         }
     }

@@ -43,4 +43,10 @@ public class TarArchiveFileExistsTest extends AbstractTestWithTestDir {
         assertThat(archive.fileExists("path/to/file2")).isTrue();
         assertThat(archive.fileExists("path/to/file3")).isFalse();
     }
+
+    @Test
+    public void should_return_false_if_the_archive_does_not_exist() {
+        var archive = new TarArchive(Path.of("does-not-exist"));
+        assertThat(archive.fileExists("xx")).isFalse();
+    }
 }

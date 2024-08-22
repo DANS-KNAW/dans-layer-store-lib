@@ -24,10 +24,12 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
 
@@ -127,6 +129,7 @@ public class ZipArchive implements Archive {
     }
 
     @Override
+    @SneakyThrows
     public boolean fileExists(String filePath) {
 
         try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
@@ -134,7 +137,7 @@ public class ZipArchive implements Archive {
                 e.getName().equals(filePath)
             );
         }
-        catch (IOException e) {
+        catch (NoSuchFileException | FileNotFoundException e) {
             return false;
         }
     }
