@@ -21,7 +21,7 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>1.5.1</version>
+        <version>1.9.0</version>
         <relativePath />
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
@@ -33,15 +33,10 @@
         <tag>HEAD</tag>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
     </scm>
-    <properties>
-        <!-- TODO: move this to the parent pom -->
-        <dans-java-utils.version>0.14.0</dans-java-utils.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-java-utils</artifactId>
-            <version>${dans-java-utils.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
