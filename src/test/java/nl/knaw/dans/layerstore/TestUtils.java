@@ -15,32 +15,9 @@
  */
 package nl.knaw.dans.layerstore;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
-import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class TestUtils {
-    public static ListAppender<ILoggingEvent> captureLog() {
-        var logger = (Logger) LoggerFactory.getLogger(LayerManagerImpl.class);
-        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
-        listAppender.start();
-        logger.setLevel(Level.ERROR);
-        logger.addAppender(listAppender);
-        return listAppender;
-    }
-
-    public static ByteArrayOutputStream captureStdout() {
-        var outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-        return outContent;
-    }
 
     /**
      * Assume that a bug is not yet fixed. This allows to execute as much of a test as possible to show code coverage, without creating false positives or false negatives.

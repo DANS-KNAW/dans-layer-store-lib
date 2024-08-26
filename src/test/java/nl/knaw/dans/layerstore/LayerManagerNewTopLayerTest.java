@@ -17,26 +17,28 @@ package nl.knaw.dans.layerstore;
 
 import ch.qos.logback.classic.Level;
 import io.dropwizard.util.DirectExecutorService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static nl.knaw.dans.layerstore.TestUtils.captureLog;
-import static nl.knaw.dans.layerstore.TestUtils.captureStdout;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
+public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
 
     // the method under test is also involved in tests for other LayerManagerImpl methods and LayeredItemStore methods
 
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+        logged = captureLog(Level.ERROR, "nl.knaw.dans"); // override debug level
+    }
+
     @Test
     public void should_log_already_archived() throws IOException {
-        var outContent = captureStdout();
-        var listAppender = captureLog();
 
         var layerManager = new LayerManagerImpl(stagingDir,
             new DmfTarArchiveProvider(
@@ -53,13 +55,13 @@ public class LayerManagerNewTopLayerTest extends AbstractTestWithTestDir {
             .hasMessage("java.lang.IllegalStateException: Layer is already archived");
 
         // Check the logs
-        var loggingEvent = listAppender.list.get(0);
+        var loggingEvent = logged.list.get(0);
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
         assertThat(loggingEvent.getFormattedMessage())
             .isEqualTo("Error archiving layer with id " + initialTopLayerId);
 
         // Check stdout, different formats when running standalone or in a suite
-        var contentString = outContent.toString();
+        var contentString = stdout.toString();
         assertThat(contentString).contains("Error archiving layer with id " + initialTopLayerId);
         assertThat(contentString).contains("java.lang.IllegalStateException: Layer is already archived");
         assertThat(contentString).contains("at nl.knaw.dans.layerstore.LayerManagerNewTopLayerTest");
