@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 import static java.text.MessageFormat.format;
 
@@ -98,10 +99,13 @@ public class ZipArchive implements Archive {
     @Override
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
+        Stream<Path> emptyFileStream = Stream.empty();
         try (var outputStream = Files.newOutputStream(zipFile);
             var bufferedOutputStream = new BufferedOutputStream(outputStream);
             var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
-            var files = Files.walk(stagingDir)
+            var files = stagingDir.toFile().exists()
+                ? Files.walk(stagingDir)
+                : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
         ) {
             for (var fileToArchive : files.toList()) {
                 if (!fileToArchive.equals(stagingDir)) {

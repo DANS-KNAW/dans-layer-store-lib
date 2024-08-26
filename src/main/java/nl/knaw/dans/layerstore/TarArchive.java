@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import static java.text.MessageFormat.format;
 
@@ -99,10 +100,13 @@ public class TarArchive implements Archive {
     @Override
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
+        Stream<Path> emptyFileStream = Stream.empty();
         try (var outputStream = Files.newOutputStream(tarFile);
             var bufferedOutputStream = new BufferedOutputStream(outputStream);
             var tarOutput = new TarArchiveOutputStream(bufferedOutputStream);
-            var files = Files.walk(stagingDir)
+            var files = stagingDir.toFile().exists()
+                ? Files.walk(stagingDir)
+                : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
         ) {
             tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
             for (var fileToArchive : files.toList()) {
