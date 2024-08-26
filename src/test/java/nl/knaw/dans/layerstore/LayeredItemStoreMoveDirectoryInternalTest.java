@@ -35,7 +35,7 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
     @Test
     public void should_move_dir_with_file() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
         var layeredStore = new LayeredItemStore(db, layerManager);
 
         layeredStore.createDirectory("a/b/c/d");
