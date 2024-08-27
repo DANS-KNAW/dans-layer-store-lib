@@ -15,53 +15,32 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.stream.Stream;
+
+import static java.text.MessageFormat.format;
 
 public class ZipArchive implements Archive {
     @NonNull
     private final Path zipFile;
 
     private boolean archived;
-
-    private static class EntryInputStream extends InputStream implements Closeable {
-        private final ZipFile zipFile;
-        private final InputStream inputStream;
-
-        public EntryInputStream(ZipFile zipFile, ZipArchiveEntry entry) throws IOException {
-            this.zipFile = zipFile;
-            this.inputStream = zipFile.getInputStream(entry);
-        }
-
-        @Override
-        public int read() throws IOException {
-            return inputStream.read();
-        }
-
-        @Override
-        public void close() throws IOException {
-            inputStream.close();
-            zipFile.close();
-        }
-    }
 
     public ZipArchive(Path zipFile) {
         this.zipFile = zipFile;
@@ -70,92 +49,81 @@ public class ZipArchive implements Archive {
 
     @Override
     public InputStream readFile(String filePath) throws IOException {
-        @SuppressWarnings("resource") // The caller is responsible for closing the stream
-        ZipFile zipFile = new ZipFile(this.zipFile.toFile());
-        ZipArchiveEntry entry = zipFile.getEntry(filePath);
-        return new EntryInputStream(zipFile, entry);
+        var zip = ZipFile.builder()
+            .setFile(this.zipFile.toFile())
+            .get();
+        var entry = Collections.list(zip.getEntries()).stream()
+            .filter(e -> e.getName().equals(filePath))
+            .findFirst().orElseThrow(() -> new IOException(format("{0} not found in {1}", filePath, zipFile.toFile())));
+        return new FilterInputStream(zip.getInputStream(entry)) {
+
+            @Override
+            @SneakyThrows
+            public void close() {
+                super.close();
+                // Close the backing stream.
+                zip.close();
+            }
+        };
     }
 
     @Override
     public void unarchiveTo(Path stagingDir) {
-        ZipArchiveInputStream zipArchiveInputStream = null;
-        try {
-            zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile.toFile()));
-            ZipArchiveEntry entry = zipArchiveInputStream.getNextZipEntry();
-            while (entry != null) {
-                if (entry.isDirectory()) {
-                    Files.createDirectories(stagingDir.resolve(entry.getName()));
+        try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
+            var entries = Collections.list(zip.getEntries());
+            for (var entry : entries) {
+                // prevent extracting anything in case of a Zip Slip
+                var filePath = stagingDir.resolve(entry.getName());
+                if (!filePath.normalize().startsWith(stagingDir)) {
+                    throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), zipFile));
                 }
-                else {
-                    Path file = stagingDir.resolve(entry.getName());
-                    Files.createDirectories(file.getParent());
-                    Files.copy(zipArchiveInputStream, file);
+            }
+            for (var entry : entries) {
+                var filePath = stagingDir.resolve(entry.getName());
+                if (filePath.normalize().startsWith(stagingDir)) { // keep CodeQL happy
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(filePath);
+                    }
+                    else {
+                        Files.createDirectories(filePath.getParent());
+                        IOUtils.copy(zip.getInputStream(entry), Files.newOutputStream(filePath));
+                    }
                 }
-                entry = zipArchiveInputStream.getNextZipEntry();
             }
         }
         catch (IOException e) {
-            throw new RuntimeException("Could not unarchive zip file", e);
-        }
-        finally {
-            IOUtils.closeQuietly(zipArchiveInputStream);
+            throw new RuntimeException("Could not unarchive " + zipFile.toFile(), e);
         }
     }
 
     @Override
-    public void archiveFrom(Path stagingDir) {
-        createZipFile(zipFile.toString(), stagingDir.toString());
-    }
-
-    // See: https://simplesolution.dev/java-create-zip-file-using-apache-commons-compress/
     @SneakyThrows
-    public void createZipFile(String zipFileName, String directoryToZip) {
-        BufferedOutputStream bufferedOutputStream = null;
-        ZipArchiveOutputStream zipArchiveOutputStream = null;
-        OutputStream outputStream = null;
-        try {
-            Path zipFilePath = Paths.get(zipFileName);
-            outputStream = Files.newOutputStream(zipFilePath);
-            bufferedOutputStream = new BufferedOutputStream(outputStream);
-            zipArchiveOutputStream = new ZipArchiveOutputStream(bufferedOutputStream);
-            File[] files = new File(directoryToZip).listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    addFileToZipStream(zipArchiveOutputStream, file, "");
+    public void archiveFrom(Path stagingDir) {
+        Stream<Path> emptyFileStream = Stream.empty();
+        try (var outputStream = Files.newOutputStream(zipFile);
+            var bufferedOutputStream = new BufferedOutputStream(outputStream);
+            var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
+            var files = stagingDir.toFile().exists()
+                ? Files.walk(stagingDir)
+                : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+        ) {
+            for (var fileToArchive : files.toList()) {
+                if (!fileToArchive.equals(stagingDir)) {
+                    var entry = new ZipArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
+                    var regularFile = Files.isRegularFile(fileToArchive);
+                    if (regularFile) {
+                        entry.setSize(fileToArchive.toFile().length());
+                    }
+                    zipOutput.putArchiveEntry(entry);
+                    if (regularFile) {
+                        try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
+                            IOUtils.copy(fileInputStream, zipOutput);
+                        }
+                    }
+                    zipOutput.closeArchiveEntry();
                 }
             }
             archived = true;
-        }
-        finally {
-            IOUtils.closeQuietly(zipArchiveOutputStream);
-            IOUtils.closeQuietly(bufferedOutputStream);
-            IOUtils.closeQuietly(outputStream);
-        }
-    }
-
-    private void addFileToZipStream(ZipArchiveOutputStream zipArchiveOutputStream, File fileToZip, String base) throws IOException {
-        String entryName = base + fileToZip.getName();
-        ZipArchiveEntry zipArchiveEntry = new ZipArchiveEntry(fileToZip, entryName);
-        zipArchiveOutputStream.putArchiveEntry(zipArchiveEntry);
-        if (fileToZip.isFile()) {
-            FileInputStream fileInputStream = null;
-            try {
-                fileInputStream = new FileInputStream(fileToZip);
-                IOUtils.copy(fileInputStream, zipArchiveOutputStream);
-                zipArchiveOutputStream.closeArchiveEntry();
-            }
-            finally {
-                IOUtils.closeQuietly(fileInputStream);
-            }
-        }
-        else {
-            zipArchiveOutputStream.closeArchiveEntry();
-            File[] files = fileToZip.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    addFileToZipStream(zipArchiveOutputStream, file, entryName + "/");
-                }
-            }
         }
     }
 
@@ -165,11 +133,15 @@ public class ZipArchive implements Archive {
     }
 
     @Override
+    @SneakyThrows
     public boolean fileExists(String filePath) {
-        try (var is = readFile(filePath)) {
-            return is != null;
+
+        try (var zip = ZipFile.builder().setFile(this.zipFile.toFile()).get()) {
+            return Collections.list(zip.getEntries()).stream().anyMatch(e ->
+                e.getName().equals(filePath)
+            );
         }
-        catch (IOException e) {
+        catch (NoSuchFileException | FileNotFoundException e) {
             return false;
         }
     }

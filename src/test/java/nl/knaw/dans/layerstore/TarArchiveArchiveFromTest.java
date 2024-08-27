@@ -15,55 +15,54 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.compress.archivers.tar.TarFile;
 import org.junit.jupiter.api.Test;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.Map;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Map.entry;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
 
     @Test
-    public void should_create_archivefile_and_change_status_to_archived() throws Exception {
-        var tarFile = testDir.resolve("test.tar");
-        TarArchive tarArchive = new TarArchive(tarFile);
+    public void should_create_tarfile_and_change_status_to_archived() throws Exception {
+        var archiveFile = testDir.resolve("test.tar");
+        var archive = new TarArchive(archiveFile);
 
-        // Create some files to archive
-        var file1 = stagingDir.resolve("file1");
-        var file2 = stagingDir.resolve("path/to/file2");
-        var file3 = stagingDir.resolve("path/to/file3");
-
-        // Write some string content to the files
-        String file1Content = "file1 content";
-        String file2Content = "file2 content";
-        String file3Content = "file3 content";
-        FileUtils.forceMkdir(file2.getParent().toFile());
-        FileUtils.write(file1.toFile(), file1Content, "UTF-8");
-        FileUtils.write(file2.toFile(), file2Content, "UTF-8");
-        FileUtils.write(file3.toFile(), file3Content, "UTF-8");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
-        tarArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         // Check that the tar file exists and contains the files and not more than that
-        assertThat(tarFile).exists();
-        Map<String, String> actual = new HashMap<>();
-        try (var tf = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
-            TarArchiveEntry entry;
-            while ((entry = tf.getNextEntry()) != null) {
-                actual.put(entry.getName(), new String(tf.readNBytes((int) entry.getSize()), StandardCharsets.UTF_8));
-            }
+        assertThat(archiveFile).exists();
+        try (var tar = new TarFile(archiveFile.toFile())) {
+            assertThat(tar.getEntries().stream().map(tarArchiveEntry ->
+                getEntry(tarArchiveEntry, tar)
+            )).containsExactlyInAnyOrder(
+                entry("file1", "file1 content"),
+                entry("path/", ""),
+                entry("path/to/", ""),
+                entry("path/to/file2", "path/to/file2 content"),
+                entry("path/to/file3", "path/to/file3 content")
+            );
         }
-        assertThat(actual).containsEntry("file1", file1Content);
-        assertThat(actual).containsEntry("path/to/file2", file2Content);
-        assertThat(actual).containsEntry("path/to/file3", file3Content);
-        assertThat(actual).hasSize(3);
-        assertThat(tarArchive.isArchived()).isTrue();
+        assertThat(archive.isArchived()).isTrue();
+
+        // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
+        assertThat(stagingDir).isNotEmptyDirectory();
+    }
+
+    @SneakyThrows
+    private static Map.Entry<String, String> getEntry(TarArchiveEntry tarArchiveEntry, TarFile tar) {
+        var bytes = tar.getInputStream(tarArchiveEntry)
+            .readNBytes((int) tarArchiveEntry.getSize());
+        return entry(tarArchiveEntry.getName(), new String(bytes, UTF_8));
     }
 }

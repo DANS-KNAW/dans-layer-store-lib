@@ -35,6 +35,7 @@ public class LayerArchiveTest extends AbstractTestWithTestDir {
     @Test
     public void throws_IllegalStateException_when_layer_is_already_archived() throws IOException {
         Files.createDirectories(archiveDir);
+        Files.createDirectories(stagingDir);
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         layer.close();
         layer.archive();

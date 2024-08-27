@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_read_content_from_stagingDir() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
         var layeredStore = new LayeredItemStore(db, layerManager);
 
         var testContent = "Hello world!";
@@ -55,7 +56,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_read_content_from_database_if_filter_applies() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 
         var testContent = "Hello world!";
@@ -68,7 +69,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_is_a_directory() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.createDirectory("a/b/c");
 
@@ -79,7 +80,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_no_such_file() throws IOException {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
 
         assertThatThrownBy(() -> layeredStore.readFile("some.txt")).

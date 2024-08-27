@@ -15,48 +15,56 @@
  */
 package nl.knaw.dans.layerstore;
 
-import org.apache.commons.io.FileUtils;
+import lombok.SneakyThrows;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Map;
 
-import static nl.knaw.dans.layerstore.TestUtils.zipFileFrom;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Map.entry;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
     @Test
     public void should_create_zipfile_and_change_status_to_archived() throws Exception {
-        var zipFile = testDir.resolve("test.zip");
-        ZipArchive zipArchive = new ZipArchive(zipFile);
-        // Create some files to archive
-        Path file1 = stagingDir.resolve("file1");
-        Path file2 = stagingDir.resolve("path/to/file2");
-        Path file3 = stagingDir.resolve("path/to/file3");
+        var archiveFile = testDir.resolve("test.zip");
+        var archive = new ZipArchive(archiveFile);
 
-        // Write some string content to the files
-        String file1Content = "file1 content";
-        String file2Content = "file2 content";
-        String file3Content = "file3 content";
-        FileUtils.forceMkdir(file2.getParent().toFile());
-        FileUtils.write(file1.toFile(), file1Content, "UTF-8");
-        FileUtils.write(file2.toFile(), file2Content, "UTF-8");
-        FileUtils.write(file3.toFile(), file3Content, "UTF-8");
+        createStagingFileWithContent("file1", "file1 content");
+        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
+        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
 
         // Archive the files
-        zipArchive.archiveFrom(stagingDir);
+        archive.archiveFrom(stagingDir);
 
         // Check that the zip file exists and contains the files and not more than that
-        assertThat(zipFile).exists();
-        try (var zf = zipFileFrom(zipFile)) {
-            assertThat(zf.getEntry("file1")).isNotNull();
-            assertThat(zf.getEntry("path/to/file2")).isNotNull();
-            assertThat(zf.getEntry("path/to/file3")).isNotNull();
-
-            // 3 files + 2 directories = 5 entries
-            assertThat(Collections.list(zf.getEntries()).size()).isEqualTo(5);
+        assertThat(archiveFile).exists();
+        try (var zip = ZipFile.builder()
+            .setFile(archiveFile.toFile())
+            .get()) {
+            assertThat(Collections.list(zip.getEntries()).stream()
+                .map(archiveEntry -> getEntry(archiveEntry, zip))
+            ).containsExactlyInAnyOrder(
+                entry("file1", "file1 content"),
+                entry("path/", ""),
+                entry("path/to/", ""),
+                entry("path/to/file2", "path/to/file2 content"),
+                entry("path/to/file3", "path/to/file3 content")
+            );
         }
+        assertThat(archive.isArchived()).isTrue();
 
-        assertThat(zipArchive.isArchived()).isTrue();
+        // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
+        assertThat(stagingDir).isNotEmptyDirectory();
+    }
+
+    @SneakyThrows
+    private static Map.Entry<String, String> getEntry(ZipArchiveEntry tarArchiveEntry, ZipFile zip) {
+        var bytes = zip.getInputStream(tarArchiveEntry)
+            .readNBytes((int) tarArchiveEntry.getSize());
+        return entry(tarArchiveEntry.getName(), new String(bytes, UTF_8));
     }
 }

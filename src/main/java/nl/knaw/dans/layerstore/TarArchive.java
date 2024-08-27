@@ -19,17 +19,22 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.utils.BoundedInputStream;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.compress.archivers.tar.TarFile;
+import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
+
+import static java.text.MessageFormat.format;
 
 @Slf4j
 public class TarArchive implements Archive {
@@ -45,74 +50,80 @@ public class TarArchive implements Archive {
     }
 
     @Override
+    @SuppressWarnings("resource") // closed by overridden method of returned stream
     public InputStream readFile(String filePath) throws IOException {
-        // No try-with-resources on tarInput, so that we can use it to back the BoundedInputStream
-        TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile));
-        try {
-            TarArchiveEntry entry;
-            while ((entry = tarInput.getNextTarEntry()) != null) {
-                if (entry.getName().equals(filePath)) {
-                    return new BoundedInputStream(tarInput, entry.getSize()) {
+        var tar = new TarFile(tarFile.toFile());
+        var entry = tar.getEntries().stream()
+            .filter(e -> e.getName().equals(filePath))
+            .findFirst().orElseThrow(() -> new IOException(format("{0} not found in {1}", filePath, tarFile)));
+        return new FilterInputStream(tar.getInputStream(entry)) {
 
-                        @Override
-                        @SneakyThrows
-                        public void close() {
-                            // Close the backing stream.
-                            tarInput.close();
-                        }
-                    };
-                }
+            @Override
+            @SneakyThrows
+            public void close() {
+                super.close();
+                // Close the backing stream.
+                tar.close();
             }
-        }
-        catch (Exception e) {
-            // Close the backing stream in case of an exception.
-            tarInput.close();
-            throw e;
-        }
-        throw new IOException("File not found in tar archive: " + filePath);
+        };
     }
 
     @Override
-    @SneakyThrows
     public void unarchiveTo(Path stagingDir) {
-        try (TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
-            TarArchiveEntry entry;
-            while ((entry = tarInput.getNextTarEntry()) != null) {
-                Path outputPath = stagingDir.resolve(entry.getName());
-                if (entry.isDirectory()) {
-                    Files.createDirectories(outputPath);
+        try (var tar = new TarFile(tarFile.toFile())) {
+            var entries = tar.getEntries();
+            for (var entry : entries) {
+                // prevent extracting anything in case of a Zip Slip
+                var filePath = stagingDir.resolve(entry.getName());
+                if (!filePath.normalize().startsWith(stagingDir)) {
+                    throw new IOException(format("Detected Zip Slip: {0} in {1}", entry.getName(), tarFile));
                 }
-                else {
-                    Files.createDirectories(outputPath.getParent());
-                    try (OutputStream outputFileStream = Files.newOutputStream(outputPath)) {
-                        IOUtils.copy(tarInput, outputFileStream);
+            }
+            for (var entry : entries) {
+                var filePath = stagingDir.resolve(entry.getName());
+                if (filePath.normalize().startsWith(stagingDir)) { // keep CodeQL happy
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(filePath);
+                    }
+                    else {
+                        Files.createDirectories(filePath.getParent());
+                        IOUtils.copy(tar.getInputStream(entry), Files.newOutputStream(filePath));
                     }
                 }
             }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Could not unarchive " + tarFile.toFile(), e);
         }
     }
 
     @Override
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
-        try (TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(Files.newOutputStream(tarFile))) {
+        Stream<Path> emptyFileStream = Stream.empty();
+        try (var outputStream = Files.newOutputStream(tarFile);
+            var bufferedOutputStream = new BufferedOutputStream(outputStream);
+            var tarOutput = new TarArchiveOutputStream(bufferedOutputStream);
+            var files = stagingDir.toFile().exists()
+                ? Files.walk(stagingDir)
+                : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+        ) {
             tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-            try (var files = Files.walk(stagingDir)) {
-                files.filter(path -> !Files.isDirectory(path))
-                    .forEach(path -> {
-                        TarArchiveEntry entry = new TarArchiveEntry(stagingDir.relativize(path).toString());
-                        entry.setSize(path.toFile().length());
-                        try {
-                            tarOutput.putArchiveEntry(entry);
-                            log.debug("Adding file {} to tar archive", path);
-                            Files.copy(path, tarOutput);
-                            log.debug("Closing entry for file");
-                            tarOutput.closeArchiveEntry();
+            for (var fileToArchive : files.toList()) {
+                if (!fileToArchive.equals(stagingDir)) {
+                    var entry = new TarArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
+                    var regularFile = Files.isRegularFile(fileToArchive);
+                    if (regularFile) {
+                        entry.setSize(fileToArchive.toFile().length());
+                    }
+                    tarOutput.putArchiveEntry(entry);
+                    if (regularFile) {
+                        try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
+                            IOUtils.copy(fileInputStream, tarOutput);
                         }
-                        catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+                    }
+                    tarOutput.closeArchiveEntry();
+                }
             }
             archived = true;
         }
@@ -126,14 +137,13 @@ public class TarArchive implements Archive {
     @Override
     @SneakyThrows
     public boolean fileExists(String filePath) {
-        try (TarArchiveInputStream tarInput = new TarArchiveInputStream(Files.newInputStream(tarFile))) {
-            TarArchiveEntry entry;
-            while ((entry = tarInput.getNextTarEntry()) != null) {
-                if (entry.getName().equals(filePath)) {
-                    return true;
-                }
-            }
+        try (var tar = new TarFile(tarFile.toFile())) {
+            return tar.getEntries().stream().anyMatch(e ->
+                e.getName().equals(filePath)
+            );
         }
-        return false;
+        catch (NoSuchFileException | FileNotFoundException e) {
+            return false;
+        }
     }
 }

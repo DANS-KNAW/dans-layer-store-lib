@@ -15,16 +15,18 @@
  */
 package nl.knaw.dans.layerstore;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
 
-public class TestUtils {
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-    /**
-     * Assume that a bug is not yet fixed. This allows to execute as much of a test as possible to show code coverage, without creating false positives or false negatives.
-     *
-     * @param message the message to display
-     */
-    public static void assumeNotYetFixed(String message) {
-        assumeTrue(false, message);
+public class TarArchiveIsArchivedTest extends AbstractTestWithTestDir {
+    @Test
+    public void should_change_status_to_archived() throws Exception {
+        FileUtils.forceMkdir(stagingDir.toFile());
+        var archive = new TarArchive(testDir.resolve("test.tar"));
+        archive.archiveFrom(stagingDir);
+
+        assertThat(archive.isArchived()).isTrue();
     }
 }

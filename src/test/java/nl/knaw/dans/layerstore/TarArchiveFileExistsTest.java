@@ -21,12 +21,12 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
-    Path archiveFile = testDir.resolve("test.zip");
+public class TarArchiveFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_file_existence_in_archive() throws Exception {
-        ZipArchive archive = new ZipArchive(archiveFile);
+        Path archiveFile = testDir.resolve("test.tar");
+        TarArchive archive = new TarArchive(archiveFile);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
@@ -46,7 +46,7 @@ public class ZipArchiveFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_false_if_the_archive_does_not_exist() {
-        var archive = new ZipArchive(Path.of("does-not-exist"));
+        var archive = new TarArchive(Path.of("does-not-exist"));
         assertThat(archive.fileExists("xx")).isFalse();
     }
 }
