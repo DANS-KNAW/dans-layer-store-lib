@@ -56,7 +56,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
             .hasRootCauseMessage(testZip.toString());
         // misleading message: the actual problem is that archiveDir does not exist
         var contentString = stdout.toString();
-        assertThat(contentString).contains(MessageFormat.format("java.nio.file.NoSuchFileException:  {0}", testZip));
+        assertThat(contentString).contains(MessageFormat.format("java.nio.file.NoSuchFileException: {0}", testZip));
     }
 
     @Test
