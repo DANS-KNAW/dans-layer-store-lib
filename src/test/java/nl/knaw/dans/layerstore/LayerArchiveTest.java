@@ -20,11 +20,12 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.text.MessageFormat;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-public class LayerArchiveTest extends AbstractTestWithTestDir {
+public class LayerArchiveTest extends AbstractCapturingTest {
     @Test
     public void throws_IllegalStateException_when_layer_is_closed() {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
@@ -45,14 +46,17 @@ public class LayerArchiveTest extends AbstractTestWithTestDir {
 
     @Test
     public void throws_RuntimeException_caused_by_an_IOException() {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var testZip = archiveDir.resolve("test.zip");
+        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testZip));
         layer.close();
 
         assertThatThrownBy(layer::archive)
             .isInstanceOf(RuntimeException.class)
             .hasRootCauseInstanceOf(NoSuchFileException.class)
-            .hasRootCauseMessage("target/test/LayerArchiveTest/layer_archive/test.zip");
-        // misleading message: the actual problem is that the LayerArchiveTest dir does not exist
+            .hasRootCauseMessage(testZip.toString());
+        // misleading message: the actual problem is that archiveDir does not exist
+        var contentString = stdout.toString();
+        assertThat(contentString).contains(MessageFormat.format("java.nio.file.NoSuchFileException: {0}", testZip));
     }
 
     @Test
