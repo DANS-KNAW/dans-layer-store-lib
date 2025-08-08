@@ -164,7 +164,7 @@ public class LayeredItemStore implements ItemStore {
         var records = new ArrayList<ItemRecord>();
         try (var s = Files.walk(source)) {
             for (Path path : s.toList()) {
-                var destPath = destination + "/" + source.relativize(path);
+                var destPath = destination + (path.equals(source) ? "" : "/" + source.relativize(path));
                 var r = ItemRecord.builder()
                     .layerId(layerManager.getTopLayer().getId())
                     .path(destPath)

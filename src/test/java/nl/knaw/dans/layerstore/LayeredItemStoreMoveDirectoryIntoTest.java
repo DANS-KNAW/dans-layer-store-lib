@@ -62,7 +62,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c");
 
         assertThat(layeredStore.listRecursive("a").stream().map(Item::getPath))
-            .containsExactlyInAnyOrder("a/b", "a/b/c/", "a/b/c/test2.txt", "a/b/c/y", "a/b/c/y/test1.txt");
+            .containsExactlyInAnyOrder("a/b", "a/b/c", "a/b/c/test2.txt", "a/b/c/y", "a/b/c/y/test1.txt");
         assertThat(stagingDir
             .resolve(String.valueOf(layerManager.getTopLayer().getId()))
             .resolve("a/b/c/y/test1.txt")
@@ -90,7 +90,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c");
 
         assertThat(layeredStore.listRecursive("a").stream().map(Item::getPath))
-            .containsExactlyInAnyOrder("a/b", "a/b/c/", "a/b/c/test2.txt", "a/b/c/y", "a/b/c/y/test1.txt");
+            .containsExactlyInAnyOrder("a/b", "a/b/c", "a/b/c/test2.txt", "a/b/c/y", "a/b/c/y/test1.txt");
     }
 
     @Test
