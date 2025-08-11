@@ -169,7 +169,7 @@ public class LayeredItemStore implements ItemStore {
                     .layerId(layerManager.getTopLayer().getId())
                     .path(destPath)
                     .type(getItemType(path)).build();
-                if (databaseBackedContentManager.test(destPath)) {
+                if (Files.isRegularFile(path) && databaseBackedContentManager.test(destPath)) {
                     byte[] content = FileUtils.readFileToByteArray(path.toFile());
                     r.setContent(databaseBackedContentManager.preStore(destPath, content));
                 }
