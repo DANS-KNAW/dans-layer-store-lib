@@ -16,6 +16,8 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
+import nl.knaw.dans.lib.util.ProcessInputStream;
+import nl.knaw.dans.lib.util.ProcessRunner;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

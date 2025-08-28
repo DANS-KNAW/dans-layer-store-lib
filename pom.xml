@@ -33,6 +33,10 @@
         <tag>HEAD</tag>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
     </scm>
+    <properties>
+        <!-- Todo: move to parent -->
+        <dans-java-utils.version>2.2.0</dans-java-utils.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>nl.knaw.dans</groupId>
