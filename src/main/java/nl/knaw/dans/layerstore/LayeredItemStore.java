@@ -61,6 +61,33 @@ public class LayeredItemStore implements ItemStore {
         this(database, layerManager, null);
     }
 
+    public void checkSameLayerIdsFoundOnStorageAsInDatabase() throws IOException {
+        var layerIdsInDb = database.listLayerIds();
+        var layerIdsOnStorage = layerManager.listLayerIds();
+        var missingInDb = new ArrayList<Long>();
+        for (var id : layerIdsOnStorage) {
+            if (!layerIdsInDb.contains(id)) {
+                missingInDb.add(id);
+            }
+        }
+        var missingOnStorage = new ArrayList<Long>();
+        for (var id : layerIdsInDb) {
+            if (!layerIdsOnStorage.contains(id)) {
+                missingOnStorage.add(id);
+            }
+        }
+        if (!missingInDb.isEmpty() || !missingOnStorage.isEmpty()) {
+            var message = "Layer IDs are inconsistent between database and storage.";
+            if (!missingInDb.isEmpty()) {
+                message += " Missing in database: " + missingInDb;
+            }
+            if (!missingOnStorage.isEmpty()) {
+                message += " Missing on storage: " + missingOnStorage;
+            }
+            throw new IllegalStateException(message);
+        }
+    }
+
     @Override
     public List<Item> listDirectory(String directoryPath) throws IOException {
         return database.listDirectory(directoryPath);

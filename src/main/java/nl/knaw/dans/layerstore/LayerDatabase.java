@@ -94,4 +94,12 @@ public interface LayerDatabase {
      * @return true if the pattern matches any path in the database, false otherwise
      */
     boolean existsPathLike(String pathPattern);
+
+    /**
+     * Lists all layer IDs that are currently in the database.
+     *
+     * @return a list of layer IDs
+     */
+    List<Long> listLayerIds();
+
 }

@@ -15,6 +15,9 @@
  */
 package nl.knaw.dans.layerstore;
 
+import java.io.IOException;
+import java.util.List;
+
 /**
  * Manages {@link Layer}s.
  */
@@ -33,4 +36,12 @@ public interface LayerManager {
      * @return the layer
      */
     Layer getLayer(long id);
+
+    /**
+     * Lists all layer IDs that are currently managed.
+     *
+     * @return a list of layer IDs
+     * @throws IOException if an I/O error occurs
+     */
+    List<Long> listLayerIds() throws IOException;
 }

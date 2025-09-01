@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import nl.knaw.dans.lib.util.ProcessRunner;
 
 import java.nio.file.Path;
+import java.util.List;
 
 @AllArgsConstructor
 public class SshRunner {
@@ -33,5 +34,16 @@ public class SshRunner {
             "test", "-e", remoteBaseDir.resolve(archiveName).toString());
         var result = runner.runToEnd();
         return result.getExitCode() == 0;
+    }
+
+    public List<String> listFiles() {
+        var runner = new ProcessRunner(sshExecutable.toAbsolutePath().toString(),
+            user + "@" + host,
+            "ls -1", remoteBaseDir.toString());
+        var result = runner.runToEnd();
+        if (result.getExitCode() != 0) {
+            throw new RuntimeException("Failed to list files in " + remoteBaseDir + " on " + host + ": " + result);
+        }
+        return result.getStandardOutput().lines().toList();
     }
 }

@@ -18,18 +18,34 @@ package nl.knaw.dans.layerstore;
 import lombok.AllArgsConstructor;
 
 import java.nio.file.Path;
+import java.util.List;
 
 @AllArgsConstructor
 public class TarArchiveProvider implements ArchiveProvider {
     private final Path archiveRoot;
 
     @Override
-    public Archive createArchive(String path) {
-        return new TarArchive(archiveRoot.resolve(path + ".tar"));
+    public Archive createArchive(long layerId) {
+        return new TarArchive(archiveRoot.resolve(layerId + ".tar"));
     }
 
     @Override
-    public boolean exists(String path) {
-        return archiveRoot.resolve(path + ".tar").toFile().exists();
+    public boolean exists(long layerId) {
+        return archiveRoot.resolve(layerId + ".tar").toFile().exists();
+    }
+
+    @Override
+    public List<Long> listArchivedLayers() {
+        try(var stream = java.nio.file.Files.list(archiveRoot)) {
+            return stream
+                .map(Path::getFileName)
+                .map(Path::toString)
+                .filter(name -> name.endsWith(".tar"))
+                .map(name -> name.substring(0, name.length() - ".tar".length()))
+                .map(Long::valueOf)
+                .toList();
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to list files in archive root: " + archiveRoot, e);
+        }
     }
 }
