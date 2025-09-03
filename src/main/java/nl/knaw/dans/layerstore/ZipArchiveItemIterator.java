@@ -25,6 +25,12 @@ import java.util.Iterator;
 
 public class ZipArchiveItemIterator implements Iterator<Item> {
     private final Iterator<ZipArchiveEntry> entries;
+    /**
+     * The root item represents the root of the zip archive, and is implicitly present in every zip archive.
+     */
+    private final Item rootItem = new Item("", Item.Type.Directory);
+
+    private boolean rootReturned = false;
 
     public ZipArchiveItemIterator(@NonNull Path zipFile) throws IOException {
         var zip = ZipFile.builder()
@@ -35,11 +41,18 @@ public class ZipArchiveItemIterator implements Iterator<Item> {
 
     @Override
     public boolean hasNext() {
+        if (!rootReturned) {
+            return true;
+        }
         return entries.hasNext();
     }
 
     @Override
     public Item next() {
+        if (!rootReturned) {
+            rootReturned = true;
+            return rootItem;
+        }
         var next = entries.next();
         return new Item(next.getName(),
             next.isDirectory() ? Item.Type.Directory : Item.Type.File);
