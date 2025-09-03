@@ -17,6 +17,8 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class TarArchiveProvider implements ArchiveProvider {
 
     @Override
     public List<Long> listArchivedLayers() {
-        try(var stream = java.nio.file.Files.list(archiveRoot)) {
+        try (var stream = Files.list(archiveRoot)) {
             return stream
                 .map(Path::getFileName)
                 .map(Path::toString)
@@ -44,7 +46,8 @@ public class TarArchiveProvider implements ArchiveProvider {
                 .map(name -> name.substring(0, name.length() - ".tar".length()))
                 .map(Long::valueOf)
                 .toList();
-        } catch (java.io.IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Failed to list files in archive root: " + archiveRoot, e);
         }
     }

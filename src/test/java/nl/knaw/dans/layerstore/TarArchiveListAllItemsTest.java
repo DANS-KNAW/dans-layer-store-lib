@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
-import nl.knaw.dans.lib.util.ZipUtil;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
@@ -25,16 +25,20 @@ import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ZipArchiveItemIteratorTest extends AbstractTestWithTestDir {
+public class TarArchiveListAllItemsTest extends AbstractTestWithTestDir {
 
     @Test
-    public void iterates_only_root_in_empty_zip_archive() throws Exception {
+    public void iterates_only_root_in_empty_tar_archive() throws Exception {
         // Given
-        var zipFile = testDir.resolve("empty.zip");
+        var tarFile = testDir.resolve("empty.tar");
         Files.createDirectories(testDir.resolve("emptyDir"));
-        ZipUtil.zipDirectory(testDir.resolve("emptyDir"), zipFile, false);
+        try (var out = Files.newOutputStream(tarFile);
+            var tos = new TarArchiveOutputStream(out)) {
+            tos.finish();
+        }
 
-        var iterator = new ZipArchiveItemIterator(zipFile);
+        var tarArchive = new TarArchive(tarFile);
+        var iterator = tarArchive.listAllItems();
 
         // When
         var actualPaths = new HashSet<String>();
@@ -46,19 +50,19 @@ public class ZipArchiveItemIteratorTest extends AbstractTestWithTestDir {
         assertThat(actualPaths).containsExactly("");
     }
 
-
     @Test
-    public void iterates_all_items_in_zip_archive() throws Exception {
+    public void iterates_all_items_in_tar_archive() throws Exception {
         // Given
-        var zipFile = testDir.resolve("test.zip");
-        var tempDir = testDir.resolve("zipInput");
+        var tarFile = testDir.resolve("test.tar");
+        var tempDir = testDir.resolve("tarInput");
+        Files.createDirectories(tempDir);
         FileUtils.writeStringToFile(tempDir.resolve("a/b/c/d/test1.txt").toFile(), "Hello world!", StandardCharsets.UTF_8);
         FileUtils.writeStringToFile(tempDir.resolve("a/b/c/test2.txt").toFile(), "Hello again!", StandardCharsets.UTF_8);
         FileUtils.writeStringToFile(tempDir.resolve("a/b/test3.txt").toFile(), "Hello once more!", StandardCharsets.UTF_8);
         FileUtils.writeStringToFile(tempDir.resolve("a/test4.txt").toFile(), "Hello for the last time!", StandardCharsets.UTF_8);
-        ZipUtil.zipDirectory(tempDir, zipFile, false);
-
-        var iterator = new ZipArchiveItemIterator(zipFile);
+        var tarArchive = new TarArchive(tarFile);
+        tarArchive.archiveFrom(tempDir);
+        var iterator = tarArchive.listAllItems();
 
         // When
         var actualPaths = new HashSet<String>();
@@ -69,14 +73,15 @@ public class ZipArchiveItemIteratorTest extends AbstractTestWithTestDir {
         // Then
         assertThat(actualPaths).containsExactlyInAnyOrder(
             "",
-            "a/",
-            "a/b/",
-            "a/b/c/",
-            "a/b/c/d/",
+            "a",
+            "a/b",
+            "a/b/c",
+            "a/b/c/d",
             "a/b/c/d/test1.txt",
             "a/b/c/test2.txt",
             "a/b/test3.txt",
             "a/test4.txt"
         );
     }
+
 }

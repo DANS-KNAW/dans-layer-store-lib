@@ -112,10 +112,15 @@ public class TarArchive implements Archive {
             tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
             for (var fileToArchive : files.toList()) {
                 if (!fileToArchive.equals(stagingDir)) {
-                    var entry = new TarArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
+                    if (Files.isSymbolicLink(fileToArchive)) {
+                        continue; // skip symbolic links
+                    }
                     var regularFile = Files.isRegularFile(fileToArchive);
+                    var entry = new TarArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive) + (regularFile ? "" : "/"));
                     if (regularFile) {
                         entry.setSize(fileToArchive.toFile().length());
+                    } else {
+                        entry.setSize(0);
                     }
                     tarOutput.putArchiveEntry(entry);
                     if (regularFile) {
@@ -149,7 +154,7 @@ public class TarArchive implements Archive {
     }
 
     @Override
-    public Iterator<Item> listAllItems() {
-        return null;
+    public Iterator<Item> listAllItems() throws IOException{
+        return new TarArchiveItemIterator(tarFile);
     }
 }
