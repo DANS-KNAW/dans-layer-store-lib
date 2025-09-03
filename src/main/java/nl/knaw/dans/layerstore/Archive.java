@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Iterator;
 
 /**
  * An archive is a file that contains a collection of files and directories. It can be implemented as a zip file, a tar, etc.
@@ -34,8 +35,7 @@ public interface Archive {
     InputStream readFile(String filePath) throws IOException;
 
     /**
-     * Unarchives the archive to the given staging directory. Note that the {@link #isArchived()} will <em>not</em> return {@code false} after this operation,
-     * as the archive file is not removed.
+     * Unarchives the archive to the given staging directory. Note that the {@link #isArchived()} will <em>not</em> return {@code false} after this operation, as the archive file is not removed.
      *
      * @param stagingDir the directory to unarchive to
      */
@@ -49,6 +49,7 @@ public interface Archive {
     void archiveFrom(Path stagingDir);
 
     // TODO: is it possible that archived changes back to false? What this exact meaning of this attribute?
+
     /**
      * Returns whether the archive has been created.
      *
@@ -64,4 +65,10 @@ public interface Archive {
      */
     boolean fileExists(String filePath);
 
+    /**
+     * Lists all items in the archive. The paths of the items are relative to the root of the archive. The iterator includes the root of the archive itself as a directory item with an empty path.
+     *
+     * @return an iterator over all items in the archive
+     */
+    Iterator<Item> listAllItems() throws IOException;
 }

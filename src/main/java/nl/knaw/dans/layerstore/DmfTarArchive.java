@@ -22,6 +22,7 @@ import lombok.SneakyThrows;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Iterator;
 
 public class DmfTarArchive implements Archive {
     private final DmfTarRunner dmfTarRunner;
@@ -56,6 +57,11 @@ public class DmfTarArchive implements Archive {
     @SneakyThrows
     public boolean fileExists(String filePath) {
         return dmfTarRunner.fileExists(path, "./" + filePath);
+    }
+
+    @Override
+    public Iterator<Item> listAllItems() {
+        return null;
     }
 
 }

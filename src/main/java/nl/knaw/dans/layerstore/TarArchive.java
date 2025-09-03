@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import static java.text.MessageFormat.format;
@@ -145,5 +146,10 @@ public class TarArchive implements Archive {
         catch (NoSuchFileException | FileNotFoundException e) {
             return false;
         }
+    }
+
+    @Override
+    public Iterator<Item> listAllItems() {
+        return null;
     }
 }
