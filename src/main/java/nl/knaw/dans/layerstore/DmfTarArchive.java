@@ -61,7 +61,6 @@ public class DmfTarArchive implements Archive {
 
     @Override
     public Iterator<Item> listAllItems() {
-        return null;
+        return new DmfTarArchiveItemIterator(path, dmfTarRunner);
     }
-
 }

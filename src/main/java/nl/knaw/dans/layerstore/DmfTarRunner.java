@@ -16,16 +16,24 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ProcessInputStream;
 import nl.knaw.dans.lib.util.ProcessRunner;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.io.LineIterator;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 @AllArgsConstructor
+@Slf4j
 public class DmfTarRunner {
     private final Path dmfTarExecutable;
     private final String user;
@@ -33,16 +41,14 @@ public class DmfTarRunner {
     private final Path remoteBaseDir;
 
     public void tarDirectory(Path directory, String archiveName) {
-        var runner = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
-            "-cf",
-            getRemotePath(archiveName),
-            ".");
-        // Always tar relative to the current directory (.) and then set that to the storage root, so that the entries in the tar file are
-        // relative to the storage root
-        runner.setWorkingDirectory(directory.toAbsolutePath().toString());
-        var result = runner.runToEnd();
-        if (result.getExitCode() != 0) {
-            throw new RuntimeException("Failed to create tar archive: " + result.getErrorOutput());
+        var commandLine = CommandLine.parse(dmfTarExecutable.toAbsolutePath() + " -cf " + getRemotePath(archiveName) + " .");
+        var executor = DefaultExecutor.builder()
+            .setWorkingDirectory(directory.toAbsolutePath().toFile())
+            .get();
+        try {
+            executor.execute(commandLine);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create tar archive: " + e.getMessage(), e);
         }
     }
 
@@ -55,7 +61,7 @@ public class DmfTarRunner {
         return new ProcessInputStream(runner.start());
     }
 
-    public boolean fileExists(String archiveName, String fileName) throws Exception {
+    public boolean fileExists(String archiveName, String fileName) throws IOException {
         var runner = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
             "-tf", // List files in archive
             "-q", // Suppress dmftar messages to stdout
@@ -68,6 +74,16 @@ public class DmfTarRunner {
             }
         }
         return false;
+    }
+
+    public Iterator<String> listFiles(String archiveName) {
+        var runner = new ProcessRunner(dmfTarExecutable.toAbsolutePath().toString(),
+            "-tf", // List files in archive
+            "-q", // Suppress dmftar messages to stdout
+            getRemotePath(archiveName));
+        var process = runner.start();
+        var reader = new BufferedReader(new InputStreamReader(new ProcessInputStream(process), StandardCharsets.UTF_8));
+        return new LineIterator(reader);
     }
 
     private String getRemotePath(String archiveName) {

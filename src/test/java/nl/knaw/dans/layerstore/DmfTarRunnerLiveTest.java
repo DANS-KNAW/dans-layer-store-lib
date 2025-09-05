@@ -16,6 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,12 +61,45 @@ public class DmfTarRunnerLiveTest {
 
     @Test
     @EnabledIf("nl.knaw.dans.layerstore.TestConditions#dmftarLiveTestConfigured")
-    public void roundTrip() throws Exception {
+    public void createTarAndReadTarRoundTrip() throws Exception {
         var tarFile = System.currentTimeMillis() + ".dmftar";
         log.debug("tarFile: {}", tarFile);
         dmfTarRunner.tarDirectory(inputDir, tarFile);
         var actual = IOUtils.toString(dmfTarRunner.readFile(tarFile, "./text/loro.txt"), StandardCharsets.UTF_8);
         var expected = FileUtils.readFileToString(new File("src/test/resources/live-test-input-dir/text/loro.txt"), StandardCharsets.UTF_8);
         assertThat(actual).isEqualTo(expected);
+    }
+
+    /*
+     *  * dmftar.executable = /path/to/dmf-tar
+     * dmftar.remote-base-dir = /path/to/remote-base-dir
+     * dmftar.user = user
+     * dmftar.host = host
+
+     */
+
+
+    @Test
+    @EnabledIf("nl.knaw.dans.layerstore.TestConditions#dmftarLiveTestConfigured")
+    public void listFilesInTar() throws Exception {
+        //var tarFile = System.currentTimeMillis() + ".dmftar";
+        var tarFile = "1756905354381.dmftar";
+        log.debug("tarFile: {}", tarFile);
+//        dmfTarRunner.tarDirectory(inputDir, tarFile);
+        try {
+            var list = IteratorUtils.toList(dmfTarRunner.listFiles(tarFile));
+            assertThat(list).asList().containsExactlyInAnyOrder(
+                "",
+                "loro.jpeg",
+                "space-galaxy.jpg",
+                "space-galaxy-1401467040F0s.jpg",
+                "Tarantula_Nebula_-_Hubble.jpg",
+                "text/",
+                "text/loro.txt"
+            );
+        } catch (Exception e) {
+            log.error("Caught exception", e);
+            throw e;
+        }
     }
 }
