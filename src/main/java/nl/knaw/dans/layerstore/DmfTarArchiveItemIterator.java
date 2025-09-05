@@ -1,16 +1,27 @@
+/*
+ * Copyright (C) 2024 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package nl.knaw.dans.layerstore;
 
 import java.util.Iterator;
 
 public class DmfTarArchiveItemIterator implements Iterator<Item> {
-    /**
-     * The root item represents the root of the zip archive, and is implicitly present in every zip archive.
-     */
-    private final Item rootItem = new Item("", Item.Type.Directory);
-
-    private boolean rootReturned = false;
-
     private final Iterator<String> entries;
+
+    private String nextEntry;
+
 
     /**
      * Creates a new iterator over the items in the given archive.
@@ -24,24 +35,52 @@ public class DmfTarArchiveItemIterator implements Iterator<Item> {
 
     @Override
     public boolean hasNext() {
-        if (!rootReturned) {
-            return true;
-        }
         return entries.hasNext();
     }
 
+    private void advance() {
+        if (nextEntry == null && entries.hasNext()) {
+            nextEntry = entries.next();
+            // Skip dmftar-cache entries
+            if (nextEntry.contains("/dmftar-cache.")) {
+                nextEntry = null;
+                advance();
+            }
+        }
+    }
+
+
     @Override
     public Item next() {
-        if (!rootReturned) {
-            rootReturned = true;
-            return rootItem;
+        var next = getPathFromEntry(entries.next());
+        // There is an entry for the root directory, but it does not end with a slash, hence the extra check for isEmpty()
+        return new Item(removeTrailingSlash(next), next.endsWith("/") || next.isEmpty() ? Item.Type.Directory : Item.Type.File);
+    }
+
+    private boolean isDmftarCacheEntry(String entry) {
+        return entry.startsWith("dmftar-cache.");
+    }
+
+    private String removeTrailingSlash(String path) {
+        if (path.endsWith("/")) {
+            return path.substring(0, path.length() - 1);
         }
-        var next = entries.next();
-        // Remove trailing slash from directory names
-        var name = next;
-        if (name.endsWith("/")) {
-            name = name.substring(0, name.length() - 1);
+        return path;
+    }
+
+    /*
+     * Entries are formatted like this example:
+     *
+     * -rw-rw-r-- janm/janm      4777 2025-07-14 11:25 ./text/loro.txt
+     *
+     * We want to extract the path after the "./".
+     */
+    private String getPathFromEntry(String entry) {
+        int index = entry.indexOf("./");
+        if (index == -1) {
+            throw new IllegalStateException("Got malformed entry from tar (no './' found): " + entry);
         }
-        return new Item(name, next.endsWith("/") ? Item.Type.Directory : Item.Type.File);
+
+        return entry.substring(index + 2);
     }
 }

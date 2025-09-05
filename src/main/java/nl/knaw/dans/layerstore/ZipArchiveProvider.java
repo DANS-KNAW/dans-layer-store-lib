@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class ZipArchiveProvider implements ArchiveProvider {
     }
 
     @Override
-    public List<Long> listArchivedLayers() {
+    public List<Long> listArchivedLayers() throws IOException {
         try (var stream = java.nio.file.Files.list(archiveRoot)) {
             return stream
                 .map(Path::getFileName)
@@ -44,9 +45,6 @@ public class ZipArchiveProvider implements ArchiveProvider {
                 .map(name -> name.substring(0, name.length() - ".zip".length()))
                 .map(Long::valueOf)
                 .toList();
-        }
-        catch (java.io.IOException e) {
-            throw new RuntimeException("Failed to list files in archive root: " + archiveRoot, e);
         }
     }
 }

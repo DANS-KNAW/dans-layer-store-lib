@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -45,5 +46,5 @@ public interface ArchiveProvider {
      *
      * @return a list of layer IDs for which archives exist
      */
-    List<Long> listArchivedLayers();
+    List<Long> listArchivedLayers() throws IOException;
 }

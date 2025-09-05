@@ -37,7 +37,7 @@ public class TarArchiveProvider implements ArchiveProvider {
     }
 
     @Override
-    public List<Long> listArchivedLayers() {
+    public List<Long> listArchivedLayers() throws IOException {
         try (var stream = Files.list(archiveRoot)) {
             return stream
                 .map(Path::getFileName)
@@ -46,9 +46,6 @@ public class TarArchiveProvider implements ArchiveProvider {
                 .map(name -> name.substring(0, name.length() - ".tar".length()))
                 .map(Long::valueOf)
                 .toList();
-        }
-        catch (IOException e) {
-            throw new RuntimeException("Failed to list files in archive root: " + archiveRoot, e);
         }
     }
 }

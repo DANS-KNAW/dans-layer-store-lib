@@ -70,24 +70,15 @@ public class DmfTarRunnerLiveTest {
         assertThat(actual).isEqualTo(expected);
     }
 
-    /*
-     *  * dmftar.executable = /path/to/dmf-tar
-     * dmftar.remote-base-dir = /path/to/remote-base-dir
-     * dmftar.user = user
-     * dmftar.host = host
-
-     */
-
-
     @Test
     @EnabledIf("nl.knaw.dans.layerstore.TestConditions#dmftarLiveTestConfigured")
     public void listFilesInTar() throws Exception {
-        //var tarFile = System.currentTimeMillis() + ".dmftar";
-        var tarFile = "1756905354381.dmftar";
-        log.debug("tarFile: {}", tarFile);
-//        dmfTarRunner.tarDirectory(inputDir, tarFile);
+        var dmfTarFile = System.currentTimeMillis() + ".dmftar";
+        log.debug("Creating tar file: {}", dmfTarFile);
+        dmfTarRunner.tarDirectory(inputDir, dmfTarFile);
+        log.debug("Created tar file: {}", dmfTarFile);
         try {
-            var list = IteratorUtils.toList(dmfTarRunner.listFiles(tarFile));
+            var list = IteratorUtils.toList(new DmfTarArchiveItemIterator(dmfTarFile, dmfTarRunner));
             assertThat(list).asList().containsExactlyInAnyOrder(
                 "",
                 "loro.jpeg",

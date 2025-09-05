@@ -16,8 +16,11 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
-import nl.knaw.dans.lib.util.ProcessRunner;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -29,21 +32,37 @@ public class SshRunner {
     private final Path remoteBaseDir;
 
     public boolean fileExists(String archiveName) {
-        var runner = new ProcessRunner(sshExecutable.toAbsolutePath().toString(),
-            user + "@" + host,
-            "test", "-e", remoteBaseDir.resolve(archiveName).toString());
-        var result = runner.runToEnd();
-        return result.getExitCode() == 0;
+        var command = String.format("%s %s@test %s -e %s",
+            sshExecutable.toAbsolutePath(),
+            user,
+            host,
+            remoteBaseDir.resolve(archiveName));
+        var cmdLine = CommandLine.parse(command);
+        var executor = DefaultExecutor.builder().get();
+        executor.setExitValues(new int[] { 0, 1 });
+        try {
+            int exitValue = executor.execute(cmdLine);
+            return exitValue == 0;
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to check existence of " + archiveName + " on " + host, e);
+        }
     }
 
-    public List<String> listFiles() {
-        var runner = new ProcessRunner(sshExecutable.toAbsolutePath().toString(),
-            user + "@" + host,
-            "ls -1", remoteBaseDir.toString());
-        var result = runner.runToEnd();
-        if (result.getExitCode() != 0) {
-            throw new RuntimeException("Failed to list files in " + remoteBaseDir + " on " + host + ": " + result);
+    public List<String> listFiles() throws IOException {
+        var command = String.format("%s %s@%s ls -1 %s",
+            sshExecutable.toAbsolutePath(),
+            user,
+            host,
+            remoteBaseDir);
+        var cmdLine = CommandLine.parse(command);
+        var executor = DefaultExecutor.builder().get();
+        var outputStream = new ByteArrayOutputStream();
+        executor.setStreamHandler(new org.apache.commons.exec.PumpStreamHandler(outputStream));
+        int exitValue = executor.execute(cmdLine);
+        if (exitValue != 0) {
+            throw new RuntimeException("Failed to list files in " + remoteBaseDir + " on " + host + ": exit code " + exitValue);
         }
-        return result.getStandardOutput().lines().toList();
+        return outputStream.toString().lines().toList();
     }
 }

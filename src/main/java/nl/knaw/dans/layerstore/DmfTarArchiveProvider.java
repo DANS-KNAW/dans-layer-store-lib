@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
+import java.io.IOException;
 import java.util.List;
 
 @AllArgsConstructor
@@ -35,7 +36,7 @@ public class DmfTarArchiveProvider implements ArchiveProvider {
     }
 
     @Override
-    public List<Long> listArchivedLayers() {
+    public List<Long> listArchivedLayers() throws IOException {
         return sshRunner.listFiles().stream()
             .filter(name -> name.endsWith(".dmftar"))
             .map(name -> name.substring(0, name.length() - ".dmftar".length()))
