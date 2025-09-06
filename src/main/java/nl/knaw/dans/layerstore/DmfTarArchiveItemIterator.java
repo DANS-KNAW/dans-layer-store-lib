@@ -16,17 +16,17 @@
 package nl.knaw.dans.layerstore;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class DmfTarArchiveItemIterator implements Iterator<Item> {
     private final Iterator<String> entries;
 
-    private String nextEntry;
-
+    private Item nextItem;
 
     /**
      * Creates a new iterator over the items in the given archive.
      *
-     * @param archiveName  the name of the archive to iterate over (without path)
+     * @param archiveName  the name of the archive to iterate over (only the filename, without the path)
      * @param dmfTarRunner the DmfTarRunner to use for accessing the archive
      */
     public DmfTarArchiveItemIterator(String archiveName, DmfTarRunner dmfTarRunner) {
@@ -35,26 +35,23 @@ public class DmfTarArchiveItemIterator implements Iterator<Item> {
 
     @Override
     public boolean hasNext() {
-        return entries.hasNext();
-    }
-
-    private void advance() {
-        if (nextEntry == null && entries.hasNext()) {
-            nextEntry = entries.next();
-            // Skip dmftar-cache entries
-            if (nextEntry.contains("/dmftar-cache.")) {
-                nextEntry = null;
-                advance();
+        while (nextItem == null && entries.hasNext()) {
+            var path = getPathFromEntry(entries.next());
+            if (!isDmftarCacheEntry(path)) {
+                nextItem = new Item(removeTrailingSlash(path), path.endsWith("/") || path.isEmpty() ? Item.Type.Directory : Item.Type.File);
             }
         }
+        return nextItem != null;
     }
-
 
     @Override
     public Item next() {
-        var next = getPathFromEntry(entries.next());
-        // There is an entry for the root directory, but it does not end with a slash, hence the extra check for isEmpty()
-        return new Item(removeTrailingSlash(next), next.endsWith("/") || next.isEmpty() ? Item.Type.Directory : Item.Type.File);
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+        var item = nextItem;
+        nextItem = null;
+        return item;
     }
 
     private boolean isDmftarCacheEntry(String entry) {
@@ -68,11 +65,11 @@ public class DmfTarArchiveItemIterator implements Iterator<Item> {
         return path;
     }
 
-    /*
+    /**
      * Entries are formatted like this example:
-     *
+     * <pre>
      * -rw-rw-r-- janm/janm      4777 2025-07-14 11:25 ./text/loro.txt
-     *
+     * </pre>
      * We want to extract the path after the "./".
      */
     private String getPathFromEntry(String entry) {
