@@ -63,7 +63,7 @@ public interface LayerDatabase {
     List<Item> listRecursive(String directoryPath) throws IOException;
 
     /**
-     * Adds a directory to the database. Ancestor directories are added automatically, if they do not exist in the same layer yet.
+     * Adds a directory to the database. Ancestor directories are added automatically if they do not exist in the same layer yet.
      *
      * @param path the path of the directory relative to the storage root
      * @return the records that were added to the database for directories that did not exist yet
@@ -94,4 +94,20 @@ public interface LayerDatabase {
      * @return true if the pattern matches any path in the database, false otherwise
      */
     boolean existsPathLike(String pathPattern);
+
+    /**
+     * Lists all layer IDs that are currently in the database.
+     *
+     * @return a list of layer IDs
+     */
+    List<Long> listLayerIds();
+
+    /**
+     * Gets all records for the given layer id.
+     *
+     * @param layerId the layer id to get records for
+     * @return a list of records for the given layer id
+     */
+    List<ItemRecord> getRecordsByLayerId(long layerId);
+
 }

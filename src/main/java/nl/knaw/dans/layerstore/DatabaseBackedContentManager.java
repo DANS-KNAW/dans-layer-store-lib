@@ -23,7 +23,7 @@ public interface DatabaseBackedContentManager {
     /**
      * Test if the content at the given path should be stored in the database.
      *
-     * @param path the path of the content relative to the root of store
+     * @param path the path of the content relative to the root of the store
      * @return true if the content should be stored in the database, false otherwise
      */
     boolean test(String path);
@@ -34,7 +34,7 @@ public interface DatabaseBackedContentManager {
      * <p>
      * The most important use case for this method is to compress the content before it is stored in the database.
      *
-     * @param path  the path of the content relative to the root of store
+     * @param path  the path of the content relative to the root of the store
      * @param bytes the content to be stored
      * @return the processed content
      */
@@ -46,7 +46,7 @@ public interface DatabaseBackedContentManager {
      * <p>
      * The most important use case for this method is to decompress the content after it is retrieved from the database (assuming it was compressed before it was stored).
      *
-     * @param path  the path of the content relative to the root of store
+     * @param path  the path of the content relative to the root of the store
      * @param bytes the content to be processed
      * @return the processed content
      */

@@ -22,9 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.HashSet;
+import java.util.List;
 
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
@@ -33,20 +32,16 @@ public class LayerManagerImpl implements LayerManager {
 
     private final ArchiveProvider archiveProvider;
 
-    private final Executor archivingExecutor;
+    private final LayerArchiver layerArchiver;
 
     @Getter
     private Layer topLayer;
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, Executor archivingExecutor) throws IOException {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver) throws IOException {
         this.stagingRoot = stagingRoot;
-        this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
+        this.layerArchiver = layerArchiver;
         this.archiveProvider = archiveProvider;
         initTopLayer();
-    }
-
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) throws IOException {
-        this(stagingRoot, archiveProvider, null);
     }
 
     private void initTopLayer() throws IOException {
@@ -59,7 +54,7 @@ public class LayerManagerImpl implements LayerManager {
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElse(createNewTopLayer().getId());
-            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
+            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
         }
     }
 
@@ -67,7 +62,7 @@ public class LayerManagerImpl implements LayerManager {
         if (!path.toFile().isDirectory()) {
             throw new IllegalStateException("Not a directory: " + path);
         }
-        if(!path.getFileName().toString().matches("\\d{13,}")) {
+        if (!path.getFileName().toString().matches("\\d{13,}")) {
             // more than 13 digits in nov 2286, comma allows a longer future
             throw new IllegalStateException("Not a timestamp: " + path);
         }
@@ -77,7 +72,7 @@ public class LayerManagerImpl implements LayerManager {
     private Layer createNewTopLayer() {
         long id = System.currentTimeMillis();
         log.debug("Creating new top layer with id {}", id);
-        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
+        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
     }
 
     @Override
@@ -90,15 +85,18 @@ public class LayerManagerImpl implements LayerManager {
     }
 
     private void archive(Layer layer) {
-        archivingExecutor.execute(() -> {
-            try {
-                layer.archive();
-            }
-            catch (Exception e) {
-                log.error("Error archiving layer with id {}", layer.getId(), e);
-                throw new RuntimeException(e);
-            }
-        });
+        layerArchiver.archive(layer);
+    }
+
+    public List<Long> listLayerIds() throws IOException {
+        try (var pathStream = Files.list(stagingRoot)) {
+            var allIds = new HashSet<>(pathStream
+                .map(this::toValidLayerName)
+                .map(Long::valueOf)
+                .toList());
+            allIds.addAll(archiveProvider.listArchivedLayers());
+            return allIds.stream().sorted().toList();
+        }
     }
 
     @Override
@@ -107,8 +105,8 @@ public class LayerManagerImpl implements LayerManager {
             // safeguard/shortcut: a fresh top layer that never received content has no directory in the staging root
             return topLayer;
         }
-        else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {
-            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
+        else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(id)) {
+            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
         }
         else {
             throw new IllegalArgumentException("No layer found with id " + id);

@@ -17,18 +17,31 @@ package nl.knaw.dans.layerstore;
 
 import lombok.AllArgsConstructor;
 
+import java.io.IOException;
+import java.util.List;
+
 @AllArgsConstructor
 public class DmfTarArchiveProvider implements ArchiveProvider {
     private final DmfTarRunner dmfTarRunner;
     private final SshRunner sshRunner;
 
     @Override
-    public Archive createArchive(String path) {
-        return new DmfTarArchive(dmfTarRunner, path + ".dmftar", exists(path));
+    public Archive createArchive(long layerId) {
+        return new DmfTarArchive(dmfTarRunner, layerId + ".dmftar", exists(layerId));
     }
 
     @Override
-    public boolean exists(String path) {
-        return sshRunner.fileExists(path + ".dmftar");
+    public boolean exists(long layerId) {
+        return sshRunner.fileExists(layerId + ".dmftar");
     }
+
+    @Override
+    public List<Long> listArchivedLayers() throws IOException {
+        return sshRunner.listFiles().stream()
+            .filter(name -> name.endsWith(".dmftar"))
+            .map(name -> name.substring(0, name.length() - ".dmftar".length()))
+            .map(Long::valueOf)
+            .toList();
+    }
+
 }

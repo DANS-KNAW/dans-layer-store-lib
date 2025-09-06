@@ -15,24 +15,36 @@
  */
 package nl.knaw.dans.layerstore;
 
+import java.io.IOException;
+import java.util.List;
+
 /**
  * Provides a way to create an Archive. The implementation should provide a way to configure where the archive is stored.
  */
 public interface ArchiveProvider {
 
     /**
-     * Create a new {@link Archive} instance.
+     * Create a new {@link Archive} instance for the given layer ID.
      *
-     * @param path the path to the archive file
+     * @param layerId the layer ID
      * @return the new archive
      */
-    Archive createArchive(String path);
+    Archive createArchive(long layerId);
+
 
     /**
      * Check if an archive exists at the given path.
      *
-     * @param path the path to the archive file
+     * @param layerId the layer ID
      * @return true if the archive exists, false otherwise
      */
-    boolean exists(String path);
+    boolean exists(long layerId);
+
+
+    /**
+     * List all archived layer IDs.
+     *
+     * @return a list of layer IDs for which archives exist
+     */
+    List<Long> listArchivedLayers() throws IOException;
 }

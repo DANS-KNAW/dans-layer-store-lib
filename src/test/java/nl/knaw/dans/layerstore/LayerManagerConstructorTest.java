@@ -29,7 +29,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_create_the_staging_root() throws IOException {
         assertThat(stagingDir).doesNotExist();
-        new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         assertThat(stagingDir).isEmptyDirectory();
     }
 
@@ -38,7 +38,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var existingLayerId = 1234567890123L;
         Files.createDirectories(stagingDir.resolve(String.valueOf(existingLayerId)));
 
-        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService())
+        var topLayerId = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver())
             .getTopLayer().getId();
         assertThat(topLayerId).isEqualTo(existingLayerId);
     }
@@ -49,7 +49,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidFileBetweenLayerDirs = "1234567890123";
         Files.createFile(stagingDir.resolve(invalidFileBetweenLayerDirs));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Not a directory: target/test/LayerManagerConstructorTest/layer_staging/" + invalidFileBetweenLayerDirs);
     }
@@ -59,7 +59,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var existingLayerDir = "123456789012";
         Files.createDirectories(stagingDir.resolve(existingLayerDir));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Not a timestamp: target/test/LayerManagerConstructorTest/layer_staging/" + existingLayerDir);
     }
@@ -69,7 +69,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidDirBetweenLayerDirs = "abcdefghijklmnopqrstuvwxyz";
         Files.createDirectories(stagingDir.resolve(invalidDirBetweenLayerDirs));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Not a timestamp: target/test/LayerManagerConstructorTest/layer_staging/" + invalidDirBetweenLayerDirs);
     }
@@ -79,7 +79,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidDirBetweenLayerDirs = "1.2";
         Files.createDirectories(stagingDir.resolve(invalidDirBetweenLayerDirs));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Not a timestamp: target/test/LayerManagerConstructorTest/layer_staging/" + invalidDirBetweenLayerDirs);
     }

@@ -16,6 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,12 +61,36 @@ public class DmfTarRunnerLiveTest {
 
     @Test
     @EnabledIf("nl.knaw.dans.layerstore.TestConditions#dmftarLiveTestConfigured")
-    public void roundTrip() throws Exception {
+    public void createTarAndReadTarRoundTrip() throws Exception {
         var tarFile = System.currentTimeMillis() + ".dmftar";
         log.debug("tarFile: {}", tarFile);
         dmfTarRunner.tarDirectory(inputDir, tarFile);
-        var actual = IOUtils.toString(dmfTarRunner.readFile(tarFile, "./text/loro.txt"), StandardCharsets.UTF_8);
+        var actual = IOUtils.toString(dmfTarRunner.readFile(tarFile, "text/loro.txt"), StandardCharsets.UTF_8);
         var expected = FileUtils.readFileToString(new File("src/test/resources/live-test-input-dir/text/loro.txt"), StandardCharsets.UTF_8);
         assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    @EnabledIf("nl.knaw.dans.layerstore.TestConditions#dmftarLiveTestConfigured")
+    public void listFilesInTar() throws Exception {
+        var dmfTarFile = System.currentTimeMillis() + ".dmftar";
+        log.debug("Creating tar file: {}", dmfTarFile);
+        dmfTarRunner.tarDirectory(inputDir, dmfTarFile);
+        log.debug("Created tar file: {}", dmfTarFile);
+        try {
+            var list = IteratorUtils.toList(new DmfTarArchiveItemIterator(dmfTarFile, dmfTarRunner));
+            assertThat(list).asList().containsExactlyInAnyOrder(
+                new Item("", Item.Type.Directory),
+                new Item("loro.jpeg", Item.Type.File),
+                new Item("space-galaxy.jpg", Item.Type.File),
+                new Item("space-galaxy-1401467040F0s.jpg", Item.Type.File),
+                new Item("Tarantula_Nebula_-_Hubble.jpg", Item.Type.File),
+                new Item("text", Item.Type.Directory),
+                new Item("text/loro.txt", Item.Type.File)
+            );
+        } catch (Exception e) {
+            log.error("Caught exception", e);
+            throw e;
+        }
     }
 }

@@ -26,7 +26,7 @@ import java.util.List;
  * but other implementations are conceivable. The main reason for defining this interface in more general terms is to hide the details of the underlying storage mechanism from the client code.
  * </p>
  * <p>
- * An ItemStore has a storage root, which is implementation dependent.
+ * An ItemStore has a storage root, which is implementation-dependent.
  * </p>
  */
 public interface ItemStore {

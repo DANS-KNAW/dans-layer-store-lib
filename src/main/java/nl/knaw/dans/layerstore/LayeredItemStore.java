@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import static nl.knaw.dans.layerstore.Utils.throwOnListDifference;
+
 /**
  * An implementation of FileStore that stores files and directories as a stack of layers. A layer can be staged or archived. Staged layers can be modified, archived layers are read-only. To transform
  * the layered file store into a regular file system directory, each layer must be unarchived (if it was archived) to a staging directory and the staging directories must be copied into a single
@@ -59,6 +61,12 @@ public class LayeredItemStore implements ItemStore {
 
     public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
         this(database, layerManager, null);
+    }
+
+    public void checkSameLayersOnStorageAndDb() throws IOException {
+        var layersInDb = database.listLayerIds();
+        var layersOnStorage = layerManager.listLayerIds();
+        throwOnListDifference(layersInDb, layersOnStorage, "Layer IDs are inconsistent between database and storage.");
     }
 
     @Override

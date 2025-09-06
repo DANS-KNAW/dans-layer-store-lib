@@ -39,7 +39,7 @@ import static nl.knaw.dans.layerstore.Item.Type;
 @Slf4j
 public class LayerDatabaseImpl implements LayerDatabase {
     private PersistenceProvider<ItemRecord> persistenceProvider;
-    
+
     @Override
     public void saveRecords(ItemRecord... records) {
         for (var record : records) {
@@ -179,6 +179,26 @@ public class LayerDatabaseImpl implements LayerDatabase {
         cq.select(cb.literal(true)).where(cb.like(itemRecordRoot.get("path"), pathPattern));
         TypedQuery<Boolean> query = persistenceProvider.createQuery(cq);
         return query.getResultStream().findFirst().orElse(false);
+    }
+
+    @Override
+    public List<Long> listLayerIds() {
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(itemRecordRoot.get("layerId")).distinct(true);
+        TypedQuery<Long> query = persistenceProvider.createQuery(cq);
+        return query.getResultList();
+    }
+
+    @Override
+    public List<ItemRecord> getRecordsByLayerId(long layerId) {
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
+        CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(itemRecordRoot).where(cb.equal(itemRecordRoot.get("layerId"), layerId));
+        TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
+        return query.getResultList();
     }
 
     private String preprocessDirectoryArgument(String directoryPath) throws NoSuchFileException, NotDirectoryException {

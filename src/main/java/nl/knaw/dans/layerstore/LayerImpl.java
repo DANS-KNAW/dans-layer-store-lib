@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Iterator;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -222,4 +223,13 @@ class LayerImpl implements Layer {
             throw new IllegalArgumentException("Path is outside staging directory");
     }
 
+    @Override
+    public Iterator<Item> listAllItems() throws IOException {
+        if (isArchived()) {
+            return archive.listAllItems();
+        }
+        else {
+            return new DirectoryTreeItemIterator(stagingDir);
+        }
+    }
 }

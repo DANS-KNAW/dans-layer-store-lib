@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_when_layer_id_does_not_exist() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
 
         // When
         assertThatThrownBy(() -> layerManager.getLayer(1234567890123L))
@@ -47,7 +46,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_garbage_in_stagingDir_created_after_creating_LayerManagerImpl_object() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         Files.createDirectories(stagingDir.resolve("0"));
 
         //When
@@ -60,7 +59,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_a_top_layer_with_content() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var topLayer = layerManager.getTopLayer();
         topLayer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
 
@@ -74,7 +73,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_an_empty_top_layer() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         long topLayerId = layerManager.getTopLayer().getId();
         assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
 
@@ -89,7 +88,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_find_an_empty_archived_layer() throws Exception {
         // Given
         Files.createDirectories(archiveDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var initialLayerId = layerManager.getTopLayer().getId();
         assertThat(stagingDir).isEmptyDirectory(); // no content in the current layer
         assertThat(archiveDir).isEmptyDirectory(); // nothing archived yet
@@ -112,7 +111,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_have_status_archived_for_the_found_layer() throws Exception {
         // Given
         Files.createDirectories(archiveDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir), new DirectLayerArchiver());
         layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         Layer initialLayer = layerManager.getTopLayer();
         var initialLayerId = initialLayer.getId();

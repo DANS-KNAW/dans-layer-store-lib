@@ -15,33 +15,13 @@
  */
 package nl.knaw.dans.layerstore;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
- * Manages {@link Layer}s.
+ * A {@link LayerArchiver} that archives layers directly, not performing any consistency checks nor scheduling archiving.
  */
-public interface LayerManager {
-    /**
-     * Closes the current top layer and creates a new top layer. The old top layer will be scheduled for archiving.
-     */
-    void newTopLayer();
+public class DirectLayerArchiver implements LayerArchiver {
 
-    Layer getTopLayer();
-
-    /**
-     * Returns the layer with the given id.
-     *
-     * @param id the id of the layer
-     * @return the layer
-     */
-    Layer getLayer(long id);
-
-    /**
-     * Lists all layer IDs that are currently managed.
-     *
-     * @return a list of layer IDs
-     * @throws IOException if an I/O error occurs
-     */
-    List<Long> listLayerIds() throws IOException;
+    @Override
+    public void archive(Layer layer) {
+        layer.archive();
+    }
 }

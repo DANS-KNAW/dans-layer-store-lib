@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -44,6 +45,7 @@ public abstract class AbstractTestWithTestDir {
             // github stumbled: https://github.com/DANS-KNAW/dans-layer-store-lib/actions/runs/8705753485/job/23876831089?pr=7#step:4:106
             FileUtils.deleteDirectory(testDir.toFile());
         }
+        Files.createDirectories(testDir);
     }
 
     public void createEmptyStagingDirFiles(String... paths) {
