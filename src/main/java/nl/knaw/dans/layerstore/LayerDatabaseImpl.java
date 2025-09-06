@@ -191,6 +191,16 @@ public class LayerDatabaseImpl implements LayerDatabase {
         return query.getResultList();
     }
 
+    @Override
+    public List<ItemRecord> getRecordsByLayerId(long layerId) {
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
+        CriteriaQuery<ItemRecord> cq = cb.createQuery(ItemRecord.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(itemRecordRoot).where(cb.equal(itemRecordRoot.get("layerId"), layerId));
+        TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
+        return query.getResultList();
+    }
+
     private String preprocessDirectoryArgument(String directoryPath) throws NoSuchFileException, NotDirectoryException {
         if (directoryPath == null) {
             throw new IllegalArgumentException("directoryPath must not be null");

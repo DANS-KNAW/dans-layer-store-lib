@@ -24,9 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
@@ -35,20 +32,16 @@ public class LayerManagerImpl implements LayerManager {
 
     private final ArchiveProvider archiveProvider;
 
-    private final Executor archivingExecutor;
+    private final LayerArchiver layerArchiver;
 
     @Getter
     private Layer topLayer;
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, Executor archivingExecutor) throws IOException {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver) throws IOException {
         this.stagingRoot = stagingRoot;
-        this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
+        this.layerArchiver = layerArchiver;
         this.archiveProvider = archiveProvider;
         initTopLayer();
-    }
-
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) throws IOException {
-        this(stagingRoot, archiveProvider, null);
     }
 
     private void initTopLayer() throws IOException {
@@ -92,15 +85,7 @@ public class LayerManagerImpl implements LayerManager {
     }
 
     private void archive(Layer layer) {
-        archivingExecutor.execute(() -> {
-            try {
-                layer.archive();
-            }
-            catch (Exception e) {
-                log.error("Error archiving layer with id {}", layer.getId(), e);
-                throw new RuntimeException(e);
-            }
-        });
+        layerArchiver.archive(layer);
     }
 
     public List<Long> listLayerIds() throws IOException {

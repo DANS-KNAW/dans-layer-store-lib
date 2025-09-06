@@ -16,6 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -61,23 +62,47 @@ public class LayeredItemStore implements ItemStore {
         this(database, layerManager, null);
     }
 
+    /**
+     * Creates a new top layer and checks that the items found on storage match the items in the database.
+     *
+     * @throws IOException
+     */
+    public void newTopLayer() throws IOException {
+        if (layerManager.getTopLayer() != null) {
+            checkSameItemsFoundOnStorageAsInDatabaseFor(layerManager.getTopLayer().getId());
+        }
+        layerManager.newTopLayer();
+    }
+
+
     public void checkSameLayerIdsFoundOnStorageAsInDatabase() throws IOException {
         var layerIdsInDb = database.listLayerIds();
         var layerIdsOnStorage = layerManager.listLayerIds();
-        var missingInDb = new ArrayList<Long>();
-        for (var id : layerIdsOnStorage) {
-            if (!layerIdsInDb.contains(id)) {
+        throwOnListDifference(layerIdsInDb, layerIdsOnStorage, "Layer IDs are inconsistent between database and storage.");
+    }
+
+    public void checkSameItemsFoundOnStorageAsInDatabaseFor(long layerId) throws IOException {
+        var itemsInDb = database.getRecordsByLayerId(layerId).stream().map(ItemRecord::toItem).toList();
+        var itemsOnStorage = IteratorUtils.toList(layerManager.getLayer(layerId).listAllItems());
+        throwOnListDifference(itemsInDb, itemsOnStorage, "Items found on storage do not match items in database.");
+    }
+
+
+    private <T> void throwOnListDifference(List<T> databaseList, List<T> storageList, String baseMessage) {
+        var missingInDb = new ArrayList<T>();
+        for (var id : storageList) {
+            if (!databaseList.contains(id)) {
                 missingInDb.add(id);
             }
         }
-        var missingOnStorage = new ArrayList<Long>();
-        for (var id : layerIdsInDb) {
-            if (!layerIdsOnStorage.contains(id)) {
+        var missingOnStorage = new ArrayList<T>();
+        for (var id : databaseList) {
+            if (!storageList.contains(id)) {
                 missingOnStorage.add(id);
             }
         }
         if (!missingInDb.isEmpty() || !missingOnStorage.isEmpty()) {
-            var message = "Layer IDs are inconsistent between database and storage.";
+            var message = baseMessage;
             if (!missingInDb.isEmpty()) {
                 message += " Missing in database: " + missingInDb;
             }

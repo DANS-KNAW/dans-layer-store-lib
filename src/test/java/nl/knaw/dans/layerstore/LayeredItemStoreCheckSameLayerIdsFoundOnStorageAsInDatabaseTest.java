@@ -26,11 +26,11 @@ import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class LayeredItemStoreCheckLayerIdsTest extends AbstractLayerDatabaseTest {
+public class LayeredItemStoreCheckSameLayerIdsFoundOnStorageAsInDatabaseTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_pass_if_store_and_database_are_empty() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         assertThatCode(layeredStore::checkSameLayerIdsFoundOnStorageAsInDatabase).doesNotThrowAnyException();
@@ -38,7 +38,7 @@ public class LayeredItemStoreCheckLayerIdsTest extends AbstractLayerDatabaseTest
 
     @Test
     public void should_pass_if_store_and_database_are_in_sync() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
@@ -49,7 +49,7 @@ public class LayeredItemStoreCheckLayerIdsTest extends AbstractLayerDatabaseTest
 
     @Test
     public void should_fail_if_db_contains_layer_not_found_on_storage() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
@@ -72,7 +72,7 @@ public class LayeredItemStoreCheckLayerIdsTest extends AbstractLayerDatabaseTest
 
     @Test
     public void should_fail_if_staging_dir_contains_layer_not_found_in_db() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
@@ -88,7 +88,7 @@ public class LayeredItemStoreCheckLayerIdsTest extends AbstractLayerDatabaseTest
 
     @Test
     public void should_fail_if_archive_dir_contains_layer_not_found_in_db() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
@@ -104,7 +104,7 @@ public class LayeredItemStoreCheckLayerIdsTest extends AbstractLayerDatabaseTest
 
     @Test
     public void should_pass_if_multiple_layers_present_and_store_in_sync_with_db() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
@@ -121,7 +121,7 @@ public class LayeredItemStoreCheckLayerIdsTest extends AbstractLayerDatabaseTest
 
     @Test
     public void should_fail_and_report_all_inconsistencies() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");

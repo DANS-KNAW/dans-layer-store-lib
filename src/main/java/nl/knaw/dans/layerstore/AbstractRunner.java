@@ -18,6 +18,9 @@ package nl.knaw.dans.layerstore;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
+/**
+ * Base class for command runners.
+ */
 public abstract class AbstractRunner {
     private static final Pattern USER_HOST_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
     private static final Pattern COMMAND_INJECTION_PATTERN = Pattern.compile("[\\s;|&`$<>]");
