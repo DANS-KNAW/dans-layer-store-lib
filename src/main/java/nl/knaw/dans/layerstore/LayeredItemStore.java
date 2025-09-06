@@ -16,7 +16,6 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -32,6 +31,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+
+import static nl.knaw.dans.layerstore.Utils.throwOnListDifference;
 
 /**
  * An implementation of FileStore that stores files and directories as a stack of layers. A layer can be staged or archived. Staged layers can be modified, archived layers are read-only. To transform
@@ -62,55 +63,10 @@ public class LayeredItemStore implements ItemStore {
         this(database, layerManager, null);
     }
 
-    /**
-     * Creates a new top layer and checks that the items found on storage match the items in the database.
-     *
-     * @throws IOException
-     */
-    public void newTopLayer() throws IOException {
-        if (layerManager.getTopLayer() != null) {
-            checkSameItemsFoundOnStorageAsInDatabaseFor(layerManager.getTopLayer().getId());
-        }
-        layerManager.newTopLayer();
-    }
-
-
-    public void checkSameLayerIdsFoundOnStorageAsInDatabase() throws IOException {
-        var layerIdsInDb = database.listLayerIds();
-        var layerIdsOnStorage = layerManager.listLayerIds();
-        throwOnListDifference(layerIdsInDb, layerIdsOnStorage, "Layer IDs are inconsistent between database and storage.");
-    }
-
-    public void checkSameItemsFoundOnStorageAsInDatabaseFor(long layerId) throws IOException {
-        var itemsInDb = database.getRecordsByLayerId(layerId).stream().map(ItemRecord::toItem).toList();
-        var itemsOnStorage = IteratorUtils.toList(layerManager.getLayer(layerId).listAllItems());
-        throwOnListDifference(itemsInDb, itemsOnStorage, "Items found on storage do not match items in database.");
-    }
-
-
-    private <T> void throwOnListDifference(List<T> databaseList, List<T> storageList, String baseMessage) {
-        var missingInDb = new ArrayList<T>();
-        for (var id : storageList) {
-            if (!databaseList.contains(id)) {
-                missingInDb.add(id);
-            }
-        }
-        var missingOnStorage = new ArrayList<T>();
-        for (var id : databaseList) {
-            if (!storageList.contains(id)) {
-                missingOnStorage.add(id);
-            }
-        }
-        if (!missingInDb.isEmpty() || !missingOnStorage.isEmpty()) {
-            var message = baseMessage;
-            if (!missingInDb.isEmpty()) {
-                message += " Missing in database: " + missingInDb;
-            }
-            if (!missingOnStorage.isEmpty()) {
-                message += " Missing on storage: " + missingOnStorage;
-            }
-            throw new IllegalStateException(message);
-        }
+    public void checkSameLayersOnStorageAndDb() throws IOException {
+        var layersInDb = database.listLayerIds();
+        var layersOnStorage = layerManager.listLayerIds();
+        throwOnListDifference(layersInDb, layersOnStorage, "Layer IDs are inconsistent between database and storage.");
     }
 
     @Override
