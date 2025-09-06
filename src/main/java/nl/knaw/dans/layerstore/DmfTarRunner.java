@@ -16,24 +16,18 @@
 package nl.knaw.dans.layerstore;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.lib.util.ProcessInputStream;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteException;
-import org.apache.commons.exec.ExecuteResultHandler;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Iterator;
-import java.util.regex.Pattern;
 
 /**
  * A runner for the dmftar command line tool, which creates and reads DMF TAR archives on a remote host via SSH.
@@ -42,9 +36,7 @@ import java.util.regex.Pattern;
  * not contain any subdirectories prefixed with 'dmftar-cache.', as these may conflict with temporary cache directories created by dmftar itself.
  */
 @Slf4j
-public class DmfTarRunner {
-    private static final Pattern USER_HOST_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
-    private static final Pattern COMMAND_INJECTION_PATTERN = Pattern.compile("[\\s;|&`$<>]");
+public class DmfTarRunner extends AbstractRunner {
     private final Path dmfTarExecutable;
 
     private final String user;
@@ -96,23 +88,30 @@ public class DmfTarRunner {
     }
 
     /**
-     * Reads a file from a DMF TAR archive on the remote host.contents
+     * Reads a file from a DMF TAR archive on the remote host.
      *
      * @param archiveName the name of the archive to read from
      * @param fileName    the name of the file to read from the archive
      * @return an InputStream for reading the file
      */
-    public InputStream readFile(String archiveName, String fileName) {
+    public InputStream readFile(String archiveName, String fileName) throws IOException{
+        if (fileName.startsWith("./")) {
+            throw new IllegalArgumentException("File name cannot start with './': " + fileName);
+        }
         var commandLine = new CommandLine(dmfTarExecutable.toAbsolutePath().toString())
-            .addArgument("-xfO")
-            .addArgument(getRemotePath(archiveName))
-            .addArgument(fileName);
-        try {
-            return getInputStreamFor(commandLine);
-        }
-        catch (IOException e) {
-            throw new RuntimeException("Failed to read file from archive: " + e.getMessage(), e);
-        }
+            .addArgument("--options=--to-stdout") // Stream the output to stdout instead of writing it to a file
+            .addArgument("--quiet") // Suppress progress messages from dmftar
+            .addArgument("--extract")
+            .addArgument("--archive=" + getRemotePath(archiveName))
+            .addArgument(addPrefix(fileName));
+        return ProcessInputStream.start(commandLine);
+    }
+
+    /*
+     * dmftar wants ./<filename>
+     */
+    private String addPrefix(String name) {
+        return "./" + name;
     }
 
     /**
@@ -126,7 +125,7 @@ public class DmfTarRunner {
             .addArgument("-qtf")
             .addArgument(getRemotePath(archiveName));
         try {
-            var inputStream = getInputStreamFor(commandLine);
+            var inputStream = (InputStream) ProcessInputStream.start(commandLine);
             var reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             return new LineIterator(reader);
         }
@@ -153,51 +152,8 @@ public class DmfTarRunner {
         return false;
     }
 
-    private InputStream getInputStreamFor(CommandLine commandLine) throws IOException {
-        var executor = DefaultExecutor.builder().get();
-        var outputStream = new PipedOutputStream();
-        var inputStream = new PipedInputStream(outputStream);
-        var streamHandler = new PumpStreamHandler(outputStream);
-        executor.setStreamHandler(streamHandler);
-        executor.execute(commandLine, new ExecuteResultHandler() {
-
-            @Override
-            public void onProcessComplete(int exitValue) {
-                IOUtils.closeQuietly(outputStream);
-            }
-
-            @Override
-            public void onProcessFailed(ExecuteException e) {
-                IOUtils.closeQuietly(outputStream);
-                log.error("Failed to execute command: " + e.getMessage(), e);
-            }
-        });
-        return inputStream;
-    }
-
     private String getRemotePath(String archiveName) {
         return user + "@" + host + ":" + remoteBaseDir.resolve(archiveName);
     }
 
-    private static String checkExecutableForSecurity(Path path) {
-        var absPath = path.toAbsolutePath().toString();
-        if (COMMAND_INJECTION_PATTERN.matcher(absPath).find()) {
-            throw new IllegalArgumentException("Invalid executable path: " + absPath);
-        }
-        return absPath;
-    }
-
-    private static String checkUserOrHostNameForSecurity(String param) {
-        if (!USER_HOST_PATTERN.matcher(param).matches()) {
-            throw new IllegalArgumentException("Invalid username: " + param);
-        }
-        return param;
-    }
-
-    private static String checkRemoteBaseDirForSecurity(String param) {
-        if (param.contains("..")) {
-            throw new IllegalArgumentException("Invalid remote base directory: " + param);
-        }
-        return param;
-    }
 }

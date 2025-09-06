@@ -30,7 +30,7 @@ public class DmfTarArchive implements Archive {
     private final String path;
 
     @Getter
-    private boolean archived;
+    private final boolean archived;
 
     public DmfTarArchive(@NonNull DmfTarRunner dmfTarRunner, @NonNull String path, boolean archived) {
         this.dmfTarRunner = dmfTarRunner;

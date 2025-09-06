@@ -65,7 +65,7 @@ public class DmfTarRunnerLiveTest {
         var tarFile = System.currentTimeMillis() + ".dmftar";
         log.debug("tarFile: {}", tarFile);
         dmfTarRunner.tarDirectory(inputDir, tarFile);
-        var actual = IOUtils.toString(dmfTarRunner.readFile(tarFile, "./text/loro.txt"), StandardCharsets.UTF_8);
+        var actual = IOUtils.toString(dmfTarRunner.readFile(tarFile, "text/loro.txt"), StandardCharsets.UTF_8);
         var expected = FileUtils.readFileToString(new File("src/test/resources/live-test-input-dir/text/loro.txt"), StandardCharsets.UTF_8);
         assertThat(actual).isEqualTo(expected);
     }
@@ -80,13 +80,13 @@ public class DmfTarRunnerLiveTest {
         try {
             var list = IteratorUtils.toList(new DmfTarArchiveItemIterator(dmfTarFile, dmfTarRunner));
             assertThat(list).asList().containsExactlyInAnyOrder(
-                "",
-                "loro.jpeg",
-                "space-galaxy.jpg",
-                "space-galaxy-1401467040F0s.jpg",
-                "Tarantula_Nebula_-_Hubble.jpg",
-                "text/",
-                "text/loro.txt"
+                new Item("", Item.Type.Directory),
+                new Item("loro.jpeg", Item.Type.File),
+                new Item("space-galaxy.jpg", Item.Type.File),
+                new Item("space-galaxy-1401467040F0s.jpg", Item.Type.File),
+                new Item("Tarantula_Nebula_-_Hubble.jpg", Item.Type.File),
+                new Item("text", Item.Type.Directory),
+                new Item("text/loro.txt", Item.Type.File)
             );
         } catch (Exception e) {
             log.error("Caught exception", e);
