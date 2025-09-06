@@ -67,7 +67,7 @@ public class DmfTarRunner {
     }
 
     /**
-     * Create DMF TAR archive from the contents of the given directory. The directory itself is not included in the archive. The directory must not contain any subdirectories prefixed with
+     * Create a DMF TAR archive from the contents of the given directory. The directory itself is not included in the archive. The directory must not contain any subdirectories prefixed with
      * 'dmftar-cache.', as these may conflict with temporary cache directories created by dmftar itself. The resulting DMT TAR archive will be created in the remote base directory with the given
      * name.
      *
