@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.AllArgsConstructor;
 import nl.knaw.dans.lib.util.ProcessInputStream;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -27,20 +26,33 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
-@AllArgsConstructor
 public class SshRunner extends AbstractRunner {
     private final Path sshExecutable;
     private final String user;
     private final String host;
     private final Path remoteBaseDir;
+    private final int connectionTimeout; // seconds
+
+    public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir) {
+        this(sshExecutable, user, host, remoteBaseDir, 10);
+    }
+
+    public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir, int connectionTimeout) {
+        this.sshExecutable = Path.of(checkExecutableForSecurity(sshExecutable));
+        this.user = checkUserOrHostNameForSecurity(user);
+        this.host = checkUserOrHostNameForSecurity(host);
+        this.remoteBaseDir = Path.of(checkRemoteBaseDirForSecurity(remoteBaseDir.toString()));
+        this.connectionTimeout = connectionTimeout;
+    }
 
     public boolean fileExists(String archiveName) {
-        var command = String.format("%s %s@test %s -e %s",
-            sshExecutable.toAbsolutePath(),
-            checkUserOrHostNameForSecurity(user),
-            checkUserOrHostNameForSecurity(host),
-            checkRemoteBaseDirForSecurity(remoteBaseDir.resolve(archiveName).toString()));
-        var cmdLine = CommandLine.parse(command);
+        var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
+            .addArgument("-o")
+            .addArgument("BatchMode=yes")
+            .addArgument("-o")
+            .addArgument("ConnectTimeout=" + connectionTimeout)
+            .addArgument(user + "@" + host)
+            .addArgument("/usr/bin/test -e '" + remoteBaseDir.resolve(archiveName) + "'", false);
         var executor = DefaultExecutor.builder().get();
         executor.setExitValues(new int[] { 0, 1 });
         try {
@@ -54,13 +66,14 @@ public class SshRunner extends AbstractRunner {
 
     public List<String> listFiles() {
         try {
-            var command = String.format("%s %s@%s ls -1 %s",
-                sshExecutable.toAbsolutePath(),
-                checkUserOrHostNameForSecurity(user),
-                checkUserOrHostNameForSecurity(host),
-                checkRemoteBaseDirForSecurity(remoteBaseDir.toString()));
-            var cmdLine = CommandLine.parse(command);
-
+            var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
+                .addArgument("-o")
+                .addArgument("BatchMode=yes")
+                .addArgument("-o")
+                .addArgument("ConnectTimeout=" + connectionTimeout)
+                .addArgument(user + "@" + host)
+                .addArgument("ls -1", false)
+                .addArgument(remoteBaseDir.toString());
             try (var in = ProcessInputStream.start(cmdLine);
                 var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 return reader.lines().toList();
