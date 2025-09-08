@@ -27,6 +27,11 @@ public interface LayerManager {
      */
     void newTopLayer();
 
+    /**
+     * Returns the current top layer.
+     *
+     * @return the current top layer
+     */
     Layer getTopLayer();
 
     /**

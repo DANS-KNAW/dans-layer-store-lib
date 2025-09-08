@@ -293,7 +293,7 @@ public class LayeredItemStore implements ItemStore {
     @Override
     public void copyDirectoryOutOf(String source, Path destination) throws IOException {
         var items = database.listRecursive(source);
-        // Sort by ascending path length, so that we start with the deepest directories
+        // Sort by ascending path length so that we start with the deepest directories
         items.sort(Comparator.comparingInt(listingRecord -> Path.of(listingRecord.getPath()).getNameCount()));
         if (!items.isEmpty()) {
             var deepestDirectory = Path.of(items.get(0).getPath()).getParent();

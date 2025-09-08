@@ -30,7 +30,7 @@ public interface Layer {
     long getId();
 
     /**
-     * Changes the state of the layer to closed.
+     * Changes the state of the layer to 'closed'.
      *
      * @throws IllegalStateException if the layer is already closed
      */

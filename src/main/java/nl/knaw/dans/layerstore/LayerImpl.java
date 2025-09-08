@@ -17,7 +17,6 @@ package nl.knaw.dans.layerstore;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
@@ -29,7 +28,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.List;
 
-@RequiredArgsConstructor
 @Slf4j
 class LayerImpl implements Layer {
 
@@ -40,10 +38,19 @@ class LayerImpl implements Layer {
     private final Path stagingDir;
 
     @NonNull
+    private final Path stagingDirClosed;
+
+    @NonNull
     private final Archive archive;
 
-    @Getter
-    private boolean closed = false;
+    // TODO: validate invariants
+
+    public LayerImpl(long id, @NonNull Path stagingDir, @NonNull Archive archive) {
+        this.id = id;
+        this.stagingDir = stagingDir;
+        this.stagingDirClosed = stagingDir.resolveSibling(id + ".closed");
+        this.archive = archive;
+    }
 
     @Override
     public void createDirectory(String path) throws IOException {
@@ -53,18 +60,23 @@ class LayerImpl implements Layer {
         Files.createDirectories(stagingDir.resolve(path));
     }
 
+    // TODO: should not be necessary, because the layer is initialized with an empty staging dir
     private void ensureStagingDirExists() throws IOException {
         if (!Files.exists(stagingDir))
             Files.createDirectories(stagingDir);
     }
 
+    public boolean isClosed() {
+        return Files.exists(stagingDirClosed) || !Files.exists(stagingDir);
+    }
+
     private void checkOpen() {
-        if (closed)
+        if (isClosed())
             throw new IllegalStateException("Layer is closed, but must be open for this operation");
     }
 
     private void checkClosed() {
-        if (!closed)
+        if (!isClosed())
             throw new IllegalStateException("Layer is open, but must be closed for this operation");
     }
 
@@ -95,27 +107,42 @@ class LayerImpl implements Layer {
     }
 
     private InputStream readFromStaging(String path) throws IOException {
-        return Files.newInputStream(stagingDir.resolve(path));
+        return Files.newInputStream(isOpen() ? stagingDir.resolve(path) : stagingDirClosed.resolve(path));
     }
 
     @Override
     public synchronized void close() {
         checkOpen();
-        closed = true;
+        try {
+            Files.move(stagingDir, stagingDirClosed);
+        }
+        catch (IOException e) {
+            log.error("Error closing layer", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void reopen() throws IOException {
         checkClosed();
+        checkNotReclosed();
         checkArchived();
         ensureStagingDirExists();
         archive.unarchiveTo(stagingDir);
-        closed = false;
+    }
+
+    private void checkNotReclosed() {
+        if (isReclosed())
+            throw new IllegalStateException("Layer is already re-closed");
+    }
+
+    private boolean isReclosed() {
+        return archive.isArchived() && Files.exists(stagingDirClosed);
     }
 
     @Override
     public boolean isOpen() {
-        return !closed;
+        return !isClosed();
     }
 
     @Override
@@ -133,10 +160,10 @@ class LayerImpl implements Layer {
 
     private void doArchive() throws IOException {
         log.debug("Start archiving layer {}", id);
-        archive.archiveFrom(stagingDir);
-        log.debug("Deleting staging directory {}", stagingDir);
-        FileUtils.deleteDirectory(stagingDir.toFile());
-        log.debug("Staging directory {} deleted", stagingDir);
+        archive.archiveFrom(stagingDirClosed);
+        log.debug("Deleting staging directory {}", stagingDirClosed);
+        FileUtils.deleteDirectory(stagingDirClosed.toFile());
+        log.debug("Staging directory {} deleted", stagingDirClosed);
     }
 
     @Override
@@ -223,13 +250,14 @@ class LayerImpl implements Layer {
             throw new IllegalArgumentException("Path is outside staging directory");
     }
 
+    // Cannot be reliably called during archiving, because the layer might be closed just after the check
     @Override
     public Iterator<Item> listAllItems() throws IOException {
         if (isArchived()) {
             return archive.listAllItems();
         }
         else {
-            return new DirectoryTreeItemIterator(stagingDir);
+            return new DirectoryTreeItemIterator(isOpen() ? stagingDir : stagingDirClosed);
         }
     }
 }

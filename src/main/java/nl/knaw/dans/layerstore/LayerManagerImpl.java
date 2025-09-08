@@ -55,6 +55,7 @@ public class LayerManagerImpl implements LayerManager {
                 .max()
                 .orElse(createNewTopLayer().getId());
             topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
+            Files.createDirectories(stagingRoot.resolve(Long.toString(id)));
         }
     }
 
@@ -70,6 +71,13 @@ public class LayerManagerImpl implements LayerManager {
     }
 
     private Layer createNewTopLayer() {
+        // Wait 2 millis before creating a new top layer to avoid name collision
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
         long id = System.currentTimeMillis();
         log.debug("Creating new top layer with id {}", id);
         return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));

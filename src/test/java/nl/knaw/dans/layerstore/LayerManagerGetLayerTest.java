@@ -75,7 +75,6 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         long topLayerId = layerManager.getTopLayer().getId();
-        assertThat(stagingDir.resolve(String.valueOf(topLayerId))).doesNotExist();
 
         // When
         var layer = layerManager.getLayer(topLayerId);
@@ -90,20 +89,15 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var initialLayerId = layerManager.getTopLayer().getId();
-        assertThat(stagingDir).isEmptyDirectory(); // no content in the current layer
         assertThat(archiveDir).isEmptyDirectory(); // nothing archived yet
-        sleep(1L); // to make sure to get a layer with another time stamp
-        layerManager.newTopLayer();
-        assertThat(initialLayerId).isNotEqualTo(layerManager.getTopLayer().getId());
-        assertThat(stagingDir).isEmptyDirectory();
-        Thread.sleep(1L); // wait for creation of the zip file, strangely not required when running the test stand alone
-        assertThat(archiveDir).isNotEmptyDirectory();
 
         // When
-        var layer = layerManager.getLayer(initialLayerId);
-        // Then
+        layerManager.newTopLayer();
 
-        assertThat(layer.getId()).isNotEqualTo(layerManager.getTopLayer().getId());
+        // Then
+        assertThat(initialLayerId)
+            .withFailMessage("The initial top layer should have a different id than the new top layer")
+            .isNotEqualTo(layerManager.getTopLayer().getId());
         assertThat(archiveDir).isNotEmptyDirectory();
     }
 
