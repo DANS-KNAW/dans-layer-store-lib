@@ -37,6 +37,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         Files.createDirectories(stagingDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
 
         var testContent = "Hello world!";
         layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
@@ -53,6 +54,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         Files.createDirectories(stagingDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         var testContent = "Hello world!";
         layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
@@ -70,6 +72,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         Files.createDirectories(stagingDir);
         var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("test.txt", toInputStream("Hello again!", UTF_8));

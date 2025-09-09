@@ -44,6 +44,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredItemStore = new LayeredItemStore(db, layerManager);
+        layerManager.newTopLayer();
         var anotherInstance = new LayeredItemStore(db, layerManager);
 
         layeredItemStore.createDirectory("a/b/c/d");
@@ -60,6 +61,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredItemStore = new LayeredItemStore(db, layerManager);
+        layeredItemStore.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
         layeredItemStore.createDirectory("a/b/c/d");
@@ -87,6 +89,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredItemStore = new LayeredItemStore(db, layerManager);
+        layeredItemStore.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
         layeredItemStore.createDirectory("a/b/c/d");
@@ -108,6 +111,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredItemStore = new LayeredItemStore(db, layerManager);
+        layeredItemStore.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
         layeredItemStore.createDirectory("a/b/c/d");
@@ -129,6 +133,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredItemStore = new LayeredItemStore(db, layerManager);
+        layerManager.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
         layeredItemStore.createDirectory("a/b/c/d");
@@ -151,6 +156,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredItemStore = new LayeredItemStore(db, layerManager);
+        layerManager.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
         layeredItemStore.createDirectory("a/b/c/d");

@@ -41,7 +41,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d/e");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
@@ -59,7 +59,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d/e");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
@@ -78,7 +78,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d/e");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
@@ -96,7 +96,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/d/test2.txt", toInputStream("Hello world!", UTF_8));

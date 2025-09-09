@@ -47,6 +47,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     public void should_read_content_from_stagingDir() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
 
         var testContent = "Hello world!";
         layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
@@ -60,6 +61,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     public void should_read_content_from_database_if_filter_applies() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         var testContent = "Hello world!";
         layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
@@ -73,6 +75,8 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     public void should_throw_is_a_directory() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
+
         layeredStore.createDirectory("a/b/c");
 
         assertThatThrownBy(() -> layeredStore.readFile("a/b")).
@@ -84,6 +88,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     public void should_throw_no_such_file() throws IOException {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         assertThatThrownBy(() -> layeredStore.readFile("some.txt")).
             isInstanceOf(NoSuchFileException.class);

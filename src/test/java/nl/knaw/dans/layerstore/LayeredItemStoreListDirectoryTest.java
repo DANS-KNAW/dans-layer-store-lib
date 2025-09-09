@@ -38,7 +38,7 @@ public class LayeredItemStoreListDirectoryTest extends AbstractLayerDatabaseTest
     public void should_return_a_shallow_list() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d/e/f");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));

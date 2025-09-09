@@ -21,6 +21,55 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This interface represents a layer in the layered item store. A layer can be in the following states:
+ *
+ * <table>
+ *   <thead>
+ *     <tr>
+ *       <th>#</th><th>open/closed</th><th>archived</th><th>staged?</th><th>when?</th>
+ *     </tr>
+ *   </thead>
+ *   <tbody>
+ *     <tr>
+ *       <td>1</td>
+ *       <td>open</td>
+ *       <td>niet archived</td>
+ *       <td>ja</td>
+ *       <td>beginsituatie van elke top layer</td>
+ *     </tr>
+ *     <tr>
+ *       <td>2</td>
+ *       <td>closed</td>
+ *       <td>niet archived</td>
+ *       <td>ja (met .closed suffix)</td>
+ *       <td>op het moment voordat de top layer gearchiveerd wordt</td>
+ *     </tr>
+ *     <tr>
+ *       <td>3</td>
+ *       <td>closed</td>
+ *       <td>archived</td>
+ *       <td>nee</td>
+ *       <td>archivering gelukt</td>
+ *     </tr>
+ *     <tr>
+ *       <td>4</td>
+ *       <td>open</td>
+ *       <td>archived</td>
+ *       <td>ja</td>
+ *       <td>reopened</td>
+ *     </tr>
+ *     <tr>
+ *       <td>5</td>
+ *       <td>closed</td>
+ *       <td>archived</td>
+ *       <td>ja (met .closed suffix)</td>
+ *       <td>close van een heropende layer</td>
+ *     </tr>
+ *   </tbody>
+ * </table>
+ *
+ */
 public interface Layer {
     /**
      * Returns the id of the layer.

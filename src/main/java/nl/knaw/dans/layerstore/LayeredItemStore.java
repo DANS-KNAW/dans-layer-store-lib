@@ -36,10 +36,10 @@ import static nl.knaw.dans.layerstore.Utils.throwOnListDifference;
 
 /**
  * An implementation of FileStore that stores files and directories as a stack of layers. A layer can be staged or archived. Staged layers can be modified, archived layers are read-only. To transform
- * the layered file store into a regular file system directory, each layer must be unarchived (if it was archived) to a staging directory and the staging directories must be copied into a single
+ * the layered file store into a regular file system directory, each layer must be unarchived (if it was archived) to a staging directory. The staging directories must be copied into a single
  * directory, starting with the oldest layer and ending with the newest layer. Files in newer layers overwrite files in older layers.
  * <p>
- * The LayeredFileStore is backed by a LayerDatabase to support storage of layers in a way that may not be fast enough for direct access, for example on tape. See the LayerDatabase interface for more
+ * The LayeredFileStore is backed by a LayerDatabase to support storage of layers in a way that may not be fast enough for direct access, for example, on tape. See the LayerDatabase interface for more
  * information.
  *
  * @see LayerDatabase
@@ -57,14 +57,14 @@ public class LayeredItemStore implements ItemStore {
         this.database = database;
         this.layerManager = layerManager;
         this.databaseBackedContentManager = Optional.ofNullable(databaseBackedContentManager).orElse(new NoopDatabaseBackedContentManager());
-        if (layerManager.getTopLayer() == null) {
-            try {
-                newTopLayer();
-            }
-            catch (IOException e) {
-                throw new IllegalStateException("Could not create top layer", e);
-            }
-        }
+//        if (layerManager.getTopLayer() == null) {
+//            try {
+//                newTopLayer();
+//            }
+//            catch (IOException e) {
+//                throw new IllegalStateException("Could not create top layer", e);
+//            }
+//        }
     }
 
     public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
