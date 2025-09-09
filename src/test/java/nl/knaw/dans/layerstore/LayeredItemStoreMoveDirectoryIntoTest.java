@@ -36,7 +36,8 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     }
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         FileUtils.write(testDir.resolve("x/y/test1.txt").toFile(), "Hello world!", "UTF-8");
         FileUtils.write(testDir.resolve("x/test2.txt").toFile(), "Hello again!", "UTF-8");
     }

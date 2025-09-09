@@ -28,8 +28,10 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayeredItemStoreListDirectoryTest extends AbstractLayerDatabaseTest {
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         Files.createDirectories(stagingDir);
+        Files.createDirectories(archiveDir);
     }
 
     @Test

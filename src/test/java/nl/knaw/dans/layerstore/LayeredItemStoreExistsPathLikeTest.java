@@ -28,8 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class LayeredItemStoreExistsPathLikeTest extends AbstractLayerDatabaseTest {
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         Files.createDirectories(stagingDir);
+        Files.createDirectories(archiveDir);
     }
 
     @Test

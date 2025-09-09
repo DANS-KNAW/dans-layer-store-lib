@@ -29,8 +29,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerDatabaseTest {
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         Files.createDirectories(stagingDir);
+        Files.createDirectories(archiveDir);
     }
 
     @Test
@@ -51,7 +53,6 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
     @Test
     public void should_not_move_dir_with_files_in_other_layer() throws Exception {
-        Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
 
@@ -59,9 +60,6 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
         layeredStore.createDirectory("a/b/e/f");
         layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!", UTF_8));
         layerManager.newTopLayer();
-
-        // without this, a stack trace is logged from an archiving thread
-        Files.createDirectories(archiveDir);
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInternal("a/b/e/f", "a/b/c/d/x")).
             isInstanceOf(RuntimeException.class)

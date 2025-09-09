@@ -33,15 +33,16 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTest {
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         Files.createDirectories(stagingDir);
+        Files.createDirectories(archiveDir);
     }
 
     @Test
     public void should_not_delete_a_directory_with_content_in_another_layer() throws Exception {
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
         layeredStore.createDirectory("a/b/c/d");
         layerManager.newTopLayer();
 

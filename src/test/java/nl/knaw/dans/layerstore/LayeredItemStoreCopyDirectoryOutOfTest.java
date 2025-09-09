@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,12 +30,15 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabaseTest {
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
+        Files.createDirectories(archiveDir);
         Files.createDirectories(stagingDir);
     }
 
     @Test
     public void should_copy_an_empty_child_directory() throws Exception {
+        // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
@@ -45,14 +47,16 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         var destination = testDir.resolve("copy");
 
+        // When
         layeredStore.copyDirectoryOutOf("a/b/c/d", destination);
 
+        // Then
         assertThat(destination.resolve("a/b/c/d/e")).isEmptyDirectory();
     }
 
     @Test
     public void should_overwrite_existing_files() throws Exception {
-        // As in https://github.com/OCFL/ocfl-java/blob/a4d4f17149640132bdfd9c00a170f414e1c7cf33/ocfl-java-core/src/main/java/io/ocfl/core/storage/filesystem/FileSystemStorage.java#L226C1-L243C6
+        // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
@@ -62,13 +66,16 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         var destination = testDir.resolve("copy");
         FileUtils.writeLines(destination.resolve("a/b/c/d/test1.txt").toFile(), List.of("Hello there!"));
 
+        // When
         layeredStore.copyDirectoryOutOf("a/b/c/d", destination);
 
+        // Then
         assertThat(destination.resolve("a/b/c/d/test1.txt")).hasContent("Hello world!");
     }
 
     @Test
     public void should_not_copy_an_empty_source_directory() throws Exception {
+        // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
@@ -77,13 +84,16 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         Path destination = testDir.resolve("copy");
 
+        // When
         layeredStore.copyDirectoryOutOf("a/b/c/d/e", destination);
 
+        // Then
         assertThat(destination).doesNotExist();
     }
 
     @Test
     public void should_copy_the_files_of_a_source_which_has_no_child_directories() throws Exception {
+        // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         Files.createDirectories(archiveDir);
@@ -93,8 +103,10 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
         layeredStore.writeFile("a/b/c/test3.txt", toInputStream("Hello again!", UTF_8));
         Path destination = testDir.resolve("copy");
 
+        // When
         layeredStore.copyDirectoryOutOf("a/b/c/d", destination);
 
+        // Then
         assertThat(destination.resolve("a/b/c/d/test1.txt")).exists();
         assertThat(destination.resolve("a/b/c/d/test2.txt")).exists();
     }

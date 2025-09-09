@@ -29,34 +29,43 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
 
     @Test
     public void should_pass_if_store_and_database_are_empty() throws Exception {
+        // Given
+        Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredItemStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+
+        // When / Then
         assertThatCode(layeredItemStore::checkSameLayersOnStorageAndDb).doesNotThrowAnyException();
     }
 
     @Test
-    public void should_pass_if_store_and_database_are_in_sync() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var layeredStore = new LayeredItemStore(db, layerManager);
-        var layeredItemStore = new LayeredItemStore(db, layerManager);
+    public void should_pass_when_store_and_database_are_in_sync() throws Exception {
+        // Given
         Files.createDirectories(archiveDir);
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
-        assertThatCode(layeredItemStore::checkSameLayersOnStorageAndDb).doesNotThrowAnyException();
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+        var anotherInstance = new LayeredItemStore(db, layerManager);
+
+        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
+
+        // When / Then
+        assertThatCode(anotherInstance::checkSameLayersOnStorageAndDb).doesNotThrowAnyException();
     }
 
     @Test
-    public void should_fail_if_db_contains_layer_not_found_on_storage() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var layeredStore = new LayeredItemStore(db, layerManager);
-        var layeredItemStore = new LayeredItemStore(db, layerManager);
+    public void should_fail_when_database_contains_layer_missing_on_storage() throws Exception {
+        // Given
         Files.createDirectories(archiveDir);
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
-        // Simulate a manual change in the database that is not reflected in the store
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+        var checker = new LayeredItemStore(db, layerManager);
+
+        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
+
         var nonExistentLayerId = layerManager.getTopLayer().getId() + 1;
         daoTestExtension.inTransaction(() -> {
             var itemRecord = ItemRecord.builder()
@@ -66,73 +75,88 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
                 .build();
             db.saveRecords(itemRecord);
         });
-        // Expect an IllegalStateException to be thrown
-        assertThatThrownBy(layeredItemStore::checkSameLayersOnStorageAndDb)
+
+        // When / Then
+        assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
             .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing on storage: [" + nonExistentLayerId + "]");
     }
 
     @Test
-    public void should_fail_if_staging_dir_contains_layer_not_found_in_db() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var layeredStore = new LayeredItemStore(db, layerManager);
-        var layeredItemStore = new LayeredItemStore(db, layerManager);
+    public void should_fail_when_staging_contains_layer_missing_in_database() throws Exception {
+        // Given
         Files.createDirectories(archiveDir);
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
-        // Simulate a manual change in the store that is not reflected in the database
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+        var checker = new LayeredItemStore(db, layerManager);
+
+        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
+
         var nonExistentLayerId = layerManager.getTopLayer().getId() + 1;
         var newStagingDir = stagingDir.resolve(Long.toString(nonExistentLayerId));
         Files.createDirectories(newStagingDir);
-        assertThatThrownBy(layeredItemStore::checkSameLayersOnStorageAndDb)
+
+        // When / Then
+        assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
             .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing in database: [" + nonExistentLayerId + "]");
     }
 
     @Test
-    public void should_fail_if_archive_dir_contains_layer_not_found_in_db() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var layeredStore = new LayeredItemStore(db, layerManager);
-        var layeredItemStore = new LayeredItemStore(db, layerManager);
+    public void should_fail_when_archive_contains_layer_missing_in_database() throws Exception {
+        // Given
         Files.createDirectories(archiveDir);
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
-        // Simulate a manual change in the store that is not reflected in the database
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+        var checker = new LayeredItemStore(db, layerManager);
+
+        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
+
         var nonExistentLayerId = layerManager.getTopLayer().getId() + 1;
         var newArchivedLayer = archiveDir.resolve(Long.toString(nonExistentLayerId) + ".zip");
         Files.createFile(newArchivedLayer);
-        assertThatThrownBy(layeredItemStore::checkSameLayersOnStorageAndDb)
+
+        // When / Then
+        assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
             .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing in database: [" + nonExistentLayerId + "]");
     }
 
     @Test
-    public void should_pass_if_multiple_layers_present_and_store_in_sync_with_db() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var layeredStore = new LayeredItemStore(db, layerManager);
-        var layeredItemStore = new LayeredItemStore(db, layerManager);
+    public void should_pass_when_multiple_layers_exist_and_store_is_in_sync_with_database() throws Exception {
+        // Given
         Files.createDirectories(archiveDir);
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+        var checker = new LayeredItemStore(db, layerManager);
+
+        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         layerManager.newTopLayer();
-        layeredStore.createDirectory("x/y/z");
-        layeredStore.writeFile("x/y/z/file1.txt", toInputStream("Layer 2 file", UTF_8));
+        layeredItemStore.createDirectory("x/y/z");
+        layeredItemStore.writeFile("x/y/z/file1.txt", toInputStream("Layer 2 file", UTF_8));
         layerManager.newTopLayer();
-        layeredStore.createDirectory("m/n");
-        layeredStore.writeFile("m/n/file2.txt", toInputStream("Layer 3 file", UTF_8));
-        assertThatCode(layeredItemStore::checkSameLayersOnStorageAndDb).doesNotThrowAnyException();
+        layeredItemStore.createDirectory("m/n");
+        layeredItemStore.writeFile("m/n/file2.txt", toInputStream("Layer 3 file", UTF_8));
+
+        // When / Then
+        assertThatCode(checker::checkSameLayersOnStorageAndDb).doesNotThrowAnyException();
     }
 
     @Test
-    public void should_fail_and_report_all_inconsistencies() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var layeredStore = new LayeredItemStore(db, layerManager);
-        var layeredItemStore = new LayeredItemStore(db, layerManager);
+    public void should_fail_and_report_all_missing_layers_on_both_sides() throws Exception {
+        // Given
         Files.createDirectories(archiveDir);
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
-        layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
-        // Simulate a manual change in the database that is not reflected in the store
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+        var checker = new LayeredItemStore(db, layerManager);
+
+        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
+        layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
+
         var nonExistentLayerIdInStore1 = layerManager.getTopLayer().getId() + 1;
         var nonExistentLayerIdInStore2 = layerManager.getTopLayer().getId() + 2;
         daoTestExtension.inTransaction(() -> {
@@ -148,17 +172,17 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
                 .build();
             db.saveRecords(itemRecord1, itemRecord2);
         });
-        // Simulate a manual change in the store that is not reflected in the database
+
         var nonExistentLayerIdInDb1 = layerManager.getTopLayer().getId() + 3;
         var nonExistentLayerIdInDb2 = layerManager.getTopLayer().getId() + 4;
         var newStagingDir = stagingDir.resolve(Long.toString(nonExistentLayerIdInDb1));
         Files.createDirectories(newStagingDir);
         var newArchivedLayer = archiveDir.resolve(Long.toString(nonExistentLayerIdInDb2) + ".zip");
         Files.createFile(newArchivedLayer);
-        // Expect an IllegalStateException to be thrown
-        assertThatThrownBy(layeredItemStore::checkSameLayersOnStorageAndDb)
+
+        // When / Then
+        assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
             .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing in database: [" + nonExistentLayerIdInDb1 + ", "
                 + nonExistentLayerIdInDb2 + "] Missing on storage: [" + nonExistentLayerIdInStore1 + ", " + nonExistentLayerIdInStore2 + "]");
-
     }
 }
