@@ -57,10 +57,32 @@ public class LayeredItemStore implements ItemStore {
         this.database = database;
         this.layerManager = layerManager;
         this.databaseBackedContentManager = Optional.ofNullable(databaseBackedContentManager).orElse(new NoopDatabaseBackedContentManager());
+        if (layerManager.getTopLayer() == null) {
+            try {
+                newTopLayer();
+            }
+            catch (IOException e) {
+                throw new IllegalStateException("Could not create top layer", e);
+            }
+        }
     }
 
     public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
         this(database, layerManager, null);
+    }
+
+    public Layer newTopLayer() throws IOException {
+        layerManager.newTopLayer();
+        database.addDirectory(layerManager.getTopLayer().getId(), "");
+        return layerManager.getTopLayer();
+    }
+
+    public Layer getLayer(long id) throws IOException {
+        return layerManager.getLayer(id);
+    }
+
+    public Layer getTopLayer() throws IOException {
+        return layerManager.getTopLayer();
     }
 
     public void checkSameLayersOnStorageAndDb() throws IOException {

@@ -19,13 +19,13 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Manages {@link Layer}s.
+ * Manages {@link Layer}s. Implementations of this interface should create new layers only through the `newTopLayer` method.
  */
 public interface LayerManager {
     /**
-     * Closes the current top layer and creates a new top layer. The old top layer will be scheduled for archiving.
+     * Closes the current top layer (if present) and creates a new top layer. The old top layer will be scheduled for archiving.
      */
-    void newTopLayer();
+    void newTopLayer() throws IOException;
 
     /**
      * Returns the current top layer.

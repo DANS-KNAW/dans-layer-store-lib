@@ -37,25 +37,29 @@ public class LayerManagerImpl implements LayerManager {
     @Getter
     private Layer topLayer;
 
+    /**
+     * Creates a new LayerManagerImpl.
+     *
+     * @param stagingRoot     the root directory for staging layers.
+     * @param archiveProvider the archive provider to use.
+     * @param layerArchiver   the layer archiver to use.
+     * @throws IOException if the staging root directory cannot be created.
+     */
     public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver) throws IOException {
         this.stagingRoot = stagingRoot;
         this.layerArchiver = layerArchiver;
         this.archiveProvider = archiveProvider;
-        initTopLayer();
-    }
-
-    private void initTopLayer() throws IOException {
-        if (Files.notExists(stagingRoot)) {
-            Files.createDirectories(stagingRoot);
+        if (Files.notExists(this.stagingRoot)) {
+            Files.createDirectories(this.stagingRoot);
         }
-        try (var pathStream = Files.list(stagingRoot)) {
-            long id = pathStream
+        try (var pathStream = Files.list(this.stagingRoot)) {
+            var id = pathStream
                 .map(this::toValidLayerName)
                 .mapToLong(Long::parseLong)
-                .max()
-                .orElse(createNewTopLayer().getId());
-            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
-            Files.createDirectories(stagingRoot.resolve(Long.toString(id)));
+                .max();
+            if (id.isPresent()) {
+                topLayer = new LayerImpl(id.getAsLong(), this.stagingRoot.resolve(Long.toString(id.getAsLong())), this.archiveProvider.createArchive(id.getAsLong()));
+            }
         }
     }
 
@@ -70,26 +74,32 @@ public class LayerManagerImpl implements LayerManager {
         return path.getFileName().toString();
     }
 
-    private Layer createNewTopLayer() {
+    @Override
+    public void newTopLayer() throws IOException {
+        var oldTopLayer = topLayer;
         // Wait 2 millis before creating a new top layer to avoid name collision
         try {
             Thread.sleep(2);
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
         long id = System.currentTimeMillis();
         log.debug("Creating new top layer with id {}", id);
-        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
-    }
+        var stagingDir = stagingRoot.resolve(Long.toString(id));
+        var newLayer = new LayerImpl(id, stagingDir, archiveProvider.createArchive(id));
+        Files.createDirectories(stagingDir);
+        topLayer = newLayer;
 
-    @Override
-    public void newTopLayer() {
-        var oldTopLayer = topLayer;
-        topLayer = createNewTopLayer();
-        oldTopLayer.close();
-        log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
-        archive(oldTopLayer);
+        if (oldTopLayer != null) {
+            oldTopLayer.close();
+            log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
+            archive(oldTopLayer);
+        }
+        else {
+            log.debug("No old top layer to archive");
+        }
     }
 
     private void archive(Layer layer) {
