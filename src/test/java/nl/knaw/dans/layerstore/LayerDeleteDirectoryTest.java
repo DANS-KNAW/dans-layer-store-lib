@@ -17,6 +17,8 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -54,8 +56,9 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalArgumentException_when_path_is_null() {
+    public void should_throw_IllegalArgumentException_when_path_is_null() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
         assertThatThrownBy(() -> layer.deleteDirectory(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Path cannot be null");

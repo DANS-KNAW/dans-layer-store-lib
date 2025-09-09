@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,8 +36,9 @@ public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalStateException_if_layer_is_closed() {
+    public void should_throw_IllegalStateException_if_layer_is_closed() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
         layer.close();
         assertThatThrownBy(() -> layer.deleteFiles(List.of("path/to/file1", "path/to/file2")))
             .isInstanceOf(IllegalStateException.class)
@@ -44,8 +46,9 @@ public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalArgumentException_if_path_is_null() {
+    public void should_throw_IllegalArgumentException_if_path_is_null() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
         assertThatThrownBy(() -> layer.deleteFiles(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Paths cannot be null");

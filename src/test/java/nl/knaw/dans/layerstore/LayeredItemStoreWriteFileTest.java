@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -90,6 +89,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layerManager.newTopLayer();
@@ -98,9 +98,11 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         layeredStore.writeFile("test.txt", toInputStream("Hello once more!", UTF_8));
 
         // Check that the file contents are in the database
-        var list = db.getAllRecords().map(itemRecord ->
-            new String((itemRecord.getContent()), StandardCharsets.UTF_8)
-        );
+        var list = db.getAllRecords()
+            .filter(itemRecord -> itemRecord.getPath().equals("test.txt")) // N.B. necessary to filter out the top directory item record
+            .map(itemRecord ->
+                new String((itemRecord.getContent()), StandardCharsets.UTF_8)
+            );
         assertThat(list).containsExactlyInAnyOrder("Hello world!", "Hello once more!", "Hello again!");
     }
 

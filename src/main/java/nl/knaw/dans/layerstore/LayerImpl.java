@@ -56,14 +56,7 @@ class LayerImpl implements Layer {
     public void createDirectory(String path) throws IOException {
         checkOpen();
         validatePath(path);
-        ensureStagingDirExists();
         Files.createDirectories(stagingDir.resolve(path));
-    }
-
-    // TODO: should not be necessary, because the layer is initialized with an empty staging dir
-    private void ensureStagingDirExists() throws IOException {
-        if (!Files.exists(stagingDir))
-            Files.createDirectories(stagingDir);
     }
 
     public boolean isClosed() {
@@ -83,7 +76,6 @@ class LayerImpl implements Layer {
     @Override
     public void deleteFiles(List<String> paths) throws IOException {
         checkOpen();
-        ensureStagingDirExists();
         if (paths == null)
             throw new IllegalArgumentException("Paths cannot be null");
         for (String path : paths) {
@@ -93,8 +85,8 @@ class LayerImpl implements Layer {
     }
 
     /*
-     * This method is synchronized, because the layer might otherwise be closed just after the check. Note, that after the file handle is returned, the layer may be closed, but
-     * that is not a problem, because the file handle is still valid until it is closed, even if the directory containing the file is deleted.
+     * This method is synchronized because the layer might otherwise be closed just after the check. Note, that after the file handle is returned, the layer may be closed, but
+     * that is not a problem because the file handle is still valid until it is closed, even if the directory containing the file is deleted.
      */
     @Override
     public synchronized InputStream readFile(String path) throws IOException {
@@ -127,7 +119,6 @@ class LayerImpl implements Layer {
         checkClosed();
         checkNotReclosed();
         checkArchived();
-        ensureStagingDirExists();
         archive.unarchiveTo(stagingDir);
     }
 
@@ -185,14 +176,12 @@ class LayerImpl implements Layer {
     public void writeFile(String filePath, InputStream content) throws IOException {
         checkOpen();
         validatePath(filePath);
-        ensureStagingDirExists(); // TODO: not needed? Is taken care of by initialization of storage
         Files.copy(content, stagingDir.resolve(filePath), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
     public void moveDirectoryInto(Path source, String destination) throws IOException {
         checkOpen();
-        ensureStagingDirExists();
         validatePath(destination);
         var destinationPath = stagingDir.resolve(destination);
         Files.move(source, destinationPath);

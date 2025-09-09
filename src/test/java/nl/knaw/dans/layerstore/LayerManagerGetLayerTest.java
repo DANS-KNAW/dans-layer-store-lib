@@ -20,13 +20,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import static java.lang.Thread.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
 
@@ -44,23 +41,10 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_find_garbage_in_stagingDir_created_after_creating_LayerManagerImpl_object() throws IOException {
-        // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        Files.createDirectories(stagingDir.resolve("0"));
-
-        //When
-        var layer = layerManager.getLayer(0L);
-
-        // Then
-        assertThat(layer.getId()).isNotEqualTo(layerManager.getTopLayer().getId());
-    }
-
-    @Test
     public void should_find_a_top_layer_with_content() throws IOException {
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var topLayer = layerManager.getTopLayer();
+        var topLayer = layerManager.newTopLayer();
         topLayer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
 
         // When
@@ -74,7 +58,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_find_an_empty_top_layer() throws IOException {
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        long topLayerId = layerManager.getTopLayer().getId();
+        long topLayerId = layerManager.newTopLayer().getId();
 
         // When
         var layer = layerManager.getLayer(topLayerId);
@@ -88,7 +72,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Given
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
-        var initialLayerId = layerManager.getTopLayer().getId();
+        var initialLayerId = layerManager.newTopLayer().getId();
         assertThat(archiveDir).isEmptyDirectory(); // nothing archived yet
 
         // When
@@ -106,23 +90,22 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Given
         Files.createDirectories(archiveDir);
         var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir), new DirectLayerArchiver());
-        layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
+        layerManager.newTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         Layer initialLayer = layerManager.getTopLayer();
         var initialLayerId = initialLayer.getId();
-        sleep(1L); // to make sure to get a layer with another time stamp
-        layerManager.newTopLayer();
-        Thread.sleep(1L); // wait for creation of the zip file, strangely not required when running the test stand alone
+        layerManager.newTopLayer(); // This will archive the top layer
 
         // When
-        var layer = layerManager.getLayer(initialLayerId);
+        var layer = layerManager.getLayer(initialLayerId); // Get the archived layer
 
         // Then
         assertThat(initialLayerId).isEqualTo(layer.getId());
         assertThat(archiveDir).isNotEmptyDirectory();
         assertThat(archiveDir.resolve(initialLayerId + ".tar")).exists();
-        assumeNotYetFixed("The layer is archived, but neither the object of the initial top layer, nor the new layer object know it.");
-        assertFalse(initialLayer.isArchived());
-        assertFalse(layer.isArchived());
+
+        // Both represent the same layer
+        assertThat(initialLayer.isArchived()).isTrue();
+        assertThat(layer.isArchived()).isTrue();
     }
 
 }

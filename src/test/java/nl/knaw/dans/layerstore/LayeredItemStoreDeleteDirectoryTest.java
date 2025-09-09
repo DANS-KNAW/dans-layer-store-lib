@@ -107,24 +107,19 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
     @Test
     public void should_throw_cannot_delete_file_from_closed_layer() throws Exception {
+        // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
         Files.createDirectories(archiveDir);
         layerManager.newTopLayer();
-
-        // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
             db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/test.txt");
 
-        // method under test
-        assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
-            .isInstanceOf(NoSuchFileException.class); // this is a failure for the wrong reason
-
-        assumeNotYetFixed("deleteFiles gets new layer object. New layer objects are open but it should be closed in this scenario.");
+        // When / Then
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageStartingWith("Cannot delete files from closed layer");

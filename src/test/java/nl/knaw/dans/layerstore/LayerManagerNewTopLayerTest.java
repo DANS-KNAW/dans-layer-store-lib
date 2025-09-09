@@ -28,8 +28,8 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
     // the method under test is also involved in tests for other LayerManagerImpl methods and LayeredItemStore methods
 
     @Test
-    public void should_log_already_archived() throws IOException {
-
+    public void should_throw_on_already_archived() throws IOException {
+        // Given
         var layerManager = new LayerManagerImpl(stagingDir,
             new DmfTarArchiveProvider(
                 getNoopDmfTarRunner(),
@@ -37,8 +37,9 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
             ),
             new DirectLayerArchiver()
         );
+        layerManager.newTopLayer(); // Create the first layer
 
-        // Run the method under test
+        // When / Then
         assertThatThrownBy(layerManager::newTopLayer)
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Layer is already archived");

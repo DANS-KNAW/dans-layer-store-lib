@@ -75,7 +75,7 @@ public class LayerManagerImpl implements LayerManager {
     }
 
     @Override
-    public void newTopLayer() throws IOException {
+    public Layer newTopLayer() throws IOException {
         var oldTopLayer = topLayer;
         // Wait 2 millis before creating a new top layer to avoid name collision
         try {
@@ -100,6 +100,7 @@ public class LayerManagerImpl implements LayerManager {
         else {
             log.debug("No old top layer to archive");
         }
+        return newLayer;
     }
 
     private void archive(Layer layer) {
@@ -119,8 +120,7 @@ public class LayerManagerImpl implements LayerManager {
 
     @Override
     public Layer getLayer(long id) {
-        if (id == topLayer.getId()) {
-            // safeguard/shortcut: a fresh top layer that never received content has no directory in the staging root
+        if (topLayer != null && id == topLayer.getId()) {
             return topLayer;
         }
         else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(id)) {

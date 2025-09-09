@@ -27,14 +27,14 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
 
     @Test
-    public void should_create_the_staging_root_and_top_layer() throws IOException {
+    public void should_create_empty_staging_root() throws IOException {
         assertThat(stagingDir).doesNotExist();
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         assertThat(stagingDir).exists();
         try (var stream = Files.list(stagingDir)) {
-            assertThat(stream).hasSize(1);
+            assertThat(stream).isEmpty();
         }
-        assertThat(layerManager.getTopLayer().getId()).isGreaterThan(0);
+        assertThat(layerManager.getTopLayer()).isNull();
     }
 
     @Test

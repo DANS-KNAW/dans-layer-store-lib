@@ -25,7 +25,7 @@ public interface LayerManager {
     /**
      * Closes the current top layer (if present) and creates a new top layer. The old top layer will be scheduled for archiving.
      */
-    void newTopLayer() throws IOException;
+    Layer newTopLayer() throws IOException;
 
     /**
      * Returns the current top layer.
