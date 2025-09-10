@@ -38,6 +38,6 @@ public class ItemsMatchDbConsistencyChecker implements LayerConsistencyChecker {
         var itemsInDb = database.getRecordsByLayerId(layer.getId()).stream().map(ItemRecord::toItem).toList();
         var itemsOnStorage = IteratorUtils.toList(layer.listAllItems());
         throwOnListDifference(itemsInDb, itemsOnStorage, "Items found on storage do not match items in database.");
-        log.debug("Consistency check of items found on storage for layer {} passed.", layer.getId());
+        log.info("Consistency check of items found on storage for layer {} OK.", layer.getId());
     }
 }

@@ -43,7 +43,7 @@ public class LayerDatabaseImpl implements LayerDatabase {
     @Override
     public void saveRecords(ItemRecord... records) {
         for (var record : records) {
-            // If the record has no generatedId, then it is new and we can persist it.
+            // If the record has no generatedId, then it is new, and we can persist it.
             if (record.getGeneratedId() == null) {
                 persistenceProvider.persist(record);
             }
