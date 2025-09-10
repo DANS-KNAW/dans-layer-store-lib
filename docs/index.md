@@ -9,7 +9,7 @@ DESCRIPTION
 ### Layer store
 
 A layer store is a hierarchical storage of files in a layered way. A layer contains a subset of the files and folders in the store. A layer is identified by a
-unique Layer ID. This ID is a unix timestamp in milliseconds. The layer IDs determine the order in which the layers are stacked. The contents of a layer store
+unique Layer ID. This ID is a Unix timestamp in milliseconds. The layer IDs determine the order in which the layers are stacked. The contents of a layer store
 can be transformed to a regular directory structure by stacking the layers in the order of their IDs. The layer with the highest ID is the top layer. Files in
 newer layers override files with the same path in older layers.
 

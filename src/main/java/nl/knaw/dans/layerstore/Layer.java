@@ -18,8 +18,58 @@ package nl.knaw.dans.layerstore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This interface represents a layer in the layered item store. A layer can be in the following states:
+ *
+ * <table>
+ *   <thead>
+ *     <tr>
+ *       <th>#</th><th>open/closed</th><th>archived</th><th>staged?</th><th>when?</th>
+ *     </tr>
+ *   </thead>
+ *   <tbody>
+ *     <tr>
+ *       <td>1</td>
+ *       <td>open</td>
+ *       <td>niet archived</td>
+ *       <td>ja</td>
+ *       <td>beginsituatie van elke top layer</td>
+ *     </tr>
+ *     <tr>
+ *       <td>2</td>
+ *       <td>closed</td>
+ *       <td>niet archived</td>
+ *       <td>ja (met .closed suffix)</td>
+ *       <td>op het moment voordat de top layer gearchiveerd wordt</td>
+ *     </tr>
+ *     <tr>
+ *       <td>3</td>
+ *       <td>closed</td>
+ *       <td>archived</td>
+ *       <td>nee</td>
+ *       <td>archivering gelukt</td>
+ *     </tr>
+ *     <tr>
+ *       <td>4</td>
+ *       <td>open</td>
+ *       <td>archived</td>
+ *       <td>ja</td>
+ *       <td>reopened</td>
+ *     </tr>
+ *     <tr>
+ *       <td>5</td>
+ *       <td>closed</td>
+ *       <td>archived</td>
+ *       <td>ja (met .closed suffix)</td>
+ *       <td>close van een heropende layer</td>
+ *     </tr>
+ *   </tbody>
+ * </table>
+ *
+ */
 public interface Layer {
     /**
      * Returns the id of the layer.
@@ -29,7 +79,7 @@ public interface Layer {
     long getId();
 
     /**
-     * Changes the state of the layer to closed.
+     * Changes the state of the layer to 'closed'.
      *
      * @throws IllegalStateException if the layer is already closed
      */
@@ -59,12 +109,38 @@ public interface Layer {
      */
     boolean isArchived();
 
+    /**
+     * Creates a directory at the given path. Not allowed when the layer is closed.
+     *
+     * @param path the path of the directory relative to the storage root
+     * @throws IOException if the directory cannot be created
+     */
     void createDirectory(String path) throws IOException;
 
+    /**
+     * Deletes the directory at the given path, including all its contents. Not allowed when the layer is closed.
+     *
+     * @param path the path of the directory relative to the storage root
+     * @throws IOException if the directory cannot be deleted
+     */
     void deleteDirectory(String path) throws IOException;
 
+    /**
+     * Returns whether a file exists at the given path in this layer.
+     *
+     * @param path the path of the file relative to the storage root
+     * @return whether the file exists
+     * @throws IOException if the existence of the file cannot be determined
+     */
     boolean fileExists(String path) throws IOException;
 
+    /**
+     * Reads the file at the given path. Note, that this may take a long time if the layer is archived, especially when the archive is stored on tape.
+     *
+     * @param path the path of the file relative to the storage root
+     * @return an input stream for reading the file; the caller is responsible for closing the stream
+     * @throws IOException if the file cannot be read
+     */
     InputStream readFile(String path) throws IOException;
 
     /**
@@ -84,9 +160,37 @@ public interface Layer {
      */
     void deleteFiles(List<String> paths) throws IOException;
 
+    /**
+     * Moves the directory at <code>source</code> into the directory at <code>destination</code>. Not allowed when the layer is closed.
+     *
+     * @param source      the path of the directory to be moved; must be an existing directory
+     * @param destination the path of the directory to move into; the directory is created if it does not exist yet
+     * @throws IOException if the directory cannot be moved
+     */
     void moveDirectoryInto(Path source, String destination) throws IOException;
 
+    /**
+     * Moves the directory at <code>source</code> to <code>destination</code>, where both paths are relative to the root of the layer.
+     *
+     * @param source      the path of the directory to be moved; must be an existing directory
+     * @param destination the path of the destination directory; must not exist yet
+     * @throws IOException if the directory cannot be moved
+     */
     void moveDirectoryInternal(String source, String destination) throws IOException;
 
+    /**
+     * Returns the size of the layer in bytes. If the layer is archived, this may take a long time, especially when the archive is stored on tape.
+     *
+     * @return the size of the layer in bytes
+     * @throws IOException if the size cannot be determined
+     */
     long getSizeInBytes() throws IOException;
+
+    /**
+     * Lists the items in this layer.
+     *
+     * @return the items in this layer
+     * @throws IOException if the items cannot be listed
+     */
+    Iterator<Item> listAllItems() throws IOException;
 }

@@ -15,15 +15,23 @@
  */
 package nl.knaw.dans.layerstore;
 
+import java.io.IOException;
+import java.util.List;
+
 /**
- * Manages {@link Layer}s.
+ * Manages {@link Layer}s. Implementations of this interface should create new layers only through the `newTopLayer` method.
  */
 public interface LayerManager {
     /**
-     * Closes the current top layer and creates a new top layer. The old top layer will be scheduled for archiving.
+     * Closes the current top layer (if present) and creates a new top layer. The old top layer will be scheduled for archiving.
      */
-    void newTopLayer();
+    Layer newTopLayer() throws IOException;
 
+    /**
+     * Returns the current top layer.
+     *
+     * @return the current top layer
+     */
     Layer getTopLayer();
 
     /**
@@ -33,4 +41,12 @@ public interface LayerManager {
      * @return the layer
      */
     Layer getLayer(long id);
+
+    /**
+     * Lists all layer IDs that are currently managed.
+     *
+     * @return a list of layer IDs
+     * @throws IOException if an I/O error occurs
+     */
+    List<Long> listLayerIds() throws IOException;
 }

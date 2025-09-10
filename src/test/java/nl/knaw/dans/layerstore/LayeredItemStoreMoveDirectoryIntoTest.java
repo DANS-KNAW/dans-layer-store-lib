@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +35,8 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     }
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         FileUtils.write(testDir.resolve("x/y/test1.txt").toFile(), "Hello world!", "UTF-8");
         FileUtils.write(testDir.resolve("x/test2.txt").toFile(), "Hello again!", "UTF-8");
     }
@@ -44,8 +44,9 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     @Test
     public void should_refuse_to_move_link() throws Exception {
         Files.createSymbolicLink(testDir.resolve("x/y/link"), testDir.resolve("x/test2.txt"));
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b");
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c")).
@@ -55,8 +56,9 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
 
     @Test
     public void should_add_directory_structure_and_files() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b");
 
         layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c");
@@ -80,8 +82,9 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
 
     @Test
     public void should_create_parent_in_top_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b");
         Files.createDirectories(archiveDir);
         layerManager.newTopLayer();
@@ -94,9 +97,10 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
     }
 
     @Test
-    public void should_throw_parent_of_destination_does_not_exists() throws IOException {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+    public void should_throw_when_destination_parent_does_not_exist() throws IOException {
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c")).
             isInstanceOf(IllegalArgumentException.class)
@@ -105,8 +109,9 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
 
     @Test
     public void should_throw_destination_exists() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
 
         layeredStore.createDirectory("a/b/c");
 

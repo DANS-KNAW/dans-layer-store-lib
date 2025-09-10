@@ -17,6 +17,8 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -27,6 +29,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
     @Test
     public void should_add_up_file_sizes() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
         layer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layer.createDirectory("path/to");
         layer.writeFile("path/to/other.txt", toInputStream("Whatever", UTF_8));
@@ -35,8 +38,9 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalStateException_when_layer_is_closed() {
+    public void should_throw_IllegalStateException_when_layer_is_closed() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
         layer.close();
 
         assertThatThrownBy(layer::getSizeInBytes).

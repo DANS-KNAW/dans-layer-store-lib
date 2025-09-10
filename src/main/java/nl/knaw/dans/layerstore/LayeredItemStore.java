@@ -32,12 +32,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import static nl.knaw.dans.layerstore.Utils.throwOnListDifference;
+
 /**
  * An implementation of FileStore that stores files and directories as a stack of layers. A layer can be staged or archived. Staged layers can be modified, archived layers are read-only. To transform
- * the layered file store into a regular file system directory, each layer must be unarchived (if it was archived) to a staging directory and the staging directories must be copied into a single
+ * the layered file store into a regular file system directory, each layer must be unarchived (if it was archived) to a staging directory. The staging directories must be copied into a single
  * directory, starting with the oldest layer and ending with the newest layer. Files in newer layers overwrite files in older layers.
  * <p>
- * The LayeredFileStore is backed by a LayerDatabase to support storage of layers in a way that may not be fast enough for direct access, for example on tape. See the LayerDatabase interface for more
+ * The LayeredFileStore is backed by a LayerDatabase to support storage of layers in a way that may not be fast enough for direct access, for example, on tape. See the LayerDatabase interface for more
  * information.
  *
  * @see LayerDatabase
@@ -55,10 +57,38 @@ public class LayeredItemStore implements ItemStore {
         this.database = database;
         this.layerManager = layerManager;
         this.databaseBackedContentManager = Optional.ofNullable(databaseBackedContentManager).orElse(new NoopDatabaseBackedContentManager());
+//        if (layerManager.getTopLayer() == null) {
+//            try {
+//                newTopLayer();
+//            }
+//            catch (IOException e) {
+//                throw new IllegalStateException("Could not create top layer", e);
+//            }
+//        }
     }
 
     public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
         this(database, layerManager, null);
+    }
+
+    public Layer newTopLayer() throws IOException {
+        layerManager.newTopLayer();
+        database.addDirectory(layerManager.getTopLayer().getId(), "");
+        return layerManager.getTopLayer();
+    }
+
+    public Layer getLayer(long id) throws IOException {
+        return layerManager.getLayer(id);
+    }
+
+    public Layer getTopLayer() throws IOException {
+        return layerManager.getTopLayer();
+    }
+
+    public void checkSameLayersOnStorageAndDb() throws IOException {
+        var layersInDb = database.listLayerIds();
+        var layersOnStorage = layerManager.listLayerIds();
+        throwOnListDifference(layersInDb, layersOnStorage, "Layer IDs are inconsistent between database and storage.");
     }
 
     @Override
@@ -285,7 +315,7 @@ public class LayeredItemStore implements ItemStore {
     @Override
     public void copyDirectoryOutOf(String source, Path destination) throws IOException {
         var items = database.listRecursive(source);
-        // Sort by ascending path length, so that we start with the deepest directories
+        // Sort by ascending path length so that we start with the deepest directories
         items.sort(Comparator.comparingInt(listingRecord -> Path.of(listingRecord.getPath()).getNameCount()));
         if (!items.isEmpty()) {
             var deepestDirectory = Path.of(items.get(0).getPath()).getParent();

@@ -15,9 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import ch.qos.logback.classic.Level;
-import io.dropwizard.util.DirectExecutorService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.constraints.NotNull;
@@ -25,46 +22,27 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
 
     // the method under test is also involved in tests for other LayerManagerImpl methods and LayeredItemStore methods
 
-    @BeforeEach
-    public void setUp() throws Exception {
-        super.setUp();
-        logged = captureLog(Level.ERROR, "nl.knaw.dans"); // override debug level
-    }
-
     @Test
-    public void should_log_already_archived() throws IOException {
-
+    public void should_throw_on_already_archived() throws IOException {
+        // Given
         var layerManager = new LayerManagerImpl(stagingDir,
             new DmfTarArchiveProvider(
-                getDmfTarRunner(),
+                getNoopDmfTarRunner(),
                 sshRunnerExpectsFileToExist(true)
             ),
-            new DirectExecutorService()
+            new DirectLayerArchiver()
         );
-        var initialTopLayerId = layerManager.getTopLayer().getId();
+        layerManager.newTopLayer(); // Create the first layer
 
-        // Run the method under test
+        // When / Then
         assertThatThrownBy(layerManager::newTopLayer)
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("java.lang.IllegalStateException: Layer is already archived");
-
-        // Check the logs
-        var loggingEvent = logged.list.get(0);
-        assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
-        assertThat(loggingEvent.getFormattedMessage())
-            .isEqualTo("Error archiving layer with id " + initialTopLayerId);
-
-        // Check stdout, different formats when running standalone or in a suite
-        var contentString = stdout.toString();
-        assertThat(contentString).contains("Error archiving layer with id " + initialTopLayerId);
-        assertThat(contentString).contains("java.lang.IllegalStateException: Layer is already archived");
-        assertThat(contentString).contains("at nl.knaw.dans.layerstore.LayerManagerNewTopLayerTest");
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Layer is already archived");
     }
 
     private static @NotNull SshRunner sshRunnerExpectsFileToExist(boolean exists) {
@@ -77,7 +55,7 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
         };
     }
 
-    private static @NotNull DmfTarRunner getDmfTarRunner() {
+    private static @NotNull DmfTarRunner getNoopDmfTarRunner() {
         return new DmfTarRunner(Path.of("dmftar"), "testuser", "dummyhost", Path.of("testarchive")) {
 
             @Override

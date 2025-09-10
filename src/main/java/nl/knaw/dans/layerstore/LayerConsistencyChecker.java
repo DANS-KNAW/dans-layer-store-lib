@@ -15,21 +15,10 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.Builder;
-import lombok.Data;
+import java.io.IOException;
 
-/**
- * A file or directory in the layer store. It may be represented by multiple ItemRecords in the database, one for each layer that contains the item. Note that to obtain the current (i.e., latest)
- * content of a File item, you need to retrieve the ItemRecord with the highest layerId.
- */
-@Data
-@Builder
-public class Item {
-    public enum Type {
-        File,
-        Directory
-    }
+public interface LayerConsistencyChecker {
 
-    private final String path;
-    private final Type type;
+    public void check(Layer layer) throws IOException;
+
 }

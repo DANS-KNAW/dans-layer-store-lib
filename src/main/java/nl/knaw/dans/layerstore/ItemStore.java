@@ -26,7 +26,7 @@ import java.util.List;
  * but other implementations are conceivable. The main reason for defining this interface in more general terms is to hide the details of the underlying storage mechanism from the client code.
  * </p>
  * <p>
- * An ItemStore has a storage root, which is implementation dependent.
+ * An ItemStore has a storage root, which is implementation-dependent.
  * </p>
  */
 public interface ItemStore {
@@ -36,7 +36,7 @@ public interface ItemStore {
      * @param directoryPath the directory path relative to the storage root
      * @return the items in the directory
      * @throws java.nio.file.NoSuchFileException if the directory does not exist in any of the layers
-     * @throws java.nio.file.NotDirectoryException if the path exists, but is not a directory
+     * @throws java.nio.file.NotDirectoryException if the path exists but is not a directory
      */
     List<Item> listDirectory(String directoryPath) throws IOException;
 
@@ -46,7 +46,7 @@ public interface ItemStore {
      * @param directoryPath the directory path relative to the storage root
      * @return the items in the directory and its subdirectories
      * @throws java.nio.file.NoSuchFileException if the directory does not exist in any of the layers
-     * @throws java.nio.file.NotDirectoryException if the path exists, but is not a directory
+     * @throws java.nio.file.NotDirectoryException if the path exists but is not a directory
      */
     List<Item> listRecursive(String directoryPath) throws IOException;
 

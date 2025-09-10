@@ -33,51 +33,56 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         Files.createDirectories(stagingDir);
+        Files.createDirectories(archiveDir);
     }
 
     @Test
     public void should_not_delete_a_file_in_a_closed_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        // Given
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+        var firstLayer = layerManager.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
-        var firstLayer = layerManager.getTopLayer();
+
         layerManager.newTopLayer();
         assertFalse(firstLayer.isOpen());
 
-        assumeNotYetFixed("getLayer returns a new layer object. New layer objects are open but it should be closed in this scenario.");
-        assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt")))
+        // When / Then
+        assertThatThrownBy(() -> firstLayer.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt")))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("Cannot delete files from closed layer");
+            .hasMessageContaining("Layer is closed, but must be open for this operation");
     }
 
     @Test
     public void should_delete_files_from_the_top_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        // Given
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
+        layerManager.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!", UTF_8));
 
-        // precondition: show database content
+        // Precondition: database content
         var list1 = daoTestExtension.inTransaction(() ->
             db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );
         assertThat(list1).containsExactlyInAnyOrder("", "a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/d/test1.txt", "a/b/c/test2.txt");
 
-        // method under test
+        // When
         layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt"));
 
-        // files are removed from the stagingDir
+        // Then: files are removed from the stagingDir
         Path layerDir = stagingDir.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))));
         assertThat(layerDir.resolve("a/b/c/d/test1.txt")).doesNotExist();
         assertThat(layerDir.resolve("a/b/c/test2.txt")).doesNotExist();
 
-        // files are removed from the database
+        // And: files are removed from the database
         var list2 = daoTestExtension.inTransaction(() ->
             db.getAllRecords().toList().stream().map(ItemRecord::getPath)
         );

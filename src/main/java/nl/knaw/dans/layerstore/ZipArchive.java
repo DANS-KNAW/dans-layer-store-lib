@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import static java.text.MessageFormat.format;
@@ -144,5 +145,10 @@ public class ZipArchive implements Archive {
         catch (NoSuchFileException | FileNotFoundException e) {
             return false;
         }
+    }
+
+    @Override
+    public Iterator<Item> listAllItems() throws IOException {
+        return new ZipArchiveItemIterator(zipFile);
     }
 }

@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
@@ -28,6 +29,7 @@ public class LayerWriteFileTest extends AbstractTestWithTestDir {
     @Test
     public void should_write_file_to_staging_dir_when_layer_is_open() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
 
         // Write a file to the layer
         var testContent = "Hello world!";
@@ -39,8 +41,9 @@ public class LayerWriteFileTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalStateException_when_layer_is_closed() {
+    public void should_throw_IllegalStateException_when_layer_is_closed() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
         layer.close();
 
         assertThatThrownBy(() -> layer.writeFile("whatever.txt", toInputStream("whatever", UTF_8))).

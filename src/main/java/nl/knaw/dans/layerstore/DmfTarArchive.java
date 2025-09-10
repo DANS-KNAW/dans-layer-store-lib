@@ -22,6 +22,7 @@ import lombok.SneakyThrows;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Iterator;
 
 public class DmfTarArchive implements Archive {
     private final DmfTarRunner dmfTarRunner;
@@ -29,7 +30,7 @@ public class DmfTarArchive implements Archive {
     private final String path;
 
     @Getter
-    private boolean archived;
+    private final boolean archived;
 
     public DmfTarArchive(@NonNull DmfTarRunner dmfTarRunner, @NonNull String path, boolean archived) {
         this.dmfTarRunner = dmfTarRunner;
@@ -58,4 +59,8 @@ public class DmfTarArchive implements Archive {
         return dmfTarRunner.fileExists(path, "./" + filePath);
     }
 
+    @Override
+    public Iterator<Item> listAllItems() {
+        return new DmfTarArchiveItemIterator(path, dmfTarRunner);
+    }
 }

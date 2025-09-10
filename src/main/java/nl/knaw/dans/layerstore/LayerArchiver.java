@@ -15,21 +15,10 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.Builder;
-import lombok.Data;
-
 /**
- * A file or directory in the layer store. It may be represented by multiple ItemRecords in the database, one for each layer that contains the item. Note that to obtain the current (i.e., latest)
- * content of a File item, you need to retrieve the ItemRecord with the highest layerId.
+ * Interface for archiving layers. This interface is used by the {@link LayerManager} to archive layers.
  */
-@Data
-@Builder
-public class Item {
-    public enum Type {
-        File,
-        Directory
-    }
+public interface LayerArchiver {
 
-    private final String path;
-    private final Type type;
+    void archive(Layer layer);
 }

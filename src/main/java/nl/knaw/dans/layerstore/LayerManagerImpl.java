@@ -22,9 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.HashSet;
+import java.util.List;
 
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
@@ -33,33 +32,34 @@ public class LayerManagerImpl implements LayerManager {
 
     private final ArchiveProvider archiveProvider;
 
-    private final Executor archivingExecutor;
+    private final LayerArchiver layerArchiver;
 
     @Getter
     private Layer topLayer;
 
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, Executor archivingExecutor) throws IOException {
+    /**
+     * Creates a new LayerManagerImpl.
+     *
+     * @param stagingRoot     the root directory for staging layers.
+     * @param archiveProvider the archive provider to use.
+     * @param layerArchiver   the layer archiver to use.
+     * @throws IOException if the staging root directory cannot be created.
+     */
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver) throws IOException {
         this.stagingRoot = stagingRoot;
-        this.archivingExecutor = Objects.requireNonNullElseGet(archivingExecutor, Executors::newSingleThreadExecutor);
+        this.layerArchiver = layerArchiver;
         this.archiveProvider = archiveProvider;
-        initTopLayer();
-    }
-
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) throws IOException {
-        this(stagingRoot, archiveProvider, null);
-    }
-
-    private void initTopLayer() throws IOException {
-        if (Files.notExists(stagingRoot)) {
-            Files.createDirectories(stagingRoot);
+        if (Files.notExists(this.stagingRoot)) {
+            Files.createDirectories(this.stagingRoot);
         }
-        try (var pathStream = Files.list(stagingRoot)) {
-            long id = pathStream
+        try (var pathStream = Files.list(this.stagingRoot)) {
+            var id = pathStream
                 .map(this::toValidLayerName)
                 .mapToLong(Long::parseLong)
-                .max()
-                .orElse(createNewTopLayer().getId());
-            topLayer = new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
+                .max();
+            if (id.isPresent()) {
+                topLayer = new LayerImpl(id.getAsLong(), this.stagingRoot.resolve(Long.toString(id.getAsLong())), this.archiveProvider.createArchive(id.getAsLong()));
+            }
         }
     }
 
@@ -67,48 +67,64 @@ public class LayerManagerImpl implements LayerManager {
         if (!path.toFile().isDirectory()) {
             throw new IllegalStateException("Not a directory: " + path);
         }
-        if(!path.getFileName().toString().matches("\\d{13,}")) {
+        if (!path.getFileName().toString().matches("\\d{13,}")) {
             // more than 13 digits in nov 2286, comma allows a longer future
             throw new IllegalStateException("Not a timestamp: " + path);
         }
         return path.getFileName().toString();
     }
 
-    private Layer createNewTopLayer() {
+    @Override
+    public Layer newTopLayer() throws IOException {
+        var oldTopLayer = topLayer;
+        // Wait 2 millis before creating a new top layer to avoid name collision
+        try {
+            Thread.sleep(2);
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
         long id = System.currentTimeMillis();
         log.debug("Creating new top layer with id {}", id);
-        return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
-    }
+        var stagingDir = stagingRoot.resolve(Long.toString(id));
+        var newLayer = new LayerImpl(id, stagingDir, archiveProvider.createArchive(id));
+        Files.createDirectories(stagingDir);
+        topLayer = newLayer;
 
-    @Override
-    public void newTopLayer() {
-        var oldTopLayer = topLayer;
-        topLayer = createNewTopLayer();
-        oldTopLayer.close();
-        log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
-        archive(oldTopLayer);
+        if (oldTopLayer != null) {
+            oldTopLayer.close();
+            log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
+            archive(oldTopLayer);
+        }
+        else {
+            log.debug("No old top layer to archive");
+        }
+        return newLayer;
     }
 
     private void archive(Layer layer) {
-        archivingExecutor.execute(() -> {
-            try {
-                layer.archive();
-            }
-            catch (Exception e) {
-                log.error("Error archiving layer with id {}", layer.getId(), e);
-                throw new RuntimeException(e);
-            }
-        });
+        layerArchiver.archive(layer);
+    }
+
+    public List<Long> listLayerIds() throws IOException {
+        try (var pathStream = Files.list(stagingRoot)) {
+            var allIds = new HashSet<>(pathStream
+                .map(this::toValidLayerName)
+                .map(Long::valueOf)
+                .toList());
+            allIds.addAll(archiveProvider.listArchivedLayers());
+            return allIds.stream().sorted().toList();
+        }
     }
 
     @Override
     public Layer getLayer(long id) {
-        if (id == topLayer.getId()) {
-            // safeguard/shortcut: a fresh top layer that never received content has no directory in the staging root
+        if (topLayer != null && id == topLayer.getId()) {
             return topLayer;
         }
-        else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(Long.toString(id))) {
-            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(Long.toString(id)));
+        else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(id)) {
+            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
         }
         else {
             throw new IllegalArgumentException("No layer found with id " + id);

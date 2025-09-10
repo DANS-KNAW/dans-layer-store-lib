@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -36,8 +35,9 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_write_file_to_staging_dir_when_layer_is_open() throws Exception {
         Files.createDirectories(stagingDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
 
         var testContent = "Hello world!";
         layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
@@ -52,8 +52,9 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_write_copy_of_content_to_database_if_filter_applies() throws Exception {
         Files.createDirectories(stagingDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         var testContent = "Hello world!";
         layeredStore.writeFile("test.txt", toInputStream(testContent, UTF_8));
@@ -69,8 +70,9 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_overwrite_content_in_the_database_if_filter_applies() throws Exception {
         Files.createDirectories(stagingDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("test.txt", toInputStream("Hello again!", UTF_8));
@@ -88,8 +90,9 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     public void should_add_copies_to_the_database_if_filter_applies() throws Exception {
         Files.createDirectories(stagingDir);
         Files.createDirectories(archiveDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
+        layeredStore.newTopLayer();
 
         layeredStore.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layerManager.newTopLayer();
@@ -98,9 +101,11 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
         layeredStore.writeFile("test.txt", toInputStream("Hello once more!", UTF_8));
 
         // Check that the file contents are in the database
-        var list = db.getAllRecords().map(itemRecord ->
-            new String((itemRecord.getContent()), StandardCharsets.UTF_8)
-        );
+        var list = db.getAllRecords()
+            .filter(itemRecord -> itemRecord.getPath().equals("test.txt")) // N.B. necessary to filter out the top directory item record
+            .map(itemRecord ->
+                new String((itemRecord.getContent()), StandardCharsets.UTF_8)
+            );
         assertThat(list).containsExactlyInAnyOrder("Hello world!", "Hello once more!", "Hello again!");
     }
 

@@ -17,6 +17,8 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -50,7 +52,8 @@ public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalArgumentException_if_source_is_outside_staging_dir() {
+    public void should_throw_IllegalArgumentException_if_source_is_outside_staging_dir() throws Exception {
+        Files.createDirectories(stagingDir);
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
         assertThatThrownBy(() -> layer.moveDirectoryInternal("../path/to/", "path/too/"))
             .isInstanceOf(IllegalArgumentException.class)
@@ -58,8 +61,9 @@ public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalArgumentException_if_destination_is_outside_staging_dir() {
+    public void should_throw_IllegalArgumentException_if_destination_is_outside_staging_dir() throws Exception {
         var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
         assertThatThrownBy(() -> layer.moveDirectoryInternal("path/to/", "../path/too/"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Path is outside staging directory");

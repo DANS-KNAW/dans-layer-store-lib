@@ -28,15 +28,17 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayeredItemStoreListDirectoryTest extends AbstractLayerDatabaseTest {
 
     @BeforeEach
-    public void prepare() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         Files.createDirectories(stagingDir);
+        Files.createDirectories(archiveDir);
     }
 
     @Test
     public void should_return_a_shallow_list() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectExecutorService());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        Files.createDirectories(archiveDir);
+        layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d/e/f");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
