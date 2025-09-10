@@ -19,6 +19,6 @@ import java.io.IOException;
 
 public interface LayerConsistencyChecker {
 
-    public void check(Layer layer) throws IOException;
+    void check(Layer layer) throws IOException;
 
 }
