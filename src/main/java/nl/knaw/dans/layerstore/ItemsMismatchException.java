@@ -15,10 +15,21 @@
  */
 package nl.knaw.dans.layerstore;
 
-import java.io.IOException;
+import lombok.Getter;
 
-public interface LayerConsistencyChecker {
+import java.util.List;
 
-    void check(Layer layer) throws IOException, ItemsMismatchException;
+/**
+ * Exception thrown when the items in the database and the items in the storage do not match.
+ */
+@Getter
+public class ItemsMismatchException extends Exception{
+    private final List<Item> missingInDb;
+    private final List<Item> missingInStorage;
 
+    public ItemsMismatchException(List<Item> missingInDb, List<Item> missingInStorage) {
+        super("Items mismatch. Missing in database: " + missingInDb + ", missing in storage: " + missingInStorage + ".");
+        this.missingInDb = missingInDb;
+        this.missingInStorage = missingInStorage;
+    }
 }

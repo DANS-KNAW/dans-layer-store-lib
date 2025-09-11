@@ -44,7 +44,7 @@ public class ConsistencyCheckingAsyncLayerArchiver implements LayerArchiver {
                 layer.archive();
                 log.info("Layer {} archived", layer.getId());
             }
-            catch (IOException e) {
+            catch (IOException|ItemsMismatchException e) {
                 throw new RuntimeException(e);
             }
         });

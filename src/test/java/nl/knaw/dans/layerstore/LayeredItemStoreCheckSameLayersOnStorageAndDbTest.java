@@ -80,7 +80,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
 
         // When / Then
         assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
-            .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing on storage: [" + nonExistentLayerId + "]");
+            .hasMessageContaining("Layer ids mismatch. Missing in database: [], missing in storage: [" + nonExistentLayerId + "].");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
 
         // When / Then
         assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
-            .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing in database: [" + nonExistentLayerId + "]");
+            .hasMessageContaining("Layer ids mismatch. Missing in database: [" + nonExistentLayerId + "], missing in storage: [].");
     }
 
     @Test
@@ -124,7 +124,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
 
         // When / Then
         assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
-            .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing in database: [" + nonExistentLayerId + "]");
+            .hasMessageContaining("Layer ids mismatch. Missing in database: [" + nonExistentLayerId + "], missing in storage: []");
     }
 
     @Test
@@ -188,7 +188,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
 
         // When / Then
         assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
-            .hasMessageContaining("Layer IDs are inconsistent between database and storage. Missing in database: [" + nonExistentLayerIdInDb1 + ", "
-                + nonExistentLayerIdInDb2 + "] Missing on storage: [" + nonExistentLayerIdInStore1 + ", " + nonExistentLayerIdInStore2 + "]");
+            .hasMessageContaining("Layer ids mismatch. Missing in database: [" + nonExistentLayerIdInDb1 + ", "
+                + nonExistentLayerIdInDb2 + "], missing in storage: [" + nonExistentLayerIdInStore1 + ", " + nonExistentLayerIdInStore2 + "]");
     }
 }

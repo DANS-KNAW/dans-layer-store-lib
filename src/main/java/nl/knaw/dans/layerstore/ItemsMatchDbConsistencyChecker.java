@@ -21,23 +21,25 @@ import org.apache.commons.collections4.IteratorUtils;
 
 import java.io.IOException;
 
-import static nl.knaw.dans.layerstore.Utils.throwOnListDifference;
-
 @Slf4j
 @AllArgsConstructor
 public class ItemsMatchDbConsistencyChecker implements LayerConsistencyChecker {
     private final LayerDatabase database;
 
     @Override
-    public void check(Layer layer) throws IOException {
+    public void check(Layer layer) throws IOException, ItemsMismatchException {
         checkSameItemsFoundOnStorageAsInDatabase(layer);
     }
 
-    private void checkSameItemsFoundOnStorageAsInDatabase(Layer layer) throws IOException {
+    private void checkSameItemsFoundOnStorageAsInDatabase(Layer layer) throws IOException, ItemsMismatchException {
         log.debug("Checking consistency of items found on storage for layer {}", layer.getId());
         var itemsInDb = database.getRecordsByLayerId(layer.getId()).stream().map(ItemRecord::toItem).toList();
         var itemsOnStorage = IteratorUtils.toList(layer.listAllItems());
-        throwOnListDifference(itemsInDb, itemsOnStorage, "Items found on storage do not match items in database.");
+        var missingInDb = itemsInDb.stream().filter(item -> !itemsOnStorage.contains(item)).toList();
+        var missingOnStorage = itemsOnStorage.stream().filter(item -> !itemsInDb.contains(item)).toList();
+        if (!missingInDb.isEmpty() || !missingOnStorage.isEmpty()) {
+            throw new ItemsMismatchException(missingInDb, missingOnStorage);
+        }
         log.info("Consistency check of items found on storage for layer {} OK.", layer.getId());
     }
 }

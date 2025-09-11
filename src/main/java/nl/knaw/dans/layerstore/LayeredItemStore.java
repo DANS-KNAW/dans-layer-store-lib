@@ -32,8 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-import static nl.knaw.dans.layerstore.Utils.throwOnListDifference;
-
 /**
  * An implementation of FileStore that stores files and directories as a stack of layers. A layer can be staged or archived. Staged layers can be modified, archived layers are read-only. To transform
  * the layered file store into a regular file system directory, each layer must be unarchived (if it was archived) to a staging directory. The staging directories must be copied into a single
@@ -49,7 +47,25 @@ public class LayeredItemStore implements ItemStore {
     private final LayerDatabase database;
     private final LayerManager layerManager;
     private final DatabaseBackedContentManager databaseBackedContentManager;
+    private final ItemsMatchDbConsistencyChecker itemsMatchDbConsistencyChecker;
 
+    /**
+     * Creates a new LayeredItemStore without a database-backed content manager.
+     *
+     * @param database     the database to use
+     * @param layerManager the layer manager to use
+     */
+    public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
+        this(database, layerManager, null);
+    }
+
+    /**
+     * Creates a new LayeredItemStore.
+     *
+     * @param database                     the database to use
+     * @param layerManager                 the layer manager to use
+     * @param databaseBackedContentManager the database-backed content manager to use
+     */
     public LayeredItemStore(
         LayerDatabase database,
         LayerManager layerManager,
@@ -57,30 +73,68 @@ public class LayeredItemStore implements ItemStore {
         this.database = database;
         this.layerManager = layerManager;
         this.databaseBackedContentManager = Optional.ofNullable(databaseBackedContentManager).orElse(new NoopDatabaseBackedContentManager());
+        this.itemsMatchDbConsistencyChecker = new ItemsMatchDbConsistencyChecker(database);
     }
 
-    public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
-        this(database, layerManager, null);
-    }
-
+    /**
+     * Creates a new top layer, archiving any existing top layer.
+     *
+     * @return the new top layer
+     * @throws IOException if an I/O error occurs
+     */
     public Layer newTopLayer() throws IOException {
         layerManager.newTopLayer();
         database.addDirectory(layerManager.getTopLayer().getId(), "");
         return layerManager.getTopLayer();
     }
 
+    /**
+     * Gets a layer by id.
+     *
+     * @param id the layer id
+     * @return the layer
+     * @throws IOException if an I/O error occurs
+     */
     public Layer getLayer(long id) throws IOException {
         return layerManager.getLayer(id);
     }
 
+    /**
+     * Gets the top layer or null if there is no top layer.
+     *
+     * @return the top layer or null if there is no top layer
+     * @throws IOException if an I/O error occurs while reading from the database or the layer manager
+     */
     public Layer getTopLayer() throws IOException {
         return layerManager.getTopLayer();
     }
 
-    public void checkSameLayersOnStorageAndDb() throws IOException {
+    /**
+     * Checks that the layers in the database match the layers in the layer manager.
+     *
+     * @throws IOException               if an I/O error occurs while reading from the database or the layer manager
+     * @throws LayerIdsMismatchException if the layer ids do not match
+     */
+    public void checkSameLayersOnStorageAndDb() throws IOException, LayerIdsMismatchException {
         var layersInDb = database.listLayerIds();
         var layersOnStorage = layerManager.listLayerIds();
-        throwOnListDifference(layersInDb, layersOnStorage, "Layer IDs are inconsistent between database and storage.");
+        var missingOnStorage = layersInDb.stream().filter(item -> !layersOnStorage.contains(item)).toList();
+        var missingInDb = layersOnStorage.stream().filter(item -> !layersInDb.contains(item)).toList();
+        if (!missingInDb.isEmpty() || !missingOnStorage.isEmpty()) {
+            throw new LayerIdsMismatchException(missingInDb, missingOnStorage);
+        }
+        log.info("Consistency check of layers on storage and database OK.");
+    }
+
+    /**
+     * Checks that the items in the database match the items in the layer.
+     *
+     * @param layerId the layer id to check
+     * @throws IOException            if an I/O error occurs while reading from the layer or the database
+     * @throws ItemsMismatchException if the items do not match
+     */
+    public void checkLayerItemRecords(long layerId) throws IOException, ItemsMismatchException {
+        itemsMatchDbConsistencyChecker.check(layerManager.getLayer(layerId));
     }
 
     @Override
