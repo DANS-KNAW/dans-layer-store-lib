@@ -186,4 +186,44 @@ public class StagingDirTest extends AbstractTestWithTestDir {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Not a directory");
     }
+
+    @Test
+    public void open_on_unstaged_closed_path_updates_internal_path_and_does_not_throw() throws IOException {
+        // Given: neither open nor closed directory exists
+        var closed = testDir.resolve("1234567890123.closed");
+        var open = testDir.resolve("1234567890123");
+        assertThat(closed).doesNotExist();
+        assertThat(open).doesNotExist();
+        var stagingDir = new StagingDir(closed);
+
+        // When
+        stagingDir.open();
+
+        // Then: an internal path points to an open variant, still not staged, and no exception
+        assertThat(stagingDir.getPath()).isEqualTo(open);
+        assertThat(stagingDir.isStaged()).isFalse();
+        // Since not staged, it's considered "closed" by definition
+        assertThat(stagingDir.isClosed()).isTrue();
+        assertThat(stagingDir.isOpen()).isFalse();
+    }
+
+    @Test
+    public void open_on_unstaged_open_path_is_noop_and_does_not_throw() throws IOException {
+        // Given: construct via root+id when nothing exists -> path points to open, not staged
+        var open = testDir.resolve("1234567890123");
+        assertThat(open).doesNotExist();
+        var stagingDir = new StagingDir(testDir, 1234567890123L);
+        assertThat(stagingDir.getPath()).isEqualTo(open);
+        assertThat(stagingDir.isStaged()).isFalse();
+
+        // When
+        stagingDir.open(); // should not throw; should keep pointing to the same open path
+
+        // Then
+        assertThat(stagingDir.getPath()).isEqualTo(open);
+        assertThat(stagingDir.isStaged()).isFalse();
+        // Not staged => reported as closed
+        assertThat(stagingDir.isClosed()).isTrue();
+        assertThat(stagingDir.isOpen()).isFalse();
+    }
 }
