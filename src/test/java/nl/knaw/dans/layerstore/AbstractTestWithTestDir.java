@@ -29,9 +29,11 @@ public abstract class AbstractTestWithTestDir {
     protected final Path testDir = Path.of("target/test")
         .resolve(getClass().getSimpleName());
 
-    protected final Path stagingDir = testDir.resolve("layer_staging");
+    protected final Path stagingRoot = testDir.resolve("staging_root");
 
-    protected final Path archiveDir = testDir.resolve("layer_archive");
+    protected final Path stagingDir = stagingRoot.resolve("1234567890123");
+
+    protected final Path archiveRoot = testDir.resolve("archive_root");
 
     public void createStagingFileWithContent(String path, String content) throws IOException {
         var filePath = stagingDir.resolve(path);

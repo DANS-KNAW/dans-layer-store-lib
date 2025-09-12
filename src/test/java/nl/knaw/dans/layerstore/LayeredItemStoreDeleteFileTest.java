@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +23,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -35,14 +33,13 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(stagingDir);
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
     }
 
     @Test
     public void should_not_delete_a_file_in_a_closed_layer() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         var firstLayer = layerManager.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
@@ -61,7 +58,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_delete_files_from_the_top_layer() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
@@ -77,8 +74,8 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         // When
         layeredStore.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt"));
 
-        // Then: files are removed from the stagingDir
-        Path layerDir = stagingDir.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))));
+        // Then: files are removed from the stagingRoot
+        Path layerDir = stagingRoot.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))));
         assertThat(layerDir.resolve("a/b/c/d/test1.txt")).doesNotExist();
         assertThat(layerDir.resolve("a/b/c/test2.txt")).doesNotExist();
 

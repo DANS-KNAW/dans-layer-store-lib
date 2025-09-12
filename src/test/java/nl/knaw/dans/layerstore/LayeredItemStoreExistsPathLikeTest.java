@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,13 +29,12 @@ public class LayeredItemStoreExistsPathLikeTest extends AbstractLayerDatabaseTes
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(stagingDir);
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
     }
 
     @Test
     public void should_return_a_shallow_list() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d/e/f");

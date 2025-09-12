@@ -15,17 +15,14 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -35,13 +32,12 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(stagingDir);
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
     }
 
     @Test
     public void should_not_delete_a_directory_with_content_in_another_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
@@ -54,7 +50,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
     @Test
     public void should_delete_empty_directory() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
@@ -68,8 +64,8 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         // method under test
         layeredStore.deleteDirectory("a/b/c");
 
-        // directory is removed from the stagingDir
-        var layerDir = stagingDir.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))));
+        // directory is removed from the stagingRoot
+        var layerDir = stagingRoot.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))));
         assertThat(layerDir.resolve("a/b")).isEmptyDirectory();
 
         // directory is removed from the database
@@ -81,7 +77,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
 
     @Test
     public void should_delete_directory_with_regular_file() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
@@ -96,9 +92,9 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         // method under test
         layeredStore.deleteDirectory("a/b");
 
-        // files are removed from the stagingDir
+        // files are removed from the stagingRoot
         var layerDir = daoTestExtension.inTransaction(() ->
-            stagingDir.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))))
+            stagingRoot.resolve(Path.of(String.valueOf((layerManager.getTopLayer().getId()))))
         );
         assertThat(layerDir.resolve("a")).isEmptyDirectory();
 
@@ -112,12 +108,12 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @Test
     public void should_throw_cannot_delete_file_from_closed_layer() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        layeredStore.newTopLayer();
+        var firstLayer = layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
         layerManager.newTopLayer();
         var list1 = daoTestExtension.inTransaction(() ->
             db.getAllRecords().toList().stream().map(ItemRecord::getPath)
@@ -127,6 +123,6 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         // When / Then
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageStartingWith("Cannot delete files from closed layer");
+            .hasMessageStartingWith("Cannot delete files from closed layer " + firstLayer.getId());
     }
 }

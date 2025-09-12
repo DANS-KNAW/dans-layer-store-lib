@@ -30,7 +30,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
     public void throws_IllegalStateException_when_layer_is_not_closed() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
         assertThatThrownBy(layer::archive)
@@ -41,9 +41,9 @@ public class LayerArchiveTest extends AbstractCapturingTest {
     @Test
     public void throws_IllegalStateException_when_layer_is_already_archived() throws IOException {
         // Given
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         layer.close();
         layer.archive();
 
@@ -57,9 +57,9 @@ public class LayerArchiveTest extends AbstractCapturingTest {
     public void throws_RuntimeException_if_archive_root_does_not_exist() throws Exception {
         // Given
         // NOTE: archiveDir is not created
-        var testZip = archiveDir.resolve("test.zip");
+        var testZip = archiveRoot.resolve("test.zip");
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(testZip));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(testZip));
         layer.close();
 
         // When / Then
@@ -75,9 +75,9 @@ public class LayerArchiveTest extends AbstractCapturingTest {
     @Test
     public void removes_staging_dir() throws IOException {
         // Given
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         createEmptyStagingDirFiles("path/to/file1");
         layer.close();
 

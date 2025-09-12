@@ -35,20 +35,17 @@ class LayerImpl implements Layer {
     private final long id;
 
     @NonNull
-    private final Path stagingDir;
+    private final StagingDir stagingDir;
 
-    @NonNull
-    private final Path stagingDirClosed;
 
     @NonNull
     private final Archive archive;
 
     // TODO: validate invariants
 
-    public LayerImpl(long id, @NonNull Path stagingDir, @NonNull Archive archive) {
+    public LayerImpl(long id, @NonNull StagingDir stagingDir, @NonNull Archive archive) {
         this.id = id;
         this.stagingDir = stagingDir;
-        this.stagingDirClosed = stagingDir.resolveSibling(id + ".closed");
         this.archive = archive;
     }
 
@@ -56,21 +53,19 @@ class LayerImpl implements Layer {
     public void createDirectory(String path) throws IOException {
         checkOpen();
         validatePath(path);
-        Files.createDirectories(stagingDir.resolve(path));
+        Files.createDirectories(stagingDir.getPath().resolve(path));
     }
 
     public boolean isClosed() {
-        return Files.exists(stagingDirClosed) || !Files.exists(stagingDir);
+        return stagingDir.isClosed();
     }
 
     private void checkOpen() {
-        if (isClosed())
-            throw new IllegalStateException("Layer is closed, but must be open for this operation");
+        stagingDir.checkOpen();
     }
 
     private void checkClosed() {
-        if (!isClosed())
-            throw new IllegalStateException("Layer is open, but must be closed for this operation");
+        stagingDir.checkClosed();
     }
 
     @Override
@@ -80,7 +75,7 @@ class LayerImpl implements Layer {
             throw new IllegalArgumentException("Paths cannot be null");
         for (String path : paths) {
             validatePath(path);
-            Files.delete(stagingDir.resolve(path));
+            Files.delete(stagingDir.getPath().resolve(path));
         }
     }
 
@@ -99,14 +94,13 @@ class LayerImpl implements Layer {
     }
 
     private InputStream readFromStaging(String path) throws IOException {
-        return Files.newInputStream(isOpen() ? stagingDir.resolve(path) : stagingDirClosed.resolve(path));
+        return Files.newInputStream(stagingDir.getPath().resolve(path));
     }
 
     @Override
     public synchronized void close() {
-        checkOpen();
         try {
-            Files.move(stagingDir, stagingDirClosed);
+            stagingDir.close();
         }
         catch (IOException e) {
             log.error("Error closing layer", e);
@@ -119,7 +113,8 @@ class LayerImpl implements Layer {
         checkClosed();
         checkNotReclosed();
         checkArchived();
-        archive.unarchiveTo(stagingDir);
+        stagingDir.open();
+        archive.unarchiveTo(stagingDir.getPath());
     }
 
     private void checkNotReclosed() {
@@ -128,7 +123,7 @@ class LayerImpl implements Layer {
     }
 
     private boolean isReclosed() {
-        return archive.isArchived() && Files.exists(stagingDirClosed);
+        return archive.isArchived() && stagingDir.isOpen();
     }
 
     @Override
@@ -151,10 +146,10 @@ class LayerImpl implements Layer {
 
     private void doArchive() throws IOException {
         log.debug("Start archiving layer {}", id);
-        archive.archiveFrom(stagingDirClosed);
-        log.debug("Deleting staging directory {}", stagingDirClosed);
-        FileUtils.deleteDirectory(stagingDirClosed.toFile());
-        log.debug("Staging directory {} deleted", stagingDirClosed);
+        archive.archiveFrom(stagingDir.getPath());
+        log.debug("Deleting staging directory {}", stagingDir.getPath());
+        FileUtils.deleteDirectory(stagingDir.getPath().toFile());
+        log.debug("Staging directory {} deleted", stagingDir.getPath());
     }
 
     @Override
@@ -176,14 +171,14 @@ class LayerImpl implements Layer {
     public void writeFile(String filePath, InputStream content) throws IOException {
         checkOpen();
         validatePath(filePath);
-        Files.copy(content, stagingDir.resolve(filePath), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(content, stagingDir.getPath().resolve(filePath), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
     public void moveDirectoryInto(Path source, String destination) throws IOException {
         checkOpen();
         validatePath(destination);
-        var destinationPath = stagingDir.resolve(destination);
+        var destinationPath = stagingDir.getPath().resolve(destination);
         Files.move(source, destinationPath);
     }
 
@@ -199,7 +194,7 @@ class LayerImpl implements Layer {
     }
 
     private boolean fileExistsInStaging(String path) {
-        return Files.exists(stagingDir.resolve(path));
+        return Files.exists(stagingDir.getPath().resolve(path));
     }
 
     @Override
@@ -207,20 +202,20 @@ class LayerImpl implements Layer {
         checkOpen();
         validatePath(source);
         validatePath(destination);
-        Files.move(stagingDir.resolve(source), stagingDir.resolve(destination));
+        Files.move(stagingDir.getPath().resolve(source), stagingDir.getPath().resolve(destination));
     }
 
     @Override
     public void deleteDirectory(String path) throws IOException {
         checkOpen();
         validatePath(path);
-        FileUtils.deleteDirectory(stagingDir.resolve(path).toFile());
+        FileUtils.deleteDirectory(stagingDir.getPath().resolve(path).toFile());
     }
 
     @Override
     public long getSizeInBytes() {
-        if (Files.exists(stagingDir)) {
-            return FileUtils.sizeOfDirectory(stagingDir.toFile());
+        if (stagingDir.isOpen()) {
+            return FileUtils.sizeOfDirectory(stagingDir.getPath().toFile());
         }
         else {
             // TODO: replace with implementation that reads total size from database?
@@ -233,9 +228,9 @@ class LayerImpl implements Layer {
             throw new IllegalArgumentException("Path cannot be null");
         if (path.isBlank() && !path.isEmpty())
             throw new IllegalArgumentException("Path cannot be blank");
-        var pathInStagingDir = stagingDir.resolve(path).normalize();
+        var pathInStagingDir = stagingDir.getPath().resolve(path).normalize();
         // Check if the path is outside the staging dir
-        if (!pathInStagingDir.startsWith(stagingDir))
+        if (!pathInStagingDir.startsWith(stagingDir.getPath()))
             throw new IllegalArgumentException("Path is outside staging directory");
     }
 
@@ -246,7 +241,7 @@ class LayerImpl implements Layer {
             return archive.listAllItems();
         }
         else {
-            return new DirectoryTreeItemIterator(isOpen() ? stagingDir : stagingDirClosed);
+            return new DirectoryTreeItemIterator(stagingDir.getPath());
         }
     }
 }

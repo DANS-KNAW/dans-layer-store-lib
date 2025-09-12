@@ -27,7 +27,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
     public void should_create_directories_in_staging_dir_if_layer_is_open() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When
         layer.createDirectory("path/to/directory");
@@ -40,7 +40,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalStateException_if_layer_is_closed() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         layer.close();
 
         // When / Then
@@ -53,7 +53,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalArgumentException_if_path_is_null() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
         assertThatThrownBy(() -> layer.createDirectory(null))
@@ -65,7 +65,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalArgumentException_if_path_is_blank() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
         assertThatThrownBy(() -> layer.createDirectory(" "))
@@ -77,7 +77,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalArgumentException_if_path_is_outside_staging_dir() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
         assertThatThrownBy(() -> layer.createDirectory("path/to/../../../directory"))

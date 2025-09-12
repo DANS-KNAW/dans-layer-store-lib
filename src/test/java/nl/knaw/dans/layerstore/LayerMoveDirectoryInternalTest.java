@@ -25,7 +25,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
     @Test
     public void should_move_directory_from_staging_dir_to_staging_dir_if_layer_is_open() throws Exception {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         layer.moveDirectoryInternal("path/to/", "path/too/");
@@ -37,7 +37,7 @@ public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_throw_IllegalStateException_when_layer_is_closed() throws Exception {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         // Create a directory with files in it
         if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
             !stagingDir.resolve("path/to/file1").toFile().createNewFile() ||
@@ -54,7 +54,7 @@ public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_IllegalArgumentException_if_source_is_outside_staging_dir() throws Exception {
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         assertThatThrownBy(() -> layer.moveDirectoryInternal("../path/to/", "path/too/"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Path is outside staging directory");
@@ -62,7 +62,7 @@ public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_throw_IllegalArgumentException_if_destination_is_outside_staging_dir() throws Exception {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         Files.createDirectories(stagingDir);
         assertThatThrownBy(() -> layer.moveDirectoryInternal("path/to/", "../path/too/"))
             .isInstanceOf(IllegalArgumentException.class)

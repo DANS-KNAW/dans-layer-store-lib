@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,13 +38,12 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(stagingDir);
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
     }
 
     @Test
-    public void should_read_content_from_stagingDir() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+    public void should_read_content_from_stagingRoot() throws Exception {
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
 
@@ -59,7 +57,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_read_content_from_database_if_filter_applies() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
@@ -73,7 +71,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_is_a_directory() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
@@ -86,7 +84,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_no_such_file() throws IOException {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 

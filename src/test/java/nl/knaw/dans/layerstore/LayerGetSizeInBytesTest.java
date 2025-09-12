@@ -28,7 +28,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_add_up_file_sizes() throws Exception {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         Files.createDirectories(stagingDir);
         layer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layer.createDirectory("path/to");
@@ -39,7 +39,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_throw_IllegalStateException_when_layer_is_closed() throws Exception {
-        var layer = new LayerImpl(1, stagingDir, new ZipArchive(archiveDir.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         Files.createDirectories(stagingDir);
         layer.close();
 

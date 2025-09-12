@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import io.dropwizard.util.DirectExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,13 +30,12 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(stagingDir);
-        Files.createDirectories(archiveDir);
+        Files.createDirectories(archiveRoot);
     }
 
     @Test
     public void should_move_dir_with_file() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
@@ -46,14 +44,14 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
 
         layeredStore.moveDirectoryInternal("a/b/e/f", "a/b/c/d/x");
 
-        var layerDir = stagingDir.resolve(String.valueOf(layerManager.getTopLayer().getId()));
+        var layerDir = stagingRoot.resolve(String.valueOf(layerManager.getTopLayer().getId()));
         assertThat(layerDir.resolve("a/b/c/d/x/test.txt")).exists();
         assertThat(layerDir.resolve("a/b/e")).exists();
     }
 
     @Test
     public void should_not_move_dir_with_files_in_other_layer() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");

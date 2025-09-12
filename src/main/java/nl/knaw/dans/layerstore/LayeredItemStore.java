@@ -109,6 +109,11 @@ public class LayeredItemStore implements ItemStore {
         return layerManager.getTopLayer();
     }
 
+
+    public List<Long> listLayerIds() throws IOException {
+        return layerManager.listLayerIds();
+    }
+
     /**
      * Checks that the layers in the database match the layers in the layer manager.
      *

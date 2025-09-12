@@ -34,8 +34,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_write_file_to_staging_dir_when_layer_is_open() throws Exception {
-        Files.createDirectories(stagingDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
 
@@ -44,15 +43,14 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
         var topLayer = layerManager.getTopLayer();
 
-        var path = stagingDir.resolve(Long.toString(topLayer.getId())).resolve("test.txt");
+        var path = stagingRoot.resolve(Long.toString(topLayer.getId())).resolve("test.txt");
         assertThat(path).exists();
         assertThat(path).usingCharset(StandardCharsets.UTF_8).hasContent(testContent);
     }
 
     @Test
     public void should_write_copy_of_content_to_database_if_filter_applies() throws Exception {
-        Files.createDirectories(stagingDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
@@ -69,8 +67,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_overwrite_content_in_the_database_if_filter_applies() throws Exception {
-        Files.createDirectories(stagingDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveDir), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new TarArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
@@ -88,9 +85,8 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_add_copies_to_the_database_if_filter_applies() throws Exception {
-        Files.createDirectories(stagingDir);
-        Files.createDirectories(archiveDir);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveDir), new DirectLayerArchiver());
+        Files.createDirectories(archiveRoot);
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 

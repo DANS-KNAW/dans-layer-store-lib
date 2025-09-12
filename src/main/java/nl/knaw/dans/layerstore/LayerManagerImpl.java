@@ -22,11 +22,18 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
+    /**
+     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed', for closed layers. Current timestamps have 13 digits. After November 2286, timestamps will
+     * have 14 digits.
+     */
+    private static final Pattern validLayerNamePattern = Pattern.compile("^\\d{13,}(.closed)?$");
 
     private final Path stagingRoot;
 
@@ -53,25 +60,14 @@ public class LayerManagerImpl implements LayerManager {
             Files.createDirectories(this.stagingRoot);
         }
         try (var pathStream = Files.list(this.stagingRoot)) {
-            var id = pathStream
-                .map(this::toValidLayerName)
-                .mapToLong(Long::parseLong)
-                .max();
-            if (id.isPresent()) {
-                topLayer = new LayerImpl(id.getAsLong(), this.stagingRoot.resolve(Long.toString(id.getAsLong())), this.archiveProvider.createArchive(id.getAsLong()));
-            }
+            pathStream
+                .map(StagingDir::new)
+                .max(Comparator.comparingLong(StagingDir::getId))
+                .ifPresent(maxDir -> {
+                        topLayer = new LayerImpl(maxDir.getId(), maxDir, this.archiveProvider.createArchive(maxDir.getId()));
+                    }
+                );
         }
-    }
-
-    private String toValidLayerName(Path path) {
-        if (!path.toFile().isDirectory()) {
-            throw new IllegalStateException("Not a directory: " + path);
-        }
-        if (!path.getFileName().toString().matches("\\d{13,}")) {
-            // more than 13 digits in nov 2286, comma allows a longer future
-            throw new IllegalStateException("Not a timestamp: " + path);
-        }
-        return path.getFileName().toString();
     }
 
     @Override
@@ -88,8 +84,8 @@ public class LayerManagerImpl implements LayerManager {
         long id = System.currentTimeMillis();
         log.debug("Creating new top layer with id {}", id);
         var stagingDir = stagingRoot.resolve(Long.toString(id));
-        var newLayer = new LayerImpl(id, stagingDir, archiveProvider.createArchive(id));
         Files.createDirectories(stagingDir);
+        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id));
         topLayer = newLayer;
 
         if (oldTopLayer != null) {
@@ -110,8 +106,8 @@ public class LayerManagerImpl implements LayerManager {
     public List<Long> listLayerIds() throws IOException {
         try (var pathStream = Files.list(stagingRoot)) {
             var allIds = new HashSet<>(pathStream
-                .map(this::toValidLayerName)
-                .map(Long::valueOf)
+                .map(StagingDir::new)
+                .map(StagingDir::getId)
                 .toList());
             allIds.addAll(archiveProvider.listArchivedLayers());
             return allIds.stream().sorted().toList();
@@ -123,11 +119,14 @@ public class LayerManagerImpl implements LayerManager {
         if (topLayer != null && id == topLayer.getId()) {
             return topLayer;
         }
-        else if (stagingRoot.resolve(Long.toString(id)).toFile().exists() || archiveProvider.exists(id)) {
-            return new LayerImpl(id, stagingRoot.resolve(Long.toString(id)), archiveProvider.createArchive(id));
-        }
         else {
-            throw new IllegalArgumentException("No layer found with id " + id);
+            var stagingDir = new StagingDir(stagingRoot, id);
+            if (stagingDir.isStaged() || archiveProvider.exists(id)) {
+                return new LayerImpl(id, stagingDir, archiveProvider.createArchive(id));
+            }
+            else {
+                throw new IllegalArgumentException("No layer found with id " + id);
+            }
         }
     }
 }
