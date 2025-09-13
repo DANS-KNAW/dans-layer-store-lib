@@ -28,7 +28,7 @@ nav:
       - API: to-api.md
       - ⇒ Context: context.md
   - Development:
-      - Overview: dev.md
+      - Live tests: live.md
 plugins:
   - markdownextradata
   - search
