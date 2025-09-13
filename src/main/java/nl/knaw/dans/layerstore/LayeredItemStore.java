@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -48,6 +50,10 @@ public class LayeredItemStore implements ItemStore {
     private final LayerManager layerManager;
     private final DatabaseBackedContentManager databaseBackedContentManager;
     private final ItemsMatchDbConsistencyChecker itemsMatchDbConsistencyChecker;
+
+    @Getter
+    @Setter
+    private boolean allowReadingContentFromArchives = true;
 
     /**
      * Creates a new LayeredItemStore without a database-backed content manager.
@@ -171,6 +177,9 @@ public class LayeredItemStore implements ItemStore {
         }
         if (latestRecord.getContent() == null) {
             log.debug("Reading file {} from layer {}", path, latestRecord.getLayerId());
+            if (!allowReadingContentFromArchives && layerManager.getLayer(latestRecord.getLayerId()).isArchived()) {
+                throw new IOException("Reading from archived layer not allowed: " + latestRecord.getLayerId());
+            }
             return layerManager.getLayer(latestRecord.getLayerId()).readFile(path);
         }
         else {
