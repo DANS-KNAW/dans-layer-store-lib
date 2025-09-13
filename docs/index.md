@@ -1,10 +1,10 @@
-MANUAL
-======
+dans-layer-store-lib
+====================
 
 A library for hierarchical storage of files in a layered way.
 
-DESCRIPTION
------------
+Concepts
+--------
 
 ### Layer store
 
@@ -96,9 +96,6 @@ may also contain the entire content of the file. For which files the content is 
 very expensive in terms of storage space, so it is recommended to only store the content of files that are expected to be relatively small and need to be read
 often. 
 
-### JavaDocs
-
-More details can be found in the [JavaDocs]{:target=_blank:}.
 
 [OCFL]: https://ocfl.io/
 
@@ -106,30 +103,4 @@ More details can be found in the [JavaDocs]{:target=_blank:}.
 
 [dans-ocfl-java-extensions-lib]: https://github.com/DANS-KNAW/dans-ocfl-java-extensions-lib
 
-[JavaDocs]: api.md
 
-INSTALLATION
-------------
-
-To use this library in a Maven-based project:
-
-1. Include in your `pom.xml` a declaration for the DANS maven repository:
-
-        <repositories>
-            <!-- possibly other repository declarations here ... -->
-            <repository>
-                <id>DANS</id>
-                <releases>
-                    <enabled>true</enabled>
-                </releases>
-                <url>https://maven.dans.knaw.nl/releases/</url>
-            </repository>
-        </repositories>
-
-2. Include a dependency on this library.
-
-        <dependency>
-            <groupId>nl.knaw.dans.lib</groupId>
-            <artifactId>dans-layer-store-lib</artifactId>
-            <version>{version}</version> <!-- <=== FILL LIBRARY VERSION TO USE HERE -->
-        </dependency>

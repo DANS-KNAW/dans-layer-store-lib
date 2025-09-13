@@ -22,9 +22,13 @@ repo_name: DANS-KNAW/dans-layer-store-lib
 repo_url: https://github.com/dans-layer-store-lib
 
 nav:
-  - Manual: index.md
-  - JavaDocs: api.md
-
+  - Manual:
+      - DESCRIPTION: index.md
+      - INSTALLATION: installation.md
+      - API: to-api.md
+      - ⇒ Context: context.md
+  - Development:
+      - Overview: dev.md
 plugins:
   - markdownextradata
   - search
