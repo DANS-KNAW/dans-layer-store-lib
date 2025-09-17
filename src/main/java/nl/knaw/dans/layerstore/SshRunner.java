@@ -26,6 +26,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * A runner for the ssh command line tool, which executes commands on a remote host via SSH.
+ */
 public class SshRunner extends AbstractRunner {
     private final Path sshExecutable;
     private final String user;
@@ -33,10 +36,27 @@ public class SshRunner extends AbstractRunner {
     private final Path remoteBaseDir;
     private final int connectionTimeout; // seconds
 
+    /**
+     * Creates a new SshRunner.
+     *
+     * @param sshExecutable path to the ssh executable
+     * @param user username for the remote host
+     * @param host host name or IP address of the remote host
+     * @param remoteBaseDir base directory on the remote host where archives are stored
+     */
     public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir) {
         this(sshExecutable, user, host, remoteBaseDir, 10);
     }
 
+    /**
+     * Creates a new SshRunner.
+     *
+     * @param sshExecutable path to the ssh executable
+     * @param user username for the remote host
+     * @param host host name or IP address of the remote host
+     * @param remoteBaseDir base directory on the remote host where archives are stored
+     * @param connectionTimeout connection timeout in seconds
+     */
     public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir, int connectionTimeout) {
         this.sshExecutable = Path.of(checkExecutableForSecurity(sshExecutable));
         this.user = checkUserOrHostNameForSecurity(user);
@@ -45,6 +65,12 @@ public class SshRunner extends AbstractRunner {
         this.connectionTimeout = connectionTimeout;
     }
 
+    /**
+     * Checks if the given archive name exists on the remote host.
+     *
+     * @param archiveName the name of the archive to check
+     * @return true if the archive exists, false otherwise
+     */
     public boolean fileExists(String archiveName) {
         var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
             .addArgument("-o")
@@ -64,6 +90,11 @@ public class SshRunner extends AbstractRunner {
         }
     }
 
+    /**
+     * Lists the files in the remote base directory.
+     *
+     * @return a list of file names in the remote base directory
+     */
     public List<String> listFiles() {
         try {
             var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())

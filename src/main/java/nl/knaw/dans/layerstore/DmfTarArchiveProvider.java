@@ -20,6 +20,9 @@ import lombok.AllArgsConstructor;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * An {@link ArchiveProvider} that uses the dmftar command line tool to create and read DMF TAR archives.
+ */
 @AllArgsConstructor
 public class DmfTarArchiveProvider implements ArchiveProvider {
     private final DmfTarRunner dmfTarRunner;

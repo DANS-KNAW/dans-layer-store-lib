@@ -21,6 +21,9 @@ import org.apache.commons.collections4.IteratorUtils;
 
 import java.io.IOException;
 
+/**
+ * Checks that the items found on storage are the same as the items found in the database for the layer.
+ */
 @Slf4j
 @AllArgsConstructor
 public class ItemsMatchDbConsistencyChecker implements LayerConsistencyChecker {

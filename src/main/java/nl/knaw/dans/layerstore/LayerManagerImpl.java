@@ -27,6 +27,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * Default implementation of the {@link LayerManager} interface.
+ */
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
     /**

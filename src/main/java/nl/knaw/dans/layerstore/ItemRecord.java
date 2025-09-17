@@ -28,7 +28,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 
 /**
- * A record in the database that represents a file or directory in a layer.
+ * A record in the database that represents a file or directory (i.e., {@link Item}) in a layer.
  */
 @Data
 @NoArgsConstructor

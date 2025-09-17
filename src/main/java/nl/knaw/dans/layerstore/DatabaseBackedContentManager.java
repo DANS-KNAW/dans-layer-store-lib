@@ -16,7 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 /**
- * Controls selecting and processing content for storage in the database.
+ * Controls selecting and pre- and post-processing content for storage in the database.
  */
 public interface DatabaseBackedContentManager {
 

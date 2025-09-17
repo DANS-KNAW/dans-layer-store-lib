@@ -22,8 +22,8 @@ import java.util.List;
 
 /**
  * <p>
- * An ItemStore stores "items", which are files and directories. The name "item" was chosen to avoid name clashes with the java.io.File class. This library implements a layered way of storing items,
- * but other implementations are conceivable. The main reason for defining this interface in more general terms is to hide the details of the underlying storage mechanism from the client code.
+ * An ItemStore stores "{@link Item}s", which are files and directories. The name "Item" was chosen to avoid name clashes with the java.io.File class. This library implements a layered way of storing
+ * items, but other implementations are conceivable. The main reason for defining this interface in more general terms is to hide the details of the underlying storage mechanism from the client code.
  * </p>
  * <p>
  * An ItemStore has a storage root, which is implementation-dependent.
@@ -35,7 +35,7 @@ public interface ItemStore {
      *
      * @param directoryPath the directory path relative to the storage root
      * @return the items in the directory
-     * @throws java.nio.file.NoSuchFileException if the directory does not exist in any of the layers
+     * @throws java.nio.file.NoSuchFileException   if the directory does not exist in any of the layers
      * @throws java.nio.file.NotDirectoryException if the path exists but is not a directory
      */
     List<Item> listDirectory(String directoryPath) throws IOException;
@@ -45,7 +45,7 @@ public interface ItemStore {
      *
      * @param directoryPath the directory path relative to the storage root
      * @return the items in the directory and its subdirectories
-     * @throws java.nio.file.NoSuchFileException if the directory does not exist in any of the layers
+     * @throws java.nio.file.NoSuchFileException   if the directory does not exist in any of the layers
      * @throws java.nio.file.NotDirectoryException if the path exists but is not a directory
      */
     List<Item> listRecursive(String directoryPath) throws IOException;

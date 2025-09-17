@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Provides access to the database that contains a record for every file and directory stored in the layered storage. Contains methods to add, delete and find information about these files and
- * directories.
+ * Provides access to the database that contains an {@link ItemRecord} for every file and directory (i.e., {@link Item}) stored in the layered storage. Contains methods to add, delete and find
+ * information about these files and directories.
  */
 public interface LayerDatabase {
 

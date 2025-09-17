@@ -21,5 +21,11 @@ package nl.knaw.dans.layerstore;
  * @param <T> the type of the object to filter
  */
 public interface Filter<T> {
+    /**
+     * Returns whether the given object should be accepted.
+     *
+     * @param t the object to filter
+     * @return whether the object should be accepted
+     */
     boolean accept(T t);
 }

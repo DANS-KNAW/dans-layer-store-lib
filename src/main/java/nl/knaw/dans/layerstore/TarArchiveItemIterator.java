@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 
+/**
+ * An iterator that iterates over the {@link Item}s in a tar archive.
+ */
 public class TarArchiveItemIterator implements Iterator<Item> {
     private final TarFile tarFile;
     private final Iterator<TarArchiveEntry> entries;

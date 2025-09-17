@@ -16,7 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 /**
- * A {@link LayerArchiver} that archives layers directly, not performing any consistency checks nor scheduling archiving.
+ * A {@link LayerArchiver} that archives layers directly (synchronously), not performing any consistency checks.
  */
 public class DirectLayerArchiver implements LayerArchiver {
 

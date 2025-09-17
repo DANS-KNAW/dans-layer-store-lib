@@ -18,6 +18,9 @@ package nl.knaw.dans.layerstore;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * An iterator that traverses the entries of a DMF TAR archive and yields {@link Item}s representing files and directories.
+ */
 public class DmfTarArchiveItemIterator implements Iterator<Item> {
     private final Iterator<String> entries;
 

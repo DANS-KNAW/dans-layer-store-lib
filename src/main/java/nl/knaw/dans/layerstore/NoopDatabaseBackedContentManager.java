@@ -15,6 +15,9 @@
  */
 package nl.knaw.dans.layerstore;
 
+/**
+ * A {@link DatabaseBackedContentManager} that does nothing.
+ */
 public class NoopDatabaseBackedContentManager implements DatabaseBackedContentManager {
     @Override
     public boolean test(String path) {

@@ -37,6 +37,9 @@ import java.util.stream.Stream;
 
 import static java.text.MessageFormat.format;
 
+/**
+ * Implementation of {@link Archive} for TAR archives.
+ */
 @Slf4j
 public class TarArchive implements Archive {
     @NonNull

@@ -22,6 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * An {@link ArchiveProvider} that creates and reads TAR archives.
+ */
 @AllArgsConstructor
 public class TarArchiveProvider implements ArchiveProvider {
     private final Path archiveRoot;

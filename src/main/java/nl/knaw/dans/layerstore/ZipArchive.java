@@ -37,6 +37,9 @@ import java.util.stream.Stream;
 
 import static java.text.MessageFormat.format;
 
+/**
+ * Implementation of {@link Archive} for ZIP archives.
+ */
 public class ZipArchive implements Archive {
     @NonNull
     private final Path zipFile;

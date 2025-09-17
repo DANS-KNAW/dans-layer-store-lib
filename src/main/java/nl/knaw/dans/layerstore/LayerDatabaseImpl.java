@@ -35,6 +35,9 @@ import java.util.stream.Stream;
 
 import static nl.knaw.dans.layerstore.Item.Type;
 
+/**
+ * An implementation of {@link LayerDatabase} that uses a {@link PersistenceProvider} to store {@link ItemRecord}s.
+ */
 @AllArgsConstructor
 @Slf4j
 public class LayerDatabaseImpl implements LayerDatabase {

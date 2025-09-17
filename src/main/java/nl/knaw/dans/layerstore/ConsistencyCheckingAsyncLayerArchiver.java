@@ -22,7 +22,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * An {@link LayerArchiver} that archives layers in a separate thread. It also checks that the items found on storage are the same as the items found in the database for the layer.
+ * A {@link LayerArchiver} that archives layers in a separate thread. It also checks that the items found on storage are the same as the items found in the database for the layer.
  */
 @Slf4j
 public class ConsistencyCheckingAsyncLayerArchiver implements LayerArchiver {

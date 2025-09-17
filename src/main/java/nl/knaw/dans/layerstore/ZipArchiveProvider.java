@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * An {@link ArchiveProvider} that creates and reads ZIP archives.
+ */
 @AllArgsConstructor
 public class ZipArchiveProvider implements ArchiveProvider {
     private final Path archiveRoot;

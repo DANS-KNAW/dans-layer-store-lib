@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 
+/**
+ * An iterator that iterates over the {@link Item}s in a zip archive.
+ */
 public class ZipArchiveItemIterator implements Iterator<Item> {
     private final Iterator<ZipArchiveEntry> entries;
     /**
