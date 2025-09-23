@@ -21,7 +21,7 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>1.9.0</version>
+        <version>1.9.1-SNAPSHOT</version>
         <relativePath />
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
@@ -33,10 +33,6 @@
         <tag>HEAD</tag>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
     </scm>
-    <properties>
-        <!-- Todo: move to parent -->
-        <dans-java-utils.version>2.3.0</dans-java-utils.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>nl.knaw.dans</groupId>
@@ -49,22 +45,18 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.18.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.26.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-exec</artifactId>
-            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
