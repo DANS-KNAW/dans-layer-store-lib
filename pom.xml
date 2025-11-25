@@ -21,7 +21,7 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>1.9.1-SNAPSHOT</version>
+        <version>1.10.0</version>
         <relativePath />
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
