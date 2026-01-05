@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>DESCRIPTION - dans-layer-store-lib</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "DESCRIPTION";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> dans-layer-store-lib
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Manual</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">DESCRIPTION</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#layer-store">Layer store</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#the-itemstore-interface">The ItemStore interface</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#layer-database">Layer database</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#layer-status">Layer status</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="installation/">INSTALLATION</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="to-api/">API</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="context/">⇒ Context</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="live/">Live tests</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">dans-layer-store-lib</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Manual</li>
+      <li class="breadcrumb-item active">DESCRIPTION</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/dans-layer-store-lib/edit/master/docs/index.md">Edit on DANS-KNAW/dans-layer-store-lib</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="dans-layer-store-lib">dans-layer-store-lib<a class="headerlink" href="#dans-layer-store-lib" title="Permanent link">&para;</a></h1>
+<p>A library for hierarchical storage of files in a layered way.</p>
+<h2 id="layer-store">Layer store<a class="headerlink" href="#layer-store" title="Permanent link">&para;</a></h2>
+<p>A layer store is a hierarchical storage of files in a layered way. A layer contains a subset of the files and folders in the store. A layer is identified by a
+unique Layer ID. This ID is a Unix timestamp in milliseconds. The layer IDs determine the order in which the layers are stacked. The contents of a layer store
+can be transformed to a regular directory structure by stacking the layers in the order of their IDs. The layer with the highest ID is the top layer. Files in
+newer layers override files with the same path in older layers.</p>
+<p>An example of a layer store with three layers is shown below.</p>
+<pre><code class="language-text">
+     +-------------------------------------------------------+    
+     |  Layer ID: 1706612162                                 |        
+     |  .                                                    |        
+     |  └── otherpath                                        |        
+     |      └── to                                           |        
+     |          └── otherdir                                 |        
+     |              └── file3.txt                            |        
+     +-------------------------------------------------------+        
+
+     +-------------------------------------------------------+        
+     |  Layer ID: 1705633401                                 |        
+     |  .                                                    |        
+     |  └── path                                             |        
+     |      └── to                                           |        
+     |          └── dir1                                     |        
+     |              ├── file1.txt                            |        
+     |              └── file2.txt                            |        
+     +-------------------------------------------------------+        
+
+     +-------------------------------------------------------+        
+     |  Layer ID: 1701118823                                 |        
+     |  .                                                    |        
+     |  └── path                                             |        
+     |      └── to                                           |        
+     |          └── dir1                                     |        
+     |              └── file1.txt                            |        
+     +-------------------------------------------------------+        
+</code></pre>
+<p>Transforming this layer store to a regular directory structure results in the following directory structure:</p>
+<pre><code class="language-text">    +--------------------------------------------------------+         
+    |  ├── otherpath                                         |         
+    |  │   └── to                                            |         
+    |  │       └── otherdir                                  |         
+    |  │           └── file3.txt                             |         
+    |  └── path                                              |         
+    |      └── to                                            |         
+    |          └── dir1                                      |         
+    |              ├── file1.txt                             |         
+    |              └── file2.txt                             |         
+    +--------------------------------------------------------+         
+</code></pre>
+<p>Note that:</p>
+<ul>
+<li><code>file1.txt</code> in layer <code>1705633401</code> overwrites <code>file1.txt</code> in layer <code>1701118823</code>.</li>
+<li>Adding files is done by adding them to the top layer.</li>
+<li>Removing files entails removing them from all layers (this is not shown in the example).</li>
+</ul>
+<p>Layers are envisioned to be implemented as a set of archive files. A simple way to picture the transformation from layer store to directory structure is to
+imagine the archive files being extracted to one temporary directory, one after the other, in the order of their layer ID.</p>
+<h2 id="the-itemstore-interface">The <code>ItemStore</code> interface<a class="headerlink" href="#the-itemstore-interface" title="Permanent link">&para;</a></h2>
+<p>The <code>dans-layer-store-lib</code> defines and implements an <code>ItemStore</code> interface. An <code>ItemStore</code> models basically a normal file/folder hierarchy. It provides methods
+for adding, removing and retrieving items. In the scenario described above, it corresponds to the directory structure that results from transforming the layer
+store to a regular directory structure.</p>
+<p>The term <strong>item</strong> instead of file or folder is used to clearly distinguish between the model and the implementation, especially because the implementation will
+involve "physical" files and folders.</p>
+<p>Although <code>ItemStore</code> does not expose the concept of a layer, the purpose of this library is to provide a layered storage. The <code>ItemStore</code> interface is intended
+to hide the layering from the user. It is not really intended to be implemented in other ways, although that is possible. The interface is geared towards
+providing exactly the features needed to implement <a href="https://github.com/OCFL/ocfl-java">ocfl-java</a>'s <code>Storage</code> interface without depending on any <a href="https://ocfl.io/">OCFL</a> specific concepts. The two are connected
+through the <a href="https://github.com/DANS-KNAW/dans-ocfl-java-extensions-lib">dans-ocfl-java-extensions-lib</a>.</p>
+<h2 id="layer-database">Layer database<a class="headerlink" href="#layer-database" title="Permanent link">&para;</a></h2>
+<p>The layer store is backed by a database. The purpose is to make operations that would otherwise be slow much faster. For example, listing the contents of a
+folder in a layer store with many layers would require reading all layers. Depending on the type of archive, it could also mean reading all archive files. If
+layer archives were stored on a very slow medium, such as tape, the problem would be compounded.</p>
+<p>To solve this problem the layer database stores a record for each item in each layer. The record contains the item's path, and type. If it is a file the record
+may also contain the entire content of the file. For which files the content is stored is configurable. Obviously, storing the content of all files would be
+very expensive in terms of storage space, so it is recommended to only store the content of files that are expected to be relatively small and need to be read
+often.</p>
+<h2 id="layer-status">Layer status<a class="headerlink" href="#layer-status" title="Permanent link">&para;</a></h2>
+<p>A layer can be in one of the following states. The state is composed of the following properties:</p>
+<ul>
+<li>open/closed — open means that the layer is still being written to. closed means that write operations are no longer allowed.</li>
+<li>staged — this means the layer is present in the staging area; if it is also closed, the name of the layer will end with <code>.closed</code>.</li>
+<li>archived — an archive has been created for the layer.</li>
+</ul>
+<p>The following table shows the relationship between the states. It follows the normal lifecycle of a layer.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">open/closed</th>
+<th style="text-align: left;">archived</th>
+<th style="text-align: left;">staged?</th>
+<th style="text-align: left;">when?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">open</td>
+<td style="text-align: left;">not archived</td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">initial state of a top layer</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">closed</td>
+<td style="text-align: left;">not archived</td>
+<td style="text-align: left;">yes (with <code>.closed</code> suffix)</td>
+<td style="text-align: left;">just before / during archiving</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">closed</td>
+<td style="text-align: left;">archived</td>
+<td style="text-align: left;">no</td>
+<td style="text-align: left;">archiving succeeded</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">open</td>
+<td style="text-align: left;">archived</td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">reopened</td>
+</tr>
+<tr>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">closed</td>
+<td style="text-align: left;">archived</td>
+<td style="text-align: left;">yes (with <code>.closed</code> suffix)</td>
+<td style="text-align: left;">closing a reopened layer</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="installation/" class="btn btn-neutral float-right" title="INSTALLATION">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/dans-layer-store-lib" class="fa fa-code-fork" style="color: #fcfcfc"> DANS-KNAW/dans-layer-store-lib</a>
+        </span>
+    
+    
+    
+      <span><a href="installation/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
