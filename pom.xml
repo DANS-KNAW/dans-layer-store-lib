@@ -29,6 +29,9 @@
     <name>DANS Layer Store Library</name>
     <description>Library for storing a file/folder hierarchy in layers</description>
     <inceptionYear>2024</inceptionYear>
+    <properties>
+        <dans-java-utils.version>2.10.1</dans-java-utils.version>
+    </properties>
     <scm>
         <tag>HEAD</tag>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
