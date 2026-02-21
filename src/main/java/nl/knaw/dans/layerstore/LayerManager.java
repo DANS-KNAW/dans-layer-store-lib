@@ -43,6 +43,13 @@ public interface LayerManager {
     Layer getLayer(long id);
 
     /**
+     * Request for the archiving of the given layer. The operation may be performed asynchronously, so the caller should check the layer's status to determine when the archiving is complete.
+     *
+     * @param layer the layer to archive
+     */
+    void archive(Layer layer);
+
+    /**
      * Lists all layer IDs that are currently managed.
      *
      * @return a list of layer IDs

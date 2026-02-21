@@ -102,7 +102,8 @@ public class LayerManagerImpl implements LayerManager {
         return newLayer;
     }
 
-    private void archive(Layer layer) {
+    @Override
+    public void archive(Layer layer) {
         layerArchiver.archive(layer);
     }
 

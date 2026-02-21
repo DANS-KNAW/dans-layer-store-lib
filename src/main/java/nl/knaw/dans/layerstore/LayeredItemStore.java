@@ -96,6 +96,17 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
+     * Requests the archiving of the layer with the specified id. The operation may be performed asynchronously, so the caller should check the layer's status to determine when the archiving is
+     * complete.
+     *
+     * @param layerId the id of the layer to archive
+     * @throws IllegalArgumentException if no layer with the specified id exists
+     */
+    public void archiveLayer(long layerId) {
+        layerManager.archive(layerManager.getLayer(layerId));
+    }
+
+    /**
      * Gets a layer by id.
      *
      * @param id the layer id
