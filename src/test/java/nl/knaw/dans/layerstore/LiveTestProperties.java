@@ -29,6 +29,7 @@ public class LiveTestProperties {
     String user;
     String host;
     Path inputDir;
+    Path outputDir;
 
     public LiveTestProperties() {
         Properties properties = new Properties();
@@ -43,6 +44,7 @@ public class LiveTestProperties {
         user = properties.getProperty("dmftar.user");
         host = properties.getProperty("dmftar.host");
         inputDir = getPath(properties, "input-dir");
+        outputDir = getPath(properties, "output-dir");
     }
 
     private static Path getPath(Properties properties, String key) {

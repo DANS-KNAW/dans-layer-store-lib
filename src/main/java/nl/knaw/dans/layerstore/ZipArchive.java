@@ -90,7 +90,9 @@ public class ZipArchive implements Archive {
                     }
                     else {
                         Files.createDirectories(filePath.getParent());
-                        IOUtils.copy(zip.getInputStream(entry), Files.newOutputStream(filePath));
+                        try (var outputStream = Files.newOutputStream(filePath)) {
+                            IOUtils.copy(zip.getInputStream(entry), outputStream);
+                        }
                     }
                 }
             }

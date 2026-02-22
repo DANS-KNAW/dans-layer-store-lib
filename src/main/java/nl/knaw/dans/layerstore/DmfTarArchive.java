@@ -48,7 +48,7 @@ public class DmfTarArchive implements Archive {
 
     @Override
     public void unarchiveTo(Path stagingDir) {
-        // TODO: implement
+        dmfTarRunner.untarArchive(path, stagingDir);
     }
 
     @Override

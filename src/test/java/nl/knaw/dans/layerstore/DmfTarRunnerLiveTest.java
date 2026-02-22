@@ -24,7 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -49,13 +51,21 @@ public class DmfTarRunnerLiveTest {
     private DmfTarRunner dmfTarRunner;
 
     private Path inputDir = Path.of("src/test/resources/live-test-input-dir");
+    private Path outputDir = Path.of("target/live-test-output-dir");
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws IOException {
         var p = new LiveTestProperties();
         dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), p.getUser(), p.getHost(), p.getRemoteBaseDir());
         if (p.getInputDir() != null) {
             inputDir = p.getInputDir();
+        }
+        if (p.getOutputDir() != null) {
+            outputDir = p.getOutputDir();
+        }
+        // Delete outputDir if it exists
+        if (Files.exists(outputDir)) {
+            FileUtils.deleteDirectory(outputDir.toFile());
         }
     }
 
@@ -92,5 +102,21 @@ public class DmfTarRunnerLiveTest {
             log.error("Caught exception", e);
             throw e;
         }
+    }
+
+    @Test
+    @EnabledIf("nl.knaw.dans.layerstore.TestConditions#dmftarLiveTestConfigured")
+    public void createAndUnpackTarRoundTrip() throws Exception {
+        var dmfTarFile = System.currentTimeMillis() + ".dmftar";
+        log.debug("Creating tar file: {} from {}", dmfTarFile, inputDir);
+        dmfTarRunner.tarDirectory(inputDir, dmfTarFile);
+        log.debug("Created tar file: {}", dmfTarFile);
+        Files.createDirectory(outputDir);
+        log.debug("Created directory: {}", outputDir);
+        dmfTarRunner.untarArchive(dmfTarFile, outputDir);
+        log.debug("Unpacked tar file to: {}", outputDir);
+        var actual = FileUtils.readFileToString(new File(outputDir.toFile(), "text/loro.txt"), StandardCharsets.UTF_8);
+        var expected = FileUtils.readFileToString(new File("src/test/resources/live-test-input-dir/text/loro.txt"), StandardCharsets.UTF_8);
+        assertThat(actual).isEqualTo(expected);
     }
 }

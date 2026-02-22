@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ProcessInputStream;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.BufferedReader;
@@ -88,13 +89,40 @@ public class DmfTarRunner extends AbstractRunner {
     }
 
     /**
+     * Unpack an archive to the specified directory.
+     *
+     * @param archiveName the name of the archive to unpack
+     * @param directory   the directory to unpack the archive into
+     */
+    public void untarArchive(String archiveName, Path directory) {
+        var commandLine = CommandLine.parse(dmfTarExecutable.toAbsolutePath() + " -xf " + getRemotePath(archiveName) + " --options=\"--directory=" + directory.toAbsolutePath() + "\"");
+        var executor = DefaultExecutor.builder()
+            .setWorkingDirectory(directory.toAbsolutePath().toFile())
+            .get();
+        try {
+            executor.execute(commandLine);
+            // Remove any directories starting with dmtar-cache. (and their contents) in the root of the target directory
+            var cacheDirs = directory.toFile().listFiles((file) -> file.isDirectory() && file.getName().startsWith("dmftar-cache."));
+            if (cacheDirs != null) {
+                for (var cacheDir : cacheDirs) {
+                    log.debug("Removing dmftar cache directory: {}", cacheDir.getAbsolutePath());
+                    FileUtils.deleteDirectory(cacheDir);
+                }
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to unpack tar archive: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Reads a file from a DMF TAR archive on the remote host.
      *
      * @param archiveName the name of the archive to read from
      * @param fileName    the name of the file to read from the archive
      * @return an InputStream for reading the file
      */
-    public InputStream readFile(String archiveName, String fileName) throws IOException{
+    public InputStream readFile(String archiveName, String fileName) throws IOException {
         if (fileName.startsWith("./")) {
             throw new IllegalArgumentException("File name cannot start with './': " + fileName);
         }

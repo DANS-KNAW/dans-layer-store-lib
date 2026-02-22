@@ -91,7 +91,9 @@ public class TarArchive implements Archive {
                     }
                     else {
                         Files.createDirectories(filePath.getParent());
-                        IOUtils.copy(tar.getInputStream(entry), Files.newOutputStream(filePath));
+                        try (var outputStream = Files.newOutputStream(filePath)) {
+                            IOUtils.copy(tar.getInputStream(entry), outputStream);
+                        }
                     }
                 }
             }
