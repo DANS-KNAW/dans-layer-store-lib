@@ -22,7 +22,7 @@ import java.nio.file.Files;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class ArchiveRootValidationTest extends AbstractTestWithTestDir {
+public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void zip_archive_provider_should_throw_on_illegal_files() throws IOException {
@@ -93,5 +93,31 @@ public class ArchiveRootValidationTest extends AbstractTestWithTestDir {
         var provider = new TarArchiveProvider(archiveRoot);
 
         provider.validateRoot();
+    }
+
+    @Test
+    public void zip_archive_provider_should_throw_on_closed_extension() throws IOException {
+        Files.createDirectories(archiveRoot);
+        Files.createFile(archiveRoot.resolve("1234567890123.zip.closed"));
+        var provider = new ZipArchiveProvider(archiveRoot);
+
+        assertThatThrownBy(provider::validateRoot)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Archive root")
+            .hasMessageContaining("contains illegal files")
+            .hasMessageContaining("1234567890123.zip.closed");
+    }
+
+    @Test
+    public void tar_archive_provider_should_throw_on_closed_extension() throws IOException {
+        Files.createDirectories(archiveRoot);
+        Files.createFile(archiveRoot.resolve("1234567890123.tar.closed"));
+        var provider = new TarArchiveProvider(archiveRoot);
+
+        assertThatThrownBy(provider::validateRoot)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Archive root")
+            .hasMessageContaining("contains illegal files")
+            .hasMessageContaining("1234567890123.tar.closed");
     }
 }

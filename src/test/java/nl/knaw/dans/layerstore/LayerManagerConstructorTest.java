@@ -94,4 +94,16 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
             .hasMessageContaining("contains illegal files")
             .hasMessageContaining(invalidDirBetweenLayerDirs);
     }
+
+    @Test
+    public void should_pass_on_staging_directory_with_closed_extension() throws IOException {
+        var existingLayerId = 1234567890123L;
+        var closedLayerDir = existingLayerId + ".closed";
+        Files.createDirectories(stagingRoot.resolve(closedLayerDir));
+
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        assertThat(layerManager.getTopLayer()).isNotNull();
+        assertThat(layerManager.getTopLayer().getId()).isEqualTo(existingLayerId);
+        assertThat(layerManager.getTopLayer().isOpen()).isFalse();
+    }
 }
