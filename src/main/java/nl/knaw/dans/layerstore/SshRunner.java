@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.Getter;
 import nl.knaw.dans.lib.util.ProcessInputStream;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -32,7 +33,9 @@ import java.util.List;
 public class SshRunner extends AbstractRunner {
     private final Path sshExecutable;
     private final String user;
+    @Getter
     private final String host;
+    @Getter
     private final Path remoteBaseDir;
     private final int connectionTimeout; // seconds
 
@@ -142,11 +145,4 @@ public class SshRunner extends AbstractRunner {
         }
     }
 
-    public String getHost() {
-        return host;
-    }
-
-    public Path getRemoteBaseDir() {
-        return remoteBaseDir;
-    }
 }
