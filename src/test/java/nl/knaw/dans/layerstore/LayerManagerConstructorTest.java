@@ -53,8 +53,10 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         Files.createFile(stagingRoot.resolve(invalidFileBetweenLayerDirs));
 
         assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Not a directory: target/test/LayerManagerConstructorTest/staging_root/" + invalidFileBetweenLayerDirs);
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Staging root")
+            .hasMessageContaining("contains illegal files")
+            .hasMessageContaining(invalidFileBetweenLayerDirs);
     }
 
     @Test
@@ -63,8 +65,10 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         Files.createDirectories(stagingRoot.resolve(existingLayerDir));
 
         assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Invalid layer name: " + existingLayerDir);
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Staging root")
+            .hasMessageContaining("contains illegal files")
+            .hasMessageContaining(existingLayerDir);
     }
 
     @Test
@@ -73,8 +77,10 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         Files.createDirectories(stagingRoot.resolve(invalidDirBetweenLayerDirs));
 
         assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Invalid layer name: " + invalidDirBetweenLayerDirs);
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Staging root")
+            .hasMessageContaining("contains illegal files")
+            .hasMessageContaining(invalidDirBetweenLayerDirs);
     }
 
     @Test
@@ -83,7 +89,9 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         Files.createDirectories(stagingRoot.resolve(invalidDirBetweenLayerDirs));
 
         assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Invalid layer name: " + invalidDirBetweenLayerDirs);
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Staging root")
+            .hasMessageContaining("contains illegal files")
+            .hasMessageContaining(invalidDirBetweenLayerDirs);
     }
 }

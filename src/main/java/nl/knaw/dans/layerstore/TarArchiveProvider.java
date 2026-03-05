@@ -40,7 +40,7 @@ public class TarArchiveProvider implements ArchiveProvider {
     }
 
     @Override
-    public List<Long> listArchivedLayers() throws IOException {
+    public List<Long> listLayerIds() throws IOException {
         try (var stream = Files.list(archiveRoot)) {
             return stream
                 .map(Path::getFileName)
@@ -49,6 +49,28 @@ public class TarArchiveProvider implements ArchiveProvider {
                 .map(name -> name.substring(0, name.length() - ".tar".length()))
                 .map(Long::valueOf)
                 .toList();
+        }
+    }
+
+    @Override
+    public void validateRoot() throws IOException {
+        if (Files.notExists(archiveRoot)) {
+            Files.createDirectories(archiveRoot);
+        }
+        try (var stream = Files.list(archiveRoot)) {
+            var illegalFiles = stream
+                .filter(path -> {
+                    var name = path.getFileName().toString();
+                    return !Files.isRegularFile(path) ||
+                        !name.endsWith(".tar") ||
+                        !name.substring(0, name.length() - ".tar".length()).matches("^\\d{13,}$");
+                })
+                .map(Path::toString)
+                .toList();
+
+            if (!illegalFiles.isEmpty()) {
+                throw new IllegalStateException(String.format("Archive root '%s' contains illegal files: %s", archiveRoot, String.join(", ", illegalFiles)));
+            }
         }
     }
 }

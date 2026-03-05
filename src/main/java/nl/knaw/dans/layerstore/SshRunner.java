@@ -96,6 +96,16 @@ public class SshRunner extends AbstractRunner {
      * @return a list of file names in the remote base directory
      */
     public List<String> listFiles() {
+        return listFiles("");
+    }
+
+    /**
+     * Lists the files in the remote base directory with the given flags.
+     *
+     * @param flags flags for the ls command
+     * @return a list of lines from the ls command
+     */
+    public List<String> listFiles(String flags) {
         try {
             var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
                 .addArgument("-o")
@@ -103,7 +113,7 @@ public class SshRunner extends AbstractRunner {
                 .addArgument("-o")
                 .addArgument("ConnectTimeout=" + connectionTimeout)
                 .addArgument(user + "@" + host)
-                .addArgument("ls -1", false)
+                .addArgument("ls -1 " + flags, false)
                 .addArgument(remoteBaseDir.toString());
             try (var in = ProcessInputStream.start(cmdLine);
                 var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
@@ -113,5 +123,13 @@ public class SshRunner extends AbstractRunner {
         catch (IOException e) {
             throw new RuntimeException("Failed to list files in " + remoteBaseDir + " on " + host + ": " + e.getMessage(), e);
         }
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public Path getRemoteBaseDir() {
+        return remoteBaseDir;
     }
 }

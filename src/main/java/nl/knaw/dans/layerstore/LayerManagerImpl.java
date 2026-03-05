@@ -62,6 +62,8 @@ public class LayerManagerImpl implements LayerManager {
         if (Files.notExists(this.stagingRoot)) {
             Files.createDirectories(this.stagingRoot);
         }
+        validateStagingRoot();
+        this.archiveProvider.validateRoot();
         try (var pathStream = Files.list(this.stagingRoot)) {
             pathStream
                 .map(StagingDir::new)
@@ -113,7 +115,7 @@ public class LayerManagerImpl implements LayerManager {
                 .map(StagingDir::new)
                 .map(StagingDir::getId)
                 .toList());
-            allIds.addAll(archiveProvider.listArchivedLayers());
+            allIds.addAll(archiveProvider.listLayerIds());
             return allIds.stream().sorted().toList();
         }
     }
@@ -130,6 +132,19 @@ public class LayerManagerImpl implements LayerManager {
             }
             else {
                 throw new IllegalArgumentException("No layer found with id " + id);
+            }
+        }
+    }
+
+    private void validateStagingRoot() throws IOException {
+        try (var pathStream = Files.list(stagingRoot)) {
+            var illegalFiles = pathStream
+                .filter(path -> !Files.isDirectory(path) || !validLayerNamePattern.matcher(path.getFileName().toString()).matches())
+                .map(Path::toString)
+                .toList();
+
+            if (!illegalFiles.isEmpty()) {
+                throw new IllegalStateException(String.format("Staging root '%s' contains illegal files: %s", stagingRoot, String.join(", ", illegalFiles)));
             }
         }
     }
