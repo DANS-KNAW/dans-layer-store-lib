@@ -125,6 +125,23 @@ public class SshRunner extends AbstractRunner {
         }
     }
 
+    public void runCommand(String command) {
+        var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
+            .addArgument("-o")
+            .addArgument("BatchMode=yes")
+            .addArgument("-o")
+            .addArgument("ConnectTimeout=" + connectionTimeout)
+            .addArgument(user + "@" + host)
+            .addArgument(command, false);
+        var executor = DefaultExecutor.builder().get();
+        try {
+            executor.execute(cmdLine);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to execute command '" + command + "' on " + host, e);
+        }
+    }
+
     public String getHost() {
         return host;
     }
