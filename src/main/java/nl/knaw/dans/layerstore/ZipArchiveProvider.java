@@ -39,7 +39,7 @@ public class ZipArchiveProvider implements ArchiveProvider {
     }
 
     @Override
-    public List<Long> listArchivedLayers() throws IOException {
+    public List<Long> listLayerIds() throws IOException {
         try (var stream = java.nio.file.Files.list(archiveRoot)) {
             return stream
                 .map(Path::getFileName)
@@ -48,6 +48,28 @@ public class ZipArchiveProvider implements ArchiveProvider {
                 .map(name -> name.substring(0, name.length() - ".zip".length()))
                 .map(Long::valueOf)
                 .toList();
+        }
+    }
+
+    @Override
+    public void validateRoot() throws IOException {
+        if (java.nio.file.Files.notExists(archiveRoot)) {
+            java.nio.file.Files.createDirectories(archiveRoot);
+        }
+        try (var stream = java.nio.file.Files.list(archiveRoot)) {
+            var illegalFiles = stream
+                .filter(path -> {
+                    var name = path.getFileName().toString();
+                    return !java.nio.file.Files.isRegularFile(path) ||
+                        !name.endsWith(".zip") ||
+                        !name.substring(0, name.length() - ".zip".length()).matches("^\\d{13,}$");
+                })
+                .map(Path::toString)
+                .toList();
+
+            if (!illegalFiles.isEmpty()) {
+                throw new IllegalStateException(String.format("Archive root '%s' contains illegal files: %s", archiveRoot, String.join(", ", illegalFiles)));
+            }
         }
     }
 }

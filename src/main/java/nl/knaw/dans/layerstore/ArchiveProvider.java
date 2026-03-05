@@ -46,5 +46,12 @@ public interface ArchiveProvider {
      *
      * @return a list of layer IDs for which archives exist
      */
-    List<Long> listArchivedLayers() throws IOException;
+    List<Long> listLayerIds() throws IOException;
+
+    /**
+     * Verifies that the archive root contains only valid archives.
+     *
+     * @throws RuntimeException if illegal files are found
+     */
+    void validateRoot() throws IOException;
 }

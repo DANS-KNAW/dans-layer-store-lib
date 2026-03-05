@@ -44,6 +44,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  * <ul>
  *     <li>the remote base directory exists</li>
  *     <li>your public key is in the authorized_keys file of the user on the host</li>
+ *     <li>dmftar-volume-changer must be on your PATH</li>
  * </ul>
  */
 @Slf4j

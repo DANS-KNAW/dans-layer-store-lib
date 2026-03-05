@@ -52,6 +52,11 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
             public boolean fileExists(String archiveName) {
                 return exists;
             }
+
+            @Override
+            public java.util.List<String> listFiles(String flags) {
+                return java.util.Collections.emptyList();
+            }
         };
     }
 

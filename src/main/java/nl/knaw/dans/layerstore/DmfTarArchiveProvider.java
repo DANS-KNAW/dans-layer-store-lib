@@ -39,12 +39,31 @@ public class DmfTarArchiveProvider implements ArchiveProvider {
     }
 
     @Override
-    public List<Long> listArchivedLayers() throws IOException {
+    public List<Long> listLayerIds() throws IOException {
         return sshRunner.listFiles().stream()
             .filter(name -> name.endsWith(".dmftar"))
             .map(name -> name.substring(0, name.length() - ".dmftar".length()))
             .map(Long::valueOf)
             .toList();
+    }
+
+    @Override
+    public void validateRoot() throws IOException {
+        var illegalFiles = sshRunner.listFiles("-F").stream()
+            .filter(name -> {
+                // ls -F appends / to directories. We're looking for things that aren't directories or don't match our pattern.
+                if (!name.endsWith("/")) {
+                    return true;
+                }
+                var dirName = name.substring(0, name.length() - 1);
+                return !dirName.endsWith(".dmftar") ||
+                    !dirName.substring(0, dirName.length() - ".dmftar".length()).matches("^\\d{13,}$");
+            })
+            .toList();
+
+        if (!illegalFiles.isEmpty()) {
+            throw new IllegalStateException(String.format("Archive root '%s' on '%s' contains illegal files: %s", sshRunner.getRemoteBaseDir(), sshRunner.getHost(), String.join(", ", illegalFiles)));
+        }
     }
 
 }
