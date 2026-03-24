@@ -57,7 +57,7 @@ public class LayerReadFileTest extends AbstractTestWithTestDir {
         var testContents = "test file";
         FileUtils.write(stagingDir.resolve("path/to/file1").toFile(), testContents, StandardCharsets.UTF_8);
         layer.close();
-        layer.archive();
+        layer.archive(false);
 
         // Check that the staging directory is gone, so we are sure the file can only be read from the archive.
         assertThat(stagingDir.toFile()).doesNotExist();

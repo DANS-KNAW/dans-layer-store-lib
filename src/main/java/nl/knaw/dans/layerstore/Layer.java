@@ -26,6 +26,24 @@ import java.util.List;
  */
 public interface Layer {
     /**
+     * The state of a layer.
+     */
+    enum State {
+        /**
+         * The layer is open for writing.
+         */
+        OPEN,
+        /**
+         * The layer is closed for writing, but not yet archived.
+         */
+        CLOSED,
+        /**
+         * The layer is archived.
+         */
+        ARCHIVED
+    }
+
+    /**
      * Returns the id of the layer.
      *
      * @return the id of the layer
@@ -33,35 +51,35 @@ public interface Layer {
     long getId();
 
     /**
-     * Changes the state of the layer to 'closed'.
+     * Returns the state of the layer.
      *
-     * @throws IllegalStateException if the layer is already closed
+     * @return the state of the layer
+     */
+    State getState();
+
+    /**
+     * Changes the state of the layer to 'closed'. Not allowed when the layer is not open.
+     *
+     * @throws IllegalStateException if the layer is not in the OPEN state
      */
     void close();
 
     /**
-     * Changes the state of the layer to open. It also stages the archive file in the staging directory. This operation is not allowed when the layer is not closed or not yet archived.
+     * Changes the state of the layer to open. It also stages the archive file in the staging directory. This operation is only allowed when the layer is in the ARCHIVED state.
+     *
+     * @throws IllegalStateException if the layer is not in the ARCHIVED state
+     * @throws IOException           if the layer cannot be reopened
      */
     void reopen() throws IOException;
 
     /**
-     * Returns whether the layer is open.
+     * Turns the layer into an archive file. This operation is only allowed when the layer is in the CLOSED state.
      *
-     * @return whether the layer is open
+     * @param overwrite whether to overwrite an existing archive file for the layer
+     * @throws IllegalStateException    if the layer is not in the CLOSED state
+     * @throws IllegalArgumentException if overwrite is false and an archive already exists
      */
-    boolean isOpen();
-
-    /**
-     * Turns the layer into an archive file.
-     */
-    void archive();
-
-    /**
-     * Returns whether the layer is archived.
-     *
-     * @return whether the layer is archived
-     */
-    boolean isArchived();
+    void archive(boolean overwrite);
 
     /**
      * Creates a directory at the given path. Not allowed when the layer is closed.

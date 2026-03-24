@@ -50,7 +50,7 @@ public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
         // When / Then
         assertThatThrownBy(() -> layer.deleteFiles(List.of("path/to/file1", "path/to/file2")))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is closed, but must be open for this operation");
+            .hasMessageContaining("must be in state OPEN");
     }
 
     @Test

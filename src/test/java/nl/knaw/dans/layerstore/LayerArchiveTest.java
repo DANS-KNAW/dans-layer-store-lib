@@ -15,12 +15,16 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.text.MessageFormat;
+import java.util.Collections;
+import java.util.zip.ZipFile;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -33,9 +37,9 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
-        assertThatThrownBy(layer::archive)
+        assertThatThrownBy(() -> layer.archive(false))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is open, but must be closed for this operation");
+            .hasMessageContaining("must be in state CLOSED");
     }
 
     @Test
@@ -45,12 +49,56 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         Files.createDirectories(stagingDir);
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         layer.close();
-        layer.archive();
+        layer.archive(false);
 
         // When / Then
-        assertThatThrownBy(layer::archive)
+        assertThatThrownBy(() -> layer.archive(false))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is already archived");
+            .hasMessageContaining("must be in state CLOSED");
+    }
+
+    @Test
+    public void throws_IllegalArgumentException_when_overwrite_is_false_and_archive_exists() throws IOException {
+        // Given
+        Files.createDirectories(archiveRoot);
+        Files.createDirectories(stagingDir);
+        var archiveFile = archiveRoot.resolve("test.zip");
+        Files.createFile(archiveFile);
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveFile));
+        layer.close();
+
+        // When / Then
+        assertThatThrownBy(() -> layer.archive(false))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("already archived");
+    }
+
+    @Test
+    public void overwrites_archive_when_overwrite_is_true() throws IOException {
+        // Given
+        Files.createDirectories(archiveRoot);
+        Files.createDirectories(stagingDir);
+        var archiveFile = archiveRoot.resolve("test.zip");
+        Files.writeString(archiveFile, "OLD CONTENT");
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveFile));
+        // Write some files to staging dir
+        Files.writeString(stagingDir.resolve("file1.txt"), "NEW CONTENT", StandardCharsets.UTF_8);
+
+        layer.close();
+
+        // When
+        layer.archive(true);
+
+        // Then
+        assertThat(archiveFile).exists();
+
+        // Read the one entry from the zip file
+        try (var zipFile = new ZipFile(archiveFile.toFile())) {
+            var entries = Collections.list(zipFile.entries());
+            assertThat(entries).hasSize(1);
+            assertThat(entries.get(0).getName()).isEqualTo("file1.txt");
+            assertThat(IOUtils.toString(zipFile.getInputStream(entries.get(0)), StandardCharsets.UTF_8)).contains("NEW CONTENT");
+        }
     }
 
     @Test
@@ -63,7 +111,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         layer.close();
 
         // When / Then
-        assertThatThrownBy(layer::archive)
+        assertThatThrownBy(() -> layer.archive(false))
             .isInstanceOf(RuntimeException.class)
             .hasRootCauseInstanceOf(NoSuchFileException.class)
             .hasRootCauseMessage(testZip.toString());
@@ -82,7 +130,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         layer.close();
 
         // When
-        layer.archive();
+        layer.archive(false);
 
         // Then
         assertThat(stagingDir).doesNotExist();

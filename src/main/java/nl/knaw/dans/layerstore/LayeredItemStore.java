@@ -100,10 +100,12 @@ public class LayeredItemStore implements ItemStore {
      * complete.
      *
      * @param layerId the id of the layer to archive
+     * @param overwrite whether to overwrite an existing archive
+     *
      * @throws IllegalArgumentException if no layer with the specified id exists
      */
-    public void archiveLayer(long layerId) {
-        layerManager.archive(layerManager.getLayer(layerId));
+    public void archiveLayer(long layerId, boolean overwrite) {
+        layerManager.archive(layerManager.getLayer(layerId), overwrite);
     }
 
     /**
@@ -188,7 +190,7 @@ public class LayeredItemStore implements ItemStore {
         }
         if (latestRecord.getContent() == null) {
             log.debug("Reading file {} from layer {}", path, latestRecord.getLayerId());
-            if (!allowReadingContentFromArchives && layerManager.getLayer(latestRecord.getLayerId()).isArchived()) {
+            if (!allowReadingContentFromArchives && layerManager.getLayer(latestRecord.getLayerId()).getState() == Layer.State.ARCHIVED) {
                 throw new IOException("Reading from archived layer not allowed: " + latestRecord.getLayerId());
             }
             return layerManager.getLayer(latestRecord.getLayerId()).readFile(path);
@@ -361,7 +363,7 @@ public class LayeredItemStore implements ItemStore {
         // Delete the files in each layer, assuming old layers are closed
         for (var entry : layerPaths.entrySet().stream().sorted().toList()) {
             var layer = layerManager.getLayer(entry.getKey());
-            if (layer.isOpen()) {
+            if (layer.getState() == Layer.State.OPEN) {
                 layer.deleteFiles(entry.getValue());
             }
             else {

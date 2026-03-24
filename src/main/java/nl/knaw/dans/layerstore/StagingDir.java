@@ -29,10 +29,10 @@ import java.util.regex.Pattern;
  */
 public class StagingDir {
     /**
-     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed', for closed layers. Current timestamps have 13 digits. After November 2286, timestamps will
-     * have 14 digits.
+     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers.
+     * Current timestamps have 13 digits. After November 2286, timestamps will have 14 digits.
      */
-    private static final Pattern validLayerNamePattern = Pattern.compile("^\\d{13,}(.closed)?$");
+    private static final Pattern validLayerNamePattern = Pattern.compile("^\\d{13,}(\\.(closed|partial))?$");
 
     @Getter
     private Path path;
@@ -46,36 +46,58 @@ public class StagingDir {
     public StagingDir(@NonNull Path stagingRoot, @NonNull Long id) {
         validateName(id.toString());
         var closedPath = stagingRoot.resolve(id + ".closed");
+        var partialPath = stagingRoot.resolve(id + ".partial");
         if (Files.exists(closedPath)) {
             path = closedPath;
+        }
+        else if (Files.exists(partialPath)) {
+            path = partialPath;
         }
         else {
             path = stagingRoot.resolve(Long.toString(id));
         }
-        validateOpenOrClosedState(path);
+        validateState(path);
     }
 
     public StagingDir(@NonNull Path path) {
         this.path = path;
-        validateOpenOrClosedState(path);
         validateName(path.getFileName().toString());
+        validateState(path);
         if (Files.isRegularFile(path)) {
             throw new IllegalArgumentException("Not a directory: " + path);
         }
 
     }
 
-    private static void validateOpenOrClosedState(Path path) {
-        if (path.getFileName().toString().endsWith(".closed")) {
-            var openPath = path.resolveSibling(path.getFileName().toString().substring(0, path.getFileName().toString().length() - ".closed".length()));
-            if (Files.exists(openPath)) {
-                throw new IllegalArgumentException("Layer " + path.getFileName().toString() + " is both open and closed");
-            }
+    private static void validateState(Path path) {
+        String fileName = path.getFileName().toString();
+        long id;
+        if (fileName.endsWith(".closed")) {
+            id = Long.parseLong(fileName.substring(0, fileName.length() - ".closed".length()));
         }
-        else if (Files.exists(path.resolveSibling(path.getFileName() + ".closed"))) {
-            throw new IllegalArgumentException("Layer " + path.getFileName() + " is closed");
+        else if (fileName.endsWith(".partial")) {
+            id = Long.parseLong(fileName.substring(0, fileName.length() - ".partial".length()));
         }
-        // If neither exists, that is OK. It means the layer is not staged.
+        else {
+            id = Long.parseLong(fileName);
+        }
+
+        Path openPath = path.resolveSibling(Long.toString(id));
+        Path closedPath = path.resolveSibling(id + ".closed");
+        Path partialPath = path.resolveSibling(id + ".partial");
+
+        int existsCount = 0;
+        if (Files.exists(openPath)) existsCount++;
+        if (Files.exists(closedPath)) existsCount++;
+        if (Files.exists(partialPath)) existsCount++;
+
+        if (existsCount > 1) {
+            throw new IllegalArgumentException("Layer " + id + " has multiple staging directories");
+        }
+
+        if (existsCount == 1 && !Files.exists(path)) {
+            throw new IllegalArgumentException("Layer " + id + " has a different staging directory than " + path.getFileName());
+        }
     }
 
     private static void validateName(String name) {
@@ -95,11 +117,15 @@ public class StagingDir {
     }
 
     public boolean isClosed() {
-        return !isStaged() || path.getFileName().toString().endsWith(".closed");
+        return isStaged() && path.getFileName().toString().endsWith(".closed");
     }
 
     public boolean isOpen() {
-        return !isClosed();
+        return isStaged() && !path.getFileName().toString().endsWith(".closed") && !path.getFileName().toString().endsWith(".partial");
+    }
+
+    public boolean isPartial() {
+        return isStaged() && path.getFileName().toString().endsWith(".partial");
     }
 
     public void checkOpen() {

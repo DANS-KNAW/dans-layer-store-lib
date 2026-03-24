@@ -41,8 +41,8 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
 
         // When / Then
         assertThatThrownBy(layerManager::newTopLayer)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is already archived");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("already archived");
     }
 
     private static @NotNull SshRunner sshRunnerExpectsFileToExist(boolean exists) {

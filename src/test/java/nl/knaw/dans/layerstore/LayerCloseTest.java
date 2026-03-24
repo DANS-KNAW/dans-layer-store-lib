@@ -46,7 +46,7 @@ public class LayerCloseTest extends AbstractTestWithTestDir {
         layer.close();
 
         // Then
-        assertThat(layer.isClosed()).isTrue();
+        assertThat(layer.getState()).isEqualTo(Layer.State.CLOSED);
     }
 
 }

@@ -47,12 +47,12 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
         layerManager.newTopLayer();
-        assertFalse(firstLayer.isOpen());
+        assertThat(firstLayer.getState()).isEqualTo(Layer.State.ARCHIVED);
 
         // When / Then
         assertThatThrownBy(() -> firstLayer.deleteFiles(List.of("a/b/c/d/test1.txt", "a/b/c/test2.txt")))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("Layer is closed, but must be open for this operation");
+            .hasMessageContaining("must be in state OPEN");
     }
 
     @Test

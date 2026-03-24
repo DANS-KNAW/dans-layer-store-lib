@@ -31,7 +31,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         assertThat(stagingDir.getPath()).doesNotExist();
         assertThat(stagingDir.getId()).isEqualTo(1234567890123L);
         assertThat(stagingDir.isStaged()).isFalse();
-        assertThat(stagingDir.isClosed()).isTrue();
+        assertThat(stagingDir.isClosed()).isFalse();
         assertThat(stagingDir.isOpen()).isFalse();
     }
 
@@ -146,7 +146,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
 
         assertThatThrownBy(() -> new StagingDir(testDir, 1234567890123L))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("both open and closed")
+            .hasMessageContaining("multiple staging directories")
             .hasMessageContaining("1234567890123");
     }
 
@@ -159,7 +159,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
 
         assertThatThrownBy(() -> new StagingDir(closed))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("both open and closed")
+            .hasMessageContaining("multiple staging directories")
             .hasMessageContaining("1234567890123");
     }
 
@@ -172,7 +172,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         // Do not create 'open' dir; validate that passing open path is rejected when sibling '.closed' exists
         assertThatThrownBy(() -> new StagingDir(open))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("is closed")
+            .hasMessageContaining("has a different staging directory than")
             .hasMessageContaining("1234567890123");
     }
 
@@ -202,8 +202,8 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         // Then: an internal path points to an open variant, still not staged, and no exception
         assertThat(stagingDir.getPath()).isEqualTo(open);
         assertThat(stagingDir.isStaged()).isFalse();
-        // Since not staged, it's considered "closed" by definition
-        assertThat(stagingDir.isClosed()).isTrue();
+        // Since not staged, it's NOT considered "closed" OR "open"
+        assertThat(stagingDir.isClosed()).isFalse();
         assertThat(stagingDir.isOpen()).isFalse();
     }
 
@@ -222,8 +222,8 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         // Then
         assertThat(stagingDir.getPath()).isEqualTo(open);
         assertThat(stagingDir.isStaged()).isFalse();
-        // Not staged => reported as closed
-        assertThat(stagingDir.isClosed()).isTrue();
+        // Not staged => reported as NOT open and NOT closed
+        assertThat(stagingDir.isClosed()).isFalse();
         assertThat(stagingDir.isOpen()).isFalse();
     }
 }

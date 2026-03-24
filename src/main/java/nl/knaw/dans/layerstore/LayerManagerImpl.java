@@ -33,10 +33,10 @@ import java.util.regex.Pattern;
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
     /**
-     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed', for closed layers. Current timestamps have 13 digits. After November 2286, timestamps will
-     * have 14 digits.
+     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers.
+     * Current timestamps have 13 digits. After November 2286, timestamps will have 14 digits.
      */
-    private static final Pattern validLayerNamePattern = Pattern.compile("^\\d{13,}(.closed)?$");
+    private static final Pattern validLayerNamePattern = Pattern.compile("^\\d{13,}(\\.(closed|partial))?$");
 
     private final Path stagingRoot;
 
@@ -94,9 +94,11 @@ public class LayerManagerImpl implements LayerManager {
         topLayer = newLayer;
 
         if (oldTopLayer != null) {
-            oldTopLayer.close();
+            if (oldTopLayer.getState() == Layer.State.OPEN) {
+                oldTopLayer.close();
+            }
             log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
-            archive(oldTopLayer);
+            archive(oldTopLayer, false);
         }
         else {
             log.debug("No old top layer to archive");
@@ -105,8 +107,8 @@ public class LayerManagerImpl implements LayerManager {
     }
 
     @Override
-    public void archive(Layer layer) {
-        layerArchiver.archive(layer);
+    public void archive(Layer layer, boolean overwrite) {
+        layerArchiver.archive(layer, overwrite);
     }
 
     public List<Long> listLayerIds() throws IOException {

@@ -57,7 +57,7 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
         // When / Then
         assertThatThrownBy(() -> layer.deleteDirectory("path/to"))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is closed, but must be open for this operation");
+            .hasMessageContaining("must be in state OPEN");
     }
 
     @Test
