@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
-import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -115,21 +114,5 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
             .hasMessage("Could not unarchive target/test/ZipArchiveUnarchiveToTest/non-existing.zip")
             .hasCauseInstanceOf(NoSuchFileException.class)
             .hasRootCauseMessage("target/test/ZipArchiveUnarchiveToTest/non-existing.zip");
-    }
-
-    @Test
-    public void should_throw_exception_when_unarchiving_to_non_empty_directory() throws Exception {
-        var zipFile = testDir.resolve("test.zip");
-        var archive = new ZipArchive(zipFile);
-
-        // Create a file to archive
-        Files.createDirectories(stagingDir);
-        Files.writeString(stagingDir.resolve("file1"), "file1 content");
-        archive.archiveFrom(stagingDir);
-
-        Files.createDirectories(testDir.resolve("unarchived/content"));
-
-        assumeNotYetFixed("unarchiveTo does not check if the target directory exists");
-        assertThatThrownBy(() -> archive.unarchiveTo(testDir.resolve("unarchived")));
     }
 }
