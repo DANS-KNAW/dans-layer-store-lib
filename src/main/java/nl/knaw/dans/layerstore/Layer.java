@@ -34,7 +34,7 @@ public interface Layer {
          */
         OPEN,
         /**
-         * The layer is closed for writing, but not yet archived.
+         * The layer is closed for writing and may be (re)archived.
          */
         CLOSED,
         /**
