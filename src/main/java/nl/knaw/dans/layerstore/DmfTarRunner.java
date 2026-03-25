@@ -222,15 +222,14 @@ public class DmfTarRunner extends AbstractRunner {
 
 
     private void validateArchiveName(String name) {
-        if (name == null || !SAFE_ARCHIVE_NAME.matcher(name).matches()) {
+        if (name == null || !SAFE_ARCHIVE_NAME.matcher(name).matches() || name.startsWith("../")) {
             throw new IllegalArgumentException("Invalid archive name: " + name);
         }
     }
 
     private void validateFileName(String name) {
-        if (name == null || name.startsWith("./") || !SAFE_FILE_NAME.matcher(name).matches()) {
+        if (name == null || name.startsWith("./") || !SAFE_FILE_NAME.matcher(name).matches() || name.startsWith("../")) {
             throw new IllegalArgumentException("Invalid file name: " + name);
         }
     }
-
 }
