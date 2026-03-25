@@ -74,7 +74,7 @@ public class LayerMoveDirectoryIntoTest extends AbstractTestWithTestDir {
 
         assertThatThrownBy(() -> layer.moveDirectoryInto(inputDir, "path/to/destination"))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is closed, but must be open for this operation");
+            .hasMessageContaining("must be in state OPEN");
     }
 
 }

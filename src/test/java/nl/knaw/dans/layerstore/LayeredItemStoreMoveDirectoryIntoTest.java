@@ -73,7 +73,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         // assert content is in DB
         Files.createDirectories(archiveRoot);
         layerManager.getTopLayer().close();
-        layerManager.getTopLayer().archive();
+        layerManager.getTopLayer().archive(false);
         assertThat(stagingRoot).isEmptyDirectory();
         try (var inputStream = layeredStore.readFile("a/b/c/y/test1.txt")) {
             Assertions.assertThat(inputStream).hasContent("Hello world!");

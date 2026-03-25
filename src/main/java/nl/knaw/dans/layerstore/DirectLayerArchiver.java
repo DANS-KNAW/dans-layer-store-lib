@@ -21,7 +21,7 @@ package nl.knaw.dans.layerstore;
 public class DirectLayerArchiver implements LayerArchiver {
 
     @Override
-    public void archive(Layer layer) {
-        layer.archive();
+    public void archive(Layer layer, boolean overwrite) {
+        layer.archive(overwrite);
     }
 }

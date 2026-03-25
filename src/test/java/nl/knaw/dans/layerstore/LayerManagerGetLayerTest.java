@@ -104,8 +104,8 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         assertThat(archiveRoot.resolve(initialLayerId + ".tar")).exists();
 
         // Both represent the same layer
-        assertThat(initialLayer.isArchived()).isTrue();
-        assertThat(layer.isArchived()).isTrue();
+        assertThat(initialLayer.getState()).isEqualTo(Layer.State.ARCHIVED);
+        assertThat(layer.getState()).isEqualTo(Layer.State.ARCHIVED);
     }
 
 }

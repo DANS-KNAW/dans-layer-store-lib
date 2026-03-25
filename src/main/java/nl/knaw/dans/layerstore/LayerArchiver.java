@@ -20,5 +20,5 @@ package nl.knaw.dans.layerstore;
  */
 public interface LayerArchiver {
 
-    void archive(Layer layer);
+    void archive(Layer layer, boolean overwrite);
 }

@@ -41,8 +41,8 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
 
         // When / Then
         assertThatThrownBy(layerManager::newTopLayer)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is already archived");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("already archived");
     }
 
     private static @NotNull SshRunner sshRunnerExpectsFileToExist(boolean exists) {
@@ -61,7 +61,8 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
     }
 
     private static @NotNull DmfTarRunner getNoopDmfTarRunner() {
-        return new DmfTarRunner(Path.of("dmftar"), "testuser", "dummyhost", Path.of("testarchive")) {
+        var ssh = new SshRunner(Path.of("ssh"), "testuser", "dummyhost", Path.of("testarchive"));
+        return new DmfTarRunner(Path.of("dmftar"), ssh, "testuser", "dummyhost", Path.of("testarchive")) {
 
             @Override
             public void tarDirectory(Path directory, String archiveName) {

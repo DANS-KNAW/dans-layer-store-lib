@@ -40,12 +40,12 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
         assertThat(stagingDir.resolve("path/to/file1").toFile()).exists();
         assertThat(stagingDir.resolve("test.zip").toFile()).doesNotExist();
         layer.close();
-        layer.archive();
+        layer.archive(false);
 
         assertThat(layer.fileExists("path/to/file1")).isTrue();
         assertThat(stagingDir.resolve("path/to/file1").toFile()).doesNotExist();
         assertThat(archiveRoot.resolve("test.zip").toFile()).exists();
-        assertThat(layer.isArchived()).isTrue();
+        assertThat(layer.getState()).isEqualTo(Layer.State.ARCHIVED);
     }
 
     @Test
@@ -55,7 +55,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         layer.close();
-        layer.archive();
+        layer.archive(false);
         if (!archiveRoot.resolve("test.zip").toFile().delete()) {
             throw new Exception("Could not delete test.zip");
         }

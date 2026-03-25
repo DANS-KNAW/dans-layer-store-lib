@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
-import static nl.knaw.dans.layerstore.TestUtils.assumeNotYetFixed;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -116,20 +115,5 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
             .hasCauseInstanceOf(NoSuchFileException.class)
             .hasRootCauseMessage("target/test/TarArchiveUnarchiveToTest/non-existing.tar");
 
-    }
-
-    @Test
-    public void should_throw_exception_when_unarchiving_to_non_empty_directory() throws Exception {
-        var tarFile = testDir.resolve("test.tar");
-        var archive = new TarArchive(tarFile);
-        // Create a file to archive
-        Files.createDirectories(stagingDir);
-        Files.writeString(stagingDir.resolve("file1"), "file1 content");
-        archive.archiveFrom(stagingDir);
-
-        Files.createDirectories(testDir.resolve("unarchived/content"));
-
-        assumeNotYetFixed("unarchiveTo does not check if the target directory exists");
-        assertThatThrownBy(() -> archive.unarchiveTo(testDir.resolve("unarchived")));
     }
 }

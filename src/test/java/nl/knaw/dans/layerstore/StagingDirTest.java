@@ -31,7 +31,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         assertThat(stagingDir.getPath()).doesNotExist();
         assertThat(stagingDir.getId()).isEqualTo(1234567890123L);
         assertThat(stagingDir.isStaged()).isFalse();
-        assertThat(stagingDir.isClosed()).isTrue();
+        assertThat(stagingDir.isClosed()).isFalse();
         assertThat(stagingDir.isOpen()).isFalse();
     }
 
@@ -103,26 +103,23 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         assertThat(stagingDir.isClosed()).isFalse();
     }
 
+    // Helper method to invoke private methods via reflection
+    private static Object invokePrivate(Object target, String methodName, Class<?>... parameterTypes) throws Exception {
+        var method = target.getClass().getDeclaredMethod(methodName, parameterTypes);
+        method.setAccessible(true);
+        return method.invoke(target);
+    }
+
     @Test
-    public void checkOpen_throws_when_closed() throws IOException {
+    public void checkOpen_throws_when_closed() throws Exception {
         var closed = testDir.resolve("1234567890123.closed");
         Files.createDirectories(closed);
         var stagingDir = new StagingDir(closed);
 
-        assertThatThrownBy(stagingDir::checkOpen)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("Layer is closed");
-    }
-
-    @Test
-    public void checkClosed_throws_when_open() throws IOException {
-        var open = testDir.resolve("1234567890123");
-        Files.createDirectories(open);
-        var stagingDir = new StagingDir(open);
-
-        assertThatThrownBy(stagingDir::checkClosed)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("Layer is open");
+        assertThatThrownBy(() -> invokePrivate(stagingDir, "checkOpen"))
+            .hasCauseInstanceOf(IllegalStateException.class)
+            .hasRootCauseInstanceOf(IllegalStateException.class)
+            .hasRootCauseMessage("Layer is closed or unstaged, but must be open and staged for this operation");
     }
 
     @Test
@@ -146,7 +143,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
 
         assertThatThrownBy(() -> new StagingDir(testDir, 1234567890123L))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("both open and closed")
+            .hasMessageContaining("multiple staging directories")
             .hasMessageContaining("1234567890123");
     }
 
@@ -159,7 +156,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
 
         assertThatThrownBy(() -> new StagingDir(closed))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("both open and closed")
+            .hasMessageContaining("multiple staging directories")
             .hasMessageContaining("1234567890123");
     }
 
@@ -172,7 +169,7 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         // Do not create 'open' dir; validate that passing open path is rejected when sibling '.closed' exists
         assertThatThrownBy(() -> new StagingDir(open))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("is closed")
+            .hasMessageContaining("has a different staging directory than")
             .hasMessageContaining("1234567890123");
     }
 
@@ -202,8 +199,8 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         // Then: an internal path points to an open variant, still not staged, and no exception
         assertThat(stagingDir.getPath()).isEqualTo(open);
         assertThat(stagingDir.isStaged()).isFalse();
-        // Since not staged, it's considered "closed" by definition
-        assertThat(stagingDir.isClosed()).isTrue();
+        // Since not staged, it's NOT considered "closed" OR "open"
+        assertThat(stagingDir.isClosed()).isFalse();
         assertThat(stagingDir.isOpen()).isFalse();
     }
 
@@ -222,8 +219,8 @@ public class StagingDirTest extends AbstractTestWithTestDir {
         // Then
         assertThat(stagingDir.getPath()).isEqualTo(open);
         assertThat(stagingDir.isStaged()).isFalse();
-        // Not staged => reported as closed
-        assertThat(stagingDir.isClosed()).isTrue();
+        // Not staged => reported as NOT open and NOT closed
+        assertThat(stagingDir.isClosed()).isFalse();
         assertThat(stagingDir.isOpen()).isFalse();
     }
 }

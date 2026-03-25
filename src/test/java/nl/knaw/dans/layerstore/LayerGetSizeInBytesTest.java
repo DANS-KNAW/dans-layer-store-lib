@@ -38,13 +38,27 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_throw_IllegalStateException_when_layer_is_closed() throws Exception {
+    public void should_add_up_file_sizes_when_closed() throws Exception {
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        Files.createDirectories(stagingDir);
+        layer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
+        layer.createDirectory("path/to");
+        layer.writeFile("path/to/other.txt", toInputStream("Whatever", UTF_8));
+        layer.close();
+
+        assertThat(layer.getSizeInBytes()).isEqualTo(20L);
+    }
+
+    @Test
+    public void should_throw_UnsupportedOperationException_when_layer_is_archived() throws Exception {
+        Files.createDirectories(archiveRoot);
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         Files.createDirectories(stagingDir);
         layer.close();
+        layer.archive(false);
 
         assertThatThrownBy(layer::getSizeInBytes).
             isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Layer is not open");
+            .hasMessage("Layer is ARCHIVED");
     }
 }

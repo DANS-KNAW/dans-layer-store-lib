@@ -48,6 +48,6 @@ public class LayerWriteFileTest extends AbstractTestWithTestDir {
 
         assertThatThrownBy(() -> layer.writeFile("whatever.txt", toInputStream("whatever", UTF_8))).
             isInstanceOf(IllegalStateException.class)
-            .hasMessage("Layer is closed, but must be open for this operation");
+            .hasMessageContaining("must be in state OPEN");
     }
 }

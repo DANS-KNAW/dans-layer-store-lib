@@ -21,6 +21,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
@@ -31,6 +33,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -41,6 +44,7 @@ import static java.text.MessageFormat.format;
  * Implementation of {@link Archive} for ZIP archives.
  */
 public class ZipArchive implements Archive {
+    private static final Logger log = LoggerFactory.getLogger(ZipArchive.class);
     @NonNull
     private final Path zipFile;
 
@@ -105,31 +109,52 @@ public class ZipArchive implements Archive {
     @Override
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
-        Stream<Path> emptyFileStream = Stream.empty();
-        try (var outputStream = Files.newOutputStream(zipFile);
-            var bufferedOutputStream = new BufferedOutputStream(outputStream);
-            var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
-            var files = stagingDir.toFile().exists()
-                ? Files.walk(stagingDir)
-                : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
-        ) {
-            for (var fileToArchive : files.toList()) {
-                if (!fileToArchive.equals(stagingDir)) {
-                    var entry = new ZipArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
-                    var regularFile = Files.isRegularFile(fileToArchive);
-                    if (regularFile) {
-                        entry.setSize(fileToArchive.toFile().length());
-                    }
-                    zipOutput.putArchiveEntry(entry);
-                    if (regularFile) {
-                        try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
-                            IOUtils.copy(fileInputStream, zipOutput);
+        Path backupFile = null;
+        if (Files.exists(zipFile)) {
+            backupFile = zipFile.resolveSibling(zipFile.getFileName().toString() + ".bak");
+            Files.move(zipFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        try {
+            Stream<Path> emptyFileStream = Stream.empty();
+            try (var outputStream = Files.newOutputStream(zipFile);
+                 var bufferedOutputStream = new BufferedOutputStream(outputStream);
+                 var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
+                 var files = stagingDir.toFile().exists()
+                     ? Files.walk(stagingDir)
+                     : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+            ) {
+                for (var fileToArchive : files.toList()) {
+                    if (!fileToArchive.equals(stagingDir)) {
+                        var entry = new ZipArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
+                        var regularFile = Files.isRegularFile(fileToArchive);
+                        if (regularFile) {
+                            entry.setSize(fileToArchive.toFile().length());
                         }
+                        zipOutput.putArchiveEntry(entry);
+                        if (regularFile) {
+                            try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
+                                IOUtils.copy(fileInputStream, zipOutput);
+                            }
+                        }
+                        zipOutput.closeArchiveEntry();
                     }
-                    zipOutput.closeArchiveEntry();
                 }
             }
             archived = true;
+            if (backupFile != null) {
+                try {
+                    Files.delete(backupFile);
+                } catch (Exception cleanupEx) {
+                    log.warn("Could not delete backup file {} after archiving {}: {}", backupFile, zipFile, cleanupEx.toString());
+                }
+            }
+        }
+        catch (Exception e) {
+            if (backupFile != null) {
+                Files.move(backupFile, zipFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+            throw e;
         }
     }
 

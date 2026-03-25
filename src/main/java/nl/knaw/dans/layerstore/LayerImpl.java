@@ -37,40 +37,51 @@ class LayerImpl implements Layer {
     @NonNull
     private final StagingDir stagingDir;
 
-
     @NonNull
     private final Archive archive;
 
-    // TODO: validate invariants
-
-    public LayerImpl(long id, @NonNull StagingDir stagingDir, @NonNull Archive archive) {
+    LayerImpl(long id, @NonNull StagingDir stagingDir, @NonNull Archive archive) {
         this.id = id;
         this.stagingDir = stagingDir;
         this.archive = archive;
     }
 
     @Override
+    public synchronized State getState() {
+        if (stagingDir.isStaged()) {
+            if (stagingDir.isOpen()) {
+                return State.OPEN;
+            }
+            if (stagingDir.isClosed()) {
+                return State.CLOSED;
+            }
+            if (stagingDir.isPartial()) {
+                return State.ARCHIVED;
+            }
+        }
+        if (archive.isArchived()) {
+            return State.ARCHIVED;
+        }
+        throw new IllegalStateException("Layer " + id + " is in an inconsistent state: not staged and not archived");
+    }
+
+    @Override
     public void createDirectory(String path) throws IOException {
-        checkOpen();
+        checkState(State.OPEN);
         validatePath(path);
         Files.createDirectories(stagingDir.getPath().resolve(path));
     }
 
-    public boolean isClosed() {
-        return stagingDir.isClosed();
-    }
-
-    private void checkOpen() {
-        stagingDir.checkOpen();
-    }
-
-    private void checkClosed() {
-        stagingDir.checkClosed();
+    private void checkState(State expectedState) {
+        State currentState = getState();
+        if (currentState != expectedState) {
+            throw new IllegalStateException(String.format("Layer %d is in state %s, but must be in state %s for this operation", id, currentState, expectedState));
+        }
     }
 
     @Override
     public void deleteFiles(List<String> paths) throws IOException {
-        checkOpen();
+        checkState(State.OPEN);
         if (paths == null)
             throw new IllegalArgumentException("Paths cannot be null");
         for (String path : paths) {
@@ -85,7 +96,7 @@ class LayerImpl implements Layer {
      */
     @Override
     public synchronized InputStream readFile(String path) throws IOException {
-        if (archive.isArchived()) {
+        if (getState() == State.ARCHIVED) {
             return archive.readFile(path);
         }
         else {
@@ -99,6 +110,7 @@ class LayerImpl implements Layer {
 
     @Override
     public synchronized void close() {
+        checkState(State.OPEN);
         try {
             stagingDir.close();
         }
@@ -109,34 +121,44 @@ class LayerImpl implements Layer {
     }
 
     @Override
-    public void reopen() throws IOException {
-        checkClosed();
-        checkNotReclosed();
-        checkArchived();
-        stagingDir.open();
-        archive.unarchiveTo(stagingDir.getPath());
-    }
-
-    private void checkNotReclosed() {
-        if (isReclosed())
-            throw new IllegalStateException("Layer is already re-closed");
-    }
-
-    private boolean isReclosed() {
-        return archive.isArchived() && stagingDir.isOpen();
+    public synchronized void reopen() throws IOException {
+        State currentState = getState();
+        if (currentState == State.CLOSED) {
+            stagingDir.open();
+        }
+        else if (currentState == State.ARCHIVED) {
+            stagingDir.partial();
+            try {
+                archive.unarchiveTo(stagingDir.getPath());
+                stagingDir.open();
+            }
+            catch (Exception e) {
+                try {
+                    stagingDir.delete();
+                }
+                catch (Exception cleanupEx) {
+                    log.error("Error deleting staging directory after failed reopen", cleanupEx);
+                }
+                throw e;
+            }
+        }
+        else {
+            throw new IllegalStateException(String.format("Layer %d is in state %s, but must be in state CLOSED or ARCHIVED for this operation", id, currentState));
+        }
     }
 
     @Override
-    public boolean isOpen() {
-        return !isClosed();
-    }
-
-    @Override
-    public synchronized void archive() {
-        checkClosed();
-        checkNotArchived();
+    public synchronized void archive(boolean overwrite) {
+        checkState(State.CLOSED);
+        if (!overwrite && archive.isArchived()) {
+            throw new IllegalArgumentException("Layer " + id + " is already archived");
+        }
         try {
-            doArchive();
+            log.debug("Start archiving layer {}", id);
+            archive.archiveFrom(stagingDir.getPath());
+            log.debug("Deleting staging directory {}", stagingDir.getPath());
+            stagingDir.delete();
+            log.debug("Staging directory {} deleted", stagingDir.getPath());
         }
         catch (IOException e) {
             log.error("Error archiving layer", e);
@@ -144,39 +166,16 @@ class LayerImpl implements Layer {
         }
     }
 
-    private void doArchive() throws IOException {
-        log.debug("Start archiving layer {}", id);
-        archive.archiveFrom(stagingDir.getPath());
-        log.debug("Deleting staging directory {}", stagingDir.getPath());
-        FileUtils.deleteDirectory(stagingDir.getPath().toFile());
-        log.debug("Staging directory {} deleted", stagingDir.getPath());
-    }
-
-    @Override
-    public boolean isArchived() {
-        return archive.isArchived();
-    }
-
-    private void checkNotArchived() {
-        if (archive.isArchived())
-            throw new IllegalStateException("Layer is already archived");
-    }
-
-    private void checkArchived() {
-        if (!archive.isArchived())
-            throw new IllegalStateException("Layer is not archived");
-    }
-
     @Override
     public void writeFile(String filePath, InputStream content) throws IOException {
-        checkOpen();
+        checkState(State.OPEN);
         validatePath(filePath);
         Files.copy(content, stagingDir.getPath().resolve(filePath), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
     public void moveDirectoryInto(Path source, String destination) throws IOException {
-        checkOpen();
+        checkState(State.OPEN);
         validatePath(destination);
         var destinationPath = stagingDir.getPath().resolve(destination);
         Files.move(source, destinationPath);
@@ -185,7 +184,7 @@ class LayerImpl implements Layer {
     @Override
     public boolean fileExists(String path) throws IOException {
         validatePath(path);
-        if (archive.isArchived()) {
+        if (getState() == State.ARCHIVED) {
             return archive.fileExists(path);
         }
         else {
@@ -199,7 +198,7 @@ class LayerImpl implements Layer {
 
     @Override
     public void moveDirectoryInternal(String source, String destination) throws IOException {
-        checkOpen();
+        checkState(State.OPEN);
         validatePath(source);
         validatePath(destination);
         Files.move(stagingDir.getPath().resolve(source), stagingDir.getPath().resolve(destination));
@@ -207,19 +206,19 @@ class LayerImpl implements Layer {
 
     @Override
     public void deleteDirectory(String path) throws IOException {
-        checkOpen();
+        checkState(State.OPEN);
         validatePath(path);
         FileUtils.deleteDirectory(stagingDir.getPath().resolve(path).toFile());
     }
 
     @Override
-    public long getSizeInBytes() {
-        if (stagingDir.isOpen()) {
+    public long getSizeInBytes() throws IOException {
+        if (getState() == State.OPEN || getState() == State.CLOSED) {
             return FileUtils.sizeOfDirectory(stagingDir.getPath().toFile());
         }
         else {
             // TODO: replace with implementation that reads total size from database?
-            throw new UnsupportedOperationException("Layer is not open");
+            throw new UnsupportedOperationException("Layer is ARCHIVED");
         }
     }
 
@@ -237,7 +236,7 @@ class LayerImpl implements Layer {
     // Cannot be reliably called during archiving, because the layer might be closed just after the check
     @Override
     public Iterator<Item> listAllItems() throws IOException {
-        if (isArchived()) {
+        if (getState() == State.ARCHIVED) {
             return archive.listAllItems();
         }
         else {

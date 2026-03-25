@@ -43,11 +43,12 @@ public interface LayerManager {
     Layer getLayer(long id);
 
     /**
-     * Request for the archiving of the given layer. The operation may be performed asynchronously, so the caller should check the layer's status to determine when the archiving is complete.
+     * Request for the archiving of the given layer. The operation may be performed asynchronously, so the caller should check the layer's state to determine when the archiving is complete.
      *
-     * @param layer the layer to archive
+     * @param layer     the layer to archive
+     * @param overwrite whether to overwrite an existing archive file
      */
-    void archive(Layer layer);
+    void archive(Layer layer, boolean overwrite);
 
     /**
      * Lists all layer IDs that are currently managed.
