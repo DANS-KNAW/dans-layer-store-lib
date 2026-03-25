@@ -134,23 +134,19 @@ class LayerImpl implements Layer {
             throw new IllegalArgumentException("Layer " + id + " is already archived");
         }
         try {
-            doArchive();
+            log.debug("Start archiving layer {}", id);
+            Path stagingPath = stagingDir.getPath();
+            Path partialPath = stagingPath.resolveSibling(id + ".partial");
+            Files.move(stagingPath, partialPath);
+            archive.archiveFrom(partialPath);
+            log.debug("Deleting staging directory {}", partialPath);
+            FileUtils.deleteDirectory(partialPath.toFile());
+            log.debug("Staging directory {} deleted", partialPath);
         }
         catch (IOException e) {
             log.error("Error archiving layer", e);
             throw new RuntimeException(e);
         }
-    }
-
-    private void doArchive() throws IOException {
-        log.debug("Start archiving layer {}", id);
-        Path stagingPath = stagingDir.getPath();
-        Path partialPath = stagingPath.resolveSibling(id + ".partial");
-        Files.move(stagingPath, partialPath);
-        archive.archiveFrom(partialPath);
-        log.debug("Deleting staging directory {}", partialPath);
-        FileUtils.deleteDirectory(partialPath.toFile());
-        log.debug("Staging directory {} deleted", partialPath);
     }
 
     @Override
