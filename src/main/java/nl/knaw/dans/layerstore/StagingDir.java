@@ -17,6 +17,7 @@ package nl.knaw.dans.layerstore;
 
 import lombok.Getter;
 import lombok.NonNull;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -161,7 +162,7 @@ public class StagingDir {
 
     public void delete() throws IOException {
         if (isClosed()) {
-            Files.delete(path);
+            FileUtils.deleteDirectory(path.toFile());
         }
         else {
             throw new IllegalStateException("Layer is open, cannot delete");

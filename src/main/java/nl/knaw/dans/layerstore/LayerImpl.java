@@ -135,13 +135,10 @@ class LayerImpl implements Layer {
         }
         try {
             log.debug("Start archiving layer {}", id);
-            Path stagingPath = stagingDir.getPath();
-            Path partialPath = stagingPath.resolveSibling(id + ".partial");
-            Files.move(stagingPath, partialPath);
-            archive.archiveFrom(partialPath);
-            log.debug("Deleting staging directory {}", partialPath);
-            FileUtils.deleteDirectory(partialPath.toFile());
-            log.debug("Staging directory {} deleted", partialPath);
+            archive.archiveFrom(stagingDir.getPath());
+            log.debug("Deleting staging directory {}", stagingDir.getPath());
+            stagingDir.delete();
+            log.debug("Staging directory {} deleted", stagingDir.getPath());
         }
         catch (IOException e) {
             log.error("Error archiving layer", e);
