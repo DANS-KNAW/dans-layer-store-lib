@@ -132,19 +132,24 @@ public class StagingDir {
         return isStaged() && path.getFileName().toString().endsWith(".partial");
     }
 
-    public void checkOpen() {
+    private void checkOpen() {
         if (!isOpen() || !isStaged())
             throw new IllegalStateException("Layer is closed or unstaged, but must be open and staged for this operation");
     }
 
-    public void checkClosed() {
+    private void checkClosed() {
         if (isOpen())
             throw new IllegalStateException("Layer is open, but must be closed for this operation");
     }
 
-    public void checkPartial() {
-        if (!isPartial())
-            throw new IllegalStateException("Layer is not partial, but must be for this operation");
+    private void checkNotStaged() {
+        if (isStaged())
+            throw new IllegalStateException("Layer is staged, but must not be for this operation");
+    }
+
+    private void checkPathHasNoSuffix() {
+        if (path.getFileName().toString().endsWith(".partial") || path.getFileName().toString().endsWith(".closed"))
+            throw new IllegalStateException("Layer path must not have .partial or .closed suffix");
     }
 
     public void close() throws IOException {
@@ -153,15 +158,11 @@ public class StagingDir {
     }
 
     public void partial() throws IOException {
-        checkClosed();
+        checkNotStaged();
+        checkPathHasNoSuffix();
         var partialPath = path.resolveSibling(getId() + ".partial");
-        if (Files.exists(path)) {
-            path = Files.move(path, partialPath);
-        }
-        else {
-            Files.createDirectories(partialPath);
-            path = partialPath;
-        }
+        Files.createDirectories(partialPath);
+        path = partialPath;
     }
 
     public void open() throws IOException {
@@ -187,6 +188,7 @@ public class StagingDir {
     public void delete() throws IOException {
         if (isClosed() || isPartial()) {
             FileUtils.deleteDirectory(path.toFile());
+            path = path.resolveSibling(Long.toString(getId()));
         }
         else {
             throw new IllegalStateException("Layer is open, cannot delete");
