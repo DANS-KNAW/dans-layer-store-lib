@@ -21,6 +21,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
@@ -41,6 +43,7 @@ import static java.text.MessageFormat.format;
  * Implementation of {@link Archive} for ZIP archives.
  */
 public class ZipArchive implements Archive {
+    private static final Logger log = LoggerFactory.getLogger(ZipArchive.class);
     @NonNull
     private final Path zipFile;
 
@@ -114,11 +117,11 @@ public class ZipArchive implements Archive {
         try {
             Stream<Path> emptyFileStream = Stream.empty();
             try (var outputStream = Files.newOutputStream(zipFile);
-                var bufferedOutputStream = new BufferedOutputStream(outputStream);
-                var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
-                var files = stagingDir.toFile().exists()
-                    ? Files.walk(stagingDir)
-                    : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+                 var bufferedOutputStream = new BufferedOutputStream(outputStream);
+                 var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
+                 var files = stagingDir.toFile().exists()
+                     ? Files.walk(stagingDir)
+                     : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
             ) {
                 for (var fileToArchive : files.toList()) {
                     if (!fileToArchive.equals(stagingDir)) {
@@ -136,10 +139,14 @@ public class ZipArchive implements Archive {
                         zipOutput.closeArchiveEntry();
                     }
                 }
-                archived = true;
             }
+            archived = true;
             if (backupFile != null) {
-                Files.delete(backupFile);
+                try {
+                    Files.delete(backupFile);
+                } catch (Exception cleanupEx) {
+                    log.warn("Could not delete backup file {} after archiving {}: {}", backupFile, zipFile, cleanupEx.toString());
+                }
             }
         }
         catch (Exception e) {

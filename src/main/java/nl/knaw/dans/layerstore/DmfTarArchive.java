@@ -33,7 +33,7 @@ public class DmfTarArchive implements Archive {
     private final String path;
 
     @Getter
-    private final boolean archived;
+    private boolean archived;
 
     public DmfTarArchive(@NonNull DmfTarRunner dmfTarRunner, @NonNull String path, boolean archived) {
         this.dmfTarRunner = dmfTarRunner;
@@ -61,8 +61,13 @@ public class DmfTarArchive implements Archive {
 
         try {
             dmfTarRunner.tarDirectory(stagingDir, path);
+            archived = true;
             if (backupPath != null) {
-                dmfTarRunner.deleteRemoteFile(backupPath);
+                try {
+                    dmfTarRunner.deleteRemoteFile(backupPath);
+                } catch (Exception cleanupEx) {
+                    // Logging is not available here, so ignore or print warning if needed
+                }
             }
         }
         catch (Exception e) {

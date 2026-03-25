@@ -30,6 +30,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Iterator;
 
+import java.util.regex.Pattern;
+
 /**
  * A runner for the dmftar command line tool, which creates and reads DMF TAR archives on a remote host via SSH.
  * <p>
@@ -38,6 +40,10 @@ import java.util.Iterator;
  */
 @Slf4j
 public class DmfTarRunner extends AbstractRunner {
+    // Only allow safe archive names: alphanumeric, dash, underscore, dot
+    private static final Pattern SAFE_ARCHIVE_NAME = Pattern.compile("[a-zA-Z0-9._-]+$");
+    private static final Pattern SAFE_FILE_NAME = Pattern.compile("[a-zA-Z0-9._/-]+$");
+
     private final Path dmfTarExecutable;
     private final SshRunner sshRunner;
 
@@ -71,7 +77,12 @@ public class DmfTarRunner extends AbstractRunner {
      */
     public void tarDirectory(Path directory, String archiveName) {
         checkForDmftarCacheDirectories(directory);
-        var commandLine = CommandLine.parse(dmfTarExecutable.toAbsolutePath() + " -cf " + getRemotePath(archiveName) + " .");
+        validateArchiveName(archiveName);
+        // Use CommandLine with addArgument to avoid command injection
+        var commandLine = new CommandLine(dmfTarExecutable.toAbsolutePath().toString())
+            .addArgument("-cf")
+            .addArgument(getRemotePath(archiveName), false) // remote path is validated
+            .addArgument(".");
         var executor = DefaultExecutor.builder()
             .setWorkingDirectory(directory.toAbsolutePath().toFile())
             .get();
@@ -97,7 +108,12 @@ public class DmfTarRunner extends AbstractRunner {
      * @param directory   the directory to unpack the archive into
      */
     public void untarArchive(String archiveName, Path directory) {
-        var commandLine = CommandLine.parse(dmfTarExecutable.toAbsolutePath() + " -xf " + getRemotePath(archiveName) + " --options=\"--directory=" + directory.toAbsolutePath() + "\"");
+        validateArchiveName(archiveName);
+        // Use CommandLine with addArgument to avoid command injection
+        var commandLine = new CommandLine(dmfTarExecutable.toAbsolutePath().toString())
+            .addArgument("-xf")
+            .addArgument(getRemotePath(archiveName), false)
+            .addArgument("--options=--directory=" + directory.toAbsolutePath());
         var executor = DefaultExecutor.builder()
             .setWorkingDirectory(directory.toAbsolutePath().toFile())
             .get();
@@ -125,12 +141,11 @@ public class DmfTarRunner extends AbstractRunner {
      * @return an InputStream for reading the file
      */
     public InputStream readFile(String archiveName, String fileName) throws IOException {
-        if (fileName.startsWith("./")) {
-            throw new IllegalArgumentException("File name cannot start with './': " + fileName);
-        }
+        validateArchiveName(archiveName);
+        validateFileName(fileName);
         var commandLine = new CommandLine(dmfTarExecutable.toAbsolutePath().toString())
-            .addArgument("--options=--to-stdout") // Stream the output to stdout instead of writing it to a file
-            .addArgument("--quiet") // Suppress progress messages from dmftar
+            .addArgument("--options=--to-stdout")
+            .addArgument("--quiet")
             .addArgument("--extract")
             .addArgument("--archive=" + getRemotePath(archiveName))
             .addArgument(addPrefix(fileName));
@@ -151,9 +166,10 @@ public class DmfTarRunner extends AbstractRunner {
      * @return an Iterator over the file names in the archive
      */
     public Iterator<String> listFiles(String archiveName) {
+        validateArchiveName(archiveName);
         var commandLine = new CommandLine(dmfTarExecutable.toAbsolutePath().toString())
             .addArgument("-qtf")
-            .addArgument(getRemotePath(archiveName));
+            .addArgument(getRemotePath(archiveName), false);
         try {
             var inputStream = (InputStream) ProcessInputStream.start(commandLine);
             var reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
@@ -173,6 +189,8 @@ public class DmfTarRunner extends AbstractRunner {
      * @throws IOException if an I/O error occurs
      */
     public boolean fileExists(String archiveName, String fileName) throws IOException {
+        validateArchiveName(archiveName);
+        validateFileName(fileName);
         var it = listFiles(archiveName);
         while (it.hasNext()) {
             if (it.next().equals(fileName)) {
@@ -183,15 +201,37 @@ public class DmfTarRunner extends AbstractRunner {
     }
 
     public void deleteRemoteFile(String archiveName) {
-        sshRunner.runCommand("rm " + remoteBaseDir.resolve(archiveName));
+        validateArchiveName(archiveName);
+        // Only allow safe archive names, and quote the path
+        var remotePath = remoteBaseDir.resolve(archiveName).toString();
+        sshRunner.runCommand("rm '" + remotePath.replace("'", "'\\''") + "'");
     }
 
     public void renameRemoteFile(String oldName, String newName) {
-        sshRunner.runCommand("mv " + remoteBaseDir.resolve(oldName) + " " + remoteBaseDir.resolve(newName));
+        validateArchiveName(oldName);
+        validateArchiveName(newName);
+        var oldPath = remoteBaseDir.resolve(oldName).toString();
+        var newPath = remoteBaseDir.resolve(newName).toString();
+        sshRunner.runCommand("mv '" + oldPath.replace("'", "'\\''") + "' '" + newPath.replace("'", "'\\''") + "'");
     }
 
     private String getRemotePath(String archiveName) {
+        // Only allow safe archive names
+        validateArchiveName(archiveName);
         return user + "@" + host + ":" + remoteBaseDir.resolve(archiveName);
+    }
+
+
+    private void validateArchiveName(String name) {
+        if (name == null || !SAFE_ARCHIVE_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid archive name: " + name);
+        }
+    }
+
+    private void validateFileName(String name) {
+        if (name == null || name.startsWith("./") || !SAFE_FILE_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid file name: " + name);
+        }
     }
 
 }
