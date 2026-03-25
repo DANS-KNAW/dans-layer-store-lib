@@ -133,7 +133,12 @@ class LayerImpl implements Layer {
                 stagingDir.open();
             }
             catch (Exception e) {
-                stagingDir.delete();
+                try {
+                    stagingDir.delete();
+                }
+                catch (Exception cleanupEx) {
+                    log.error("Error deleting staging directory after failed reopen", cleanupEx);
+                }
                 throw e;
             }
         }
