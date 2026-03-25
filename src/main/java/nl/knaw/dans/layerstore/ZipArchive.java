@@ -105,31 +105,48 @@ public class ZipArchive implements Archive {
     @Override
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
-        Stream<Path> emptyFileStream = Stream.empty();
-        try (var outputStream = Files.newOutputStream(zipFile);
-            var bufferedOutputStream = new BufferedOutputStream(outputStream);
-            var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
-            var files = stagingDir.toFile().exists()
-                ? Files.walk(stagingDir)
-                : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
-        ) {
-            for (var fileToArchive : files.toList()) {
-                if (!fileToArchive.equals(stagingDir)) {
-                    var entry = new ZipArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
-                    var regularFile = Files.isRegularFile(fileToArchive);
-                    if (regularFile) {
-                        entry.setSize(fileToArchive.toFile().length());
-                    }
-                    zipOutput.putArchiveEntry(entry);
-                    if (regularFile) {
-                        try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
-                            IOUtils.copy(fileInputStream, zipOutput);
+        Path backupFile = null;
+        if (Files.exists(zipFile)) {
+            backupFile = zipFile.resolveSibling(zipFile.getFileName().toString() + ".bak");
+            Files.move(zipFile, backupFile);
+        }
+
+        try {
+            Stream<Path> emptyFileStream = Stream.empty();
+            try (var outputStream = Files.newOutputStream(zipFile);
+                var bufferedOutputStream = new BufferedOutputStream(outputStream);
+                var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
+                var files = stagingDir.toFile().exists()
+                    ? Files.walk(stagingDir)
+                    : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+            ) {
+                for (var fileToArchive : files.toList()) {
+                    if (!fileToArchive.equals(stagingDir)) {
+                        var entry = new ZipArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive).toString());
+                        var regularFile = Files.isRegularFile(fileToArchive);
+                        if (regularFile) {
+                            entry.setSize(fileToArchive.toFile().length());
                         }
+                        zipOutput.putArchiveEntry(entry);
+                        if (regularFile) {
+                            try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
+                                IOUtils.copy(fileInputStream, zipOutput);
+                            }
+                        }
+                        zipOutput.closeArchiveEntry();
                     }
-                    zipOutput.closeArchiveEntry();
                 }
+                archived = true;
             }
-            archived = true;
+            if (backupFile != null) {
+                Files.delete(backupFile);
+            }
+        }
+        catch (Exception e) {
+            if (backupFile != null) {
+                Files.move(backupFile, zipFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+            throw e;
         }
     }
 

@@ -106,37 +106,54 @@ public class TarArchive implements Archive {
     @Override
     @SneakyThrows
     public void archiveFrom(Path stagingDir) {
-        Stream<Path> emptyFileStream = Stream.empty();
-        try (var outputStream = Files.newOutputStream(tarFile);
-            var bufferedOutputStream = new BufferedOutputStream(outputStream);
-            var tarOutput = new TarArchiveOutputStream(bufferedOutputStream);
-            var files = stagingDir.toFile().exists()
-                ? Files.walk(stagingDir)
-                : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
-        ) {
-            tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-            for (var fileToArchive : files.toList()) {
-                if (!fileToArchive.equals(stagingDir)) {
-                    if (Files.isSymbolicLink(fileToArchive)) {
-                        continue; // skip symbolic links
-                    }
-                    var regularFile = Files.isRegularFile(fileToArchive);
-                    var entry = new TarArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive) + (regularFile ? "" : "/"));
-                    if (regularFile) {
-                        entry.setSize(fileToArchive.toFile().length());
-                    } else {
-                        entry.setSize(0);
-                    }
-                    tarOutput.putArchiveEntry(entry);
-                    if (regularFile) {
-                        try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
-                            IOUtils.copy(fileInputStream, tarOutput);
+        Path backupFile = null;
+        if (Files.exists(tarFile)) {
+            backupFile = tarFile.resolveSibling(tarFile.getFileName().toString() + ".bak");
+            Files.move(tarFile, backupFile);
+        }
+
+        try {
+            Stream<Path> emptyFileStream = Stream.empty();
+            try (var outputStream = Files.newOutputStream(tarFile);
+                var bufferedOutputStream = new BufferedOutputStream(outputStream);
+                var tarOutput = new TarArchiveOutputStream(bufferedOutputStream);
+                var files = stagingDir.toFile().exists()
+                    ? Files.walk(stagingDir)
+                    : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+            ) {
+                tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
+                for (var fileToArchive : files.toList()) {
+                    if (!fileToArchive.equals(stagingDir)) {
+                        if (Files.isSymbolicLink(fileToArchive)) {
+                            continue; // skip symbolic links
                         }
+                        var regularFile = Files.isRegularFile(fileToArchive);
+                        var entry = new TarArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive) + (regularFile ? "" : "/"));
+                        if (regularFile) {
+                            entry.setSize(fileToArchive.toFile().length());
+                        } else {
+                            entry.setSize(0);
+                        }
+                        tarOutput.putArchiveEntry(entry);
+                        if (regularFile) {
+                            try (var fileInputStream = new FileInputStream(fileToArchive.toFile())) {
+                                IOUtils.copy(fileInputStream, tarOutput);
+                            }
+                        }
+                        tarOutput.closeArchiveEntry();
                     }
-                    tarOutput.closeArchiveEntry();
                 }
+                archived = true;
             }
-            archived = true;
+            if (backupFile != null) {
+                Files.delete(backupFile);
+            }
+        }
+        catch (Exception e) {
+            if (backupFile != null) {
+                Files.move(backupFile, tarFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+            throw e;
         }
     }
 

@@ -39,6 +39,7 @@ import java.util.Iterator;
 @Slf4j
 public class DmfTarRunner extends AbstractRunner {
     private final Path dmfTarExecutable;
+    private final SshRunner sshRunner;
 
     private final String user;
     private final String host;
@@ -52,8 +53,9 @@ public class DmfTarRunner extends AbstractRunner {
      * @param host             host name or IP address of the remote host
      * @param remoteBaseDir    base directory on the remote host where archives are stored
      */
-    public DmfTarRunner(Path dmfTarExecutable, String user, String host, Path remoteBaseDir) {
+    public DmfTarRunner(Path dmfTarExecutable, SshRunner sshRunner, String user, String host, Path remoteBaseDir) {
         this.dmfTarExecutable = Path.of(checkExecutableForSecurity(dmfTarExecutable));
+        this.sshRunner = sshRunner;
         this.user = checkUserOrHostNameForSecurity(user);
         this.host = checkUserOrHostNameForSecurity(host);
         this.remoteBaseDir = Path.of(checkRemoteBaseDirForSecurity(remoteBaseDir.toString()));
@@ -178,6 +180,14 @@ public class DmfTarRunner extends AbstractRunner {
             }
         }
         return false;
+    }
+
+    public void deleteRemoteFile(String archiveName) {
+        sshRunner.runCommand("rm " + remoteBaseDir.resolve(archiveName));
+    }
+
+    public void renameRemoteFile(String oldName, String newName) {
+        sshRunner.runCommand("mv " + remoteBaseDir.resolve(oldName) + " " + remoteBaseDir.resolve(newName));
     }
 
     private String getRemotePath(String archiveName) {

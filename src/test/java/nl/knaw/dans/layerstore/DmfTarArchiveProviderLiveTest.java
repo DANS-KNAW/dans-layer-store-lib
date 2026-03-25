@@ -35,8 +35,8 @@ public class DmfTarArchiveProviderLiveTest {
     @BeforeEach
     public void setUp() throws IOException {
         var p = new LiveTestProperties();
-        dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), p.getUser(), p.getHost(), p.getRemoteBaseDir());
         sshRunner = new SshRunner(Path.of("/usr/bin/ssh"), p.getUser(), p.getHost(), p.getRemoteBaseDir());
+        dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), sshRunner, p.getUser(), p.getHost(), p.getRemoteBaseDir());
         provider = new DmfTarArchiveProvider(dmfTarRunner, sshRunner);
         if (p.getInputDir() != null) {
             inputDir = p.getInputDir();

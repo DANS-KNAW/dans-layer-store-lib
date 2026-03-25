@@ -53,7 +53,24 @@ public class DmfTarArchive implements Archive {
 
     @Override
     public void archiveFrom(Path stagingDir) {
-        dmfTarRunner.tarDirectory(stagingDir, path);
+        String backupPath = null;
+        if (archived) {
+            backupPath = path + ".bak";
+            dmfTarRunner.renameRemoteFile(path, backupPath);
+        }
+
+        try {
+            dmfTarRunner.tarDirectory(stagingDir, path);
+            if (backupPath != null) {
+                dmfTarRunner.deleteRemoteFile(backupPath);
+            }
+        }
+        catch (Exception e) {
+            if (backupPath != null) {
+                dmfTarRunner.renameRemoteFile(backupPath, path);
+            }
+            throw e;
+        }
     }
 
     @Override
