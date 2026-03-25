@@ -29,8 +29,8 @@ import java.util.regex.Pattern;
  */
 public class StagingDir {
     /**
-     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers.
-     * Current timestamps have 13 digits. After November 2286, timestamps will have 14 digits.
+     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers. Current timestamps have 13 digits.
+     * After November 2286, timestamps will have 14 digits.
      */
     private static final Pattern validLayerNamePattern = Pattern.compile("^\\d{13,}(\\.(closed|partial))?$");
 
@@ -87,9 +87,12 @@ public class StagingDir {
         Path partialPath = path.resolveSibling(id + ".partial");
 
         int existsCount = 0;
-        if (Files.exists(openPath)) existsCount++;
-        if (Files.exists(closedPath)) existsCount++;
-        if (Files.exists(partialPath)) existsCount++;
+        if (Files.exists(openPath))
+            existsCount++;
+        if (Files.exists(closedPath))
+            existsCount++;
+        if (Files.exists(partialPath))
+            existsCount++;
 
         if (existsCount > 1) {
             throw new IllegalArgumentException("Layer " + id + " has multiple staging directories");
@@ -156,4 +159,12 @@ public class StagingDir {
         return Files.exists(path);
     }
 
+    public void delete() throws IOException {
+        if (isClosed()) {
+            Files.delete(path);
+        }
+        else {
+            throw new IllegalStateException("Layer is open, cannot delete");
+        }
+    }
 }

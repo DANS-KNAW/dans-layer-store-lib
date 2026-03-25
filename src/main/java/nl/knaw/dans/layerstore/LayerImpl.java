@@ -37,7 +37,6 @@ class LayerImpl implements Layer {
     @NonNull
     private final StagingDir stagingDir;
 
-
     @NonNull
     private final Archive archive;
 

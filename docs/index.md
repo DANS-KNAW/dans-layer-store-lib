@@ -86,33 +86,36 @@ through the [dans-ocfl-java-extensions-lib].
 
 The layer store is backed by a database. The purpose is to make operations that would otherwise be slow much faster. For example, listing the contents of a
 folder in a layer store with many layers would require reading all layers. Depending on the type of archive, it could also mean reading all archive files. If
-layer archives were stored on a very slow medium, such as tape, the problem would be compounded.
+layer archives were stored in a very slow medium, such as tape, the problem would be compounded.
 
-To solve this problem the layer database stores a record for each item in each layer. The record contains the item's path, and type. If it is a file the record
+To solve this problem, the layer database stores a record for each item in each layer. The record contains the item's path and type. If it is a file, the record
 may also contain the entire content of the file. For which files the content is stored is configurable. Obviously, storing the content of all files would be
 very expensive in terms of storage space, so it is recommended to only store the content of files that are expected to be relatively small and need to be read
 often.
 
 ## Layer states
 
+![state-diagram-layers](img/state-diagram-layers.png)
+
 A layer is always on one of three states:
 
-* OPEN – this means it can be written to. It is the initial state of a layer. The files in the layer have been staged to fast storage.
-* CLOSED – this means it cannot be written to. A layer must be closed before it can be archived. Closing a layer is a fast operation, but archiving can take a
+* **OPEN** – this means it can be written to. It is the initial state of a layer. The files in the layer have been staged to fast storage.
+* **CLOSED** – this means it cannot be written to. A layer must be closed before it can be archived. Closing a layer is a fast operation, but archiving can take
+  a
   long time, depending on the size of the layer.
-* ARCHIVED – this means the layer has been written to an archive file and the staged files have been deleted.
+* **ARCHIVED** – this means the layer has been written to an archive file and the staged files have been deleted.
 
 The transitions between these states are as follows:
 
-* close - OPEN -> CLOSED. This is an instantaneous operation. The files are still staged on fast storage after closing, but the layer can no longer be changed.
-* archive - CLOSED -> ARCHIVED. This is potentially a slow operation, as it involves writing the layer to an archive file and deleting the staged files. The
-  archive transition takes a boolean argument, `overwrite`, which determines whether to overwrite an existing archive file if it exists. If `overwrite` is
-  `false`, an error is thrown if the archive file already exists. If it is true, the existing archive is only deleted after the new archive is fully written.
-* reopen - ARCHIVED -> OPEN. This is potentially a slow operation, as it involves reading the archive file and staging the files to fast storage again. The
-  archive is **not** deleted after reopening. If the open layer is subsequently edited, closed and archived again, the client should pass `overwrite=true` to
-  make sure the updates are reflected in the archive file.
-
-![state-diagram-layers](img/state-diagram-layers.png)
+* **close** (transition: OPEN -> CLOSED). This is an instantaneous operation. The files are still staged on fast storage after closing, but the layer can no
+  longer be changed.
+* **archive** (transition: CLOSED -> ARCHIVED). This is potentially a slow operation, as it involves writing the layer to an archive file and deleting the
+  staged files. The archive transition takes a boolean argument, `overwrite`, which determines whether to overwrite an existing archive file if it exists. If
+  `overwrite` is   `false`, an error is thrown if the archive file already exists. If it is true, the existing archive is only deleted after the new archive is
+  fully written.
+* **reopen** (transition: ARCHIVED -> OPEN). This is potentially a slow operation, as it involves reading the archive file and staging the files to fast storage
+  again. The archive is **not** deleted after reopening. If the open layer is subsequently edited, closed and archived again, the client should pass
+  `overwrite= true` to make sure the updates are reflected in the archive file.
 
 [OCFL]: https://ocfl.io/
 
