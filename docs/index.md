@@ -97,7 +97,7 @@ often.
 
 ![state-diagram-layers](img/state-diagram-layers.png)
 
-A layer is always on one of three states:
+A layer is always in one of three states:
 
 * **OPEN** – this means it can be written to. It is the initial state of a layer. The files in the layer have been staged to fast storage.
 * **CLOSED** – this means it cannot be written to. A layer must be closed before it can be archived. Closing a layer is a fast operation, but archiving can take
