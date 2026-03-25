@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
@@ -109,7 +110,7 @@ public class TarArchive implements Archive {
         Path backupFile = null;
         if (Files.exists(tarFile)) {
             backupFile = tarFile.resolveSibling(tarFile.getFileName().toString() + ".bak");
-            Files.move(tarFile, backupFile);
+            Files.move(tarFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
         }
 
         try {
