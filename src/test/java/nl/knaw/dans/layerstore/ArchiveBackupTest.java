@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -32,7 +33,7 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
 
         Files.createDirectories(stagingDir.getParent());
         Files.createDirectory(stagingDir);
-        assertThat(stagingDir.toFile().setReadable(false)).isTrue();
+        Assumptions.assumeTrue(stagingDir.toFile().setReadable(false), "setReadable not supported");
 
         try {
             assertThatThrownBy(() -> archive.archiveFrom(stagingDir))
@@ -56,7 +57,7 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
 
         Files.createDirectories(stagingDir.getParent());
         Files.createDirectory(stagingDir);
-        assertThat(stagingDir.toFile().setReadable(false)).isTrue();
+        Assumptions.assumeTrue(stagingDir.toFile().setReadable(false), "setReadable not supported");
 
         try {
             assertThatThrownBy(() -> archive.archiveFrom(stagingDir))
