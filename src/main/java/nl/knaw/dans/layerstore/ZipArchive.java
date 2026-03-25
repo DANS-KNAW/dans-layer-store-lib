@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -111,7 +112,7 @@ public class ZipArchive implements Archive {
         Path backupFile = null;
         if (Files.exists(zipFile)) {
             backupFile = zipFile.resolveSibling(zipFile.getFileName().toString() + ".bak");
-            Files.move(zipFile, backupFile);
+            Files.move(zipFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
         }
 
         try {
