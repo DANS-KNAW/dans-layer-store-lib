@@ -123,18 +123,6 @@ public class StagingDirTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void checkClosed_throws_when_open() throws Exception {
-        var open = testDir.resolve("1234567890123");
-        Files.createDirectories(open);
-        var stagingDir = new StagingDir(open);
-
-        assertThatThrownBy(() -> invokePrivate(stagingDir, "checkClosed"))
-            .hasCauseInstanceOf(IllegalStateException.class)
-            .hasRootCauseInstanceOf(IllegalStateException.class)
-            .hasRootCauseMessage("Layer is open, but must be closed for this operation");
-    }
-
-    @Test
     public void constructor_rejects_invalid_names() {
         var notNumeric = testDir.resolve("abc");
         var wrongSuffix = testDir.resolve("1234567890123.notclosed");

@@ -67,9 +67,90 @@ public class StagingDir {
         if (Files.isRegularFile(path)) {
             throw new IllegalArgumentException("Not a directory: " + path);
         }
-
     }
 
+    // Public API
+    public Long getId() {
+        int lastDot = path.getFileName().toString().lastIndexOf('.');
+        if (lastDot == -1) {
+            return Long.parseLong(path.getFileName().toString());
+        }
+        else {
+            return Long.parseLong(path.getFileName().toString().substring(0, lastDot));
+        }
+    }
+
+    public boolean isClosed() {
+        return isStaged() && path.getFileName().toString().endsWith(".closed");
+    }
+
+    public boolean isOpen() {
+        return isStaged() && !path.getFileName().toString().endsWith(".closed") && !path.getFileName().toString().endsWith(".partial");
+    }
+
+    public boolean isPartial() {
+        return isStaged() && path.getFileName().toString().endsWith(".partial");
+    }
+
+    public void close() throws IOException {
+        checkOpen();
+        path = Files.move(path, path.resolveSibling(path.getFileName() + ".closed"));
+    }
+
+    private void checkOpen() {
+        if (!isOpen() || !isStaged())
+            throw new IllegalStateException("Layer is closed or unstaged, but must be open and staged for this operation");
+    }
+
+    public void partial() throws IOException {
+        checkNotStaged();
+        checkPathHasNoSuffix();
+        var partialPath = path.resolveSibling(getId() + ".partial");
+        Files.createDirectories(partialPath);
+        path = partialPath;
+    }
+
+    private void checkNotStaged() {
+        if (isStaged())
+            throw new IllegalStateException("Layer is staged, but must not be for this operation");
+    }
+
+    private void checkPathHasNoSuffix() {
+        if (path.getFileName().toString().endsWith(".partial") || path.getFileName().toString().endsWith(".closed"))
+            throw new IllegalStateException("Layer path must not have .partial or .closed suffix");
+    }
+
+    public void open() throws IOException {
+        var openPath = path.resolveSibling(Long.toString(getId()));
+        if (path.getFileName().toString().endsWith(".closed") || path.getFileName().toString().endsWith(".partial")) {
+            if (Files.exists(path)) {
+                path = Files.move(path, openPath);
+            }
+            path = openPath;
+        }
+        else {
+            if (!isOpen() && !path.equals(openPath) && Files.exists(path)) {
+                throw new IllegalStateException("Layer staging directory is in an unexpected state: " + path);
+            }
+            path = openPath;
+        }
+    }
+
+    public boolean isStaged() {
+        return Files.exists(path);
+    }
+
+    public void delete() throws IOException {
+        if (isClosed() || isPartial()) {
+            FileUtils.deleteDirectory(path.toFile());
+            path = path.resolveSibling(Long.toString(getId()));
+        }
+        else {
+            throw new IllegalStateException("Layer is open, cannot delete");
+        }
+    }
+
+    // Static helpers (used by constructors)
     private static void validateState(Path path) {
         String fileName = path.getFileName().toString();
         long id;
@@ -107,91 +188,6 @@ public class StagingDir {
     private static void validateName(String name) {
         if (!validLayerNamePattern.matcher(name).matches()) {
             throw new IllegalArgumentException("Invalid layer name: " + name);
-        }
-    }
-
-    public Long getId() {
-        int lastDot = path.getFileName().toString().lastIndexOf('.');
-        if (lastDot == -1) {
-            return Long.parseLong(path.getFileName().toString());
-        }
-        else {
-            return Long.parseLong(path.getFileName().toString().substring(0, lastDot));
-        }
-    }
-
-    public boolean isClosed() {
-        return isStaged() && path.getFileName().toString().endsWith(".closed");
-    }
-
-    public boolean isOpen() {
-        return isStaged() && !path.getFileName().toString().endsWith(".closed") && !path.getFileName().toString().endsWith(".partial");
-    }
-
-    public boolean isPartial() {
-        return isStaged() && path.getFileName().toString().endsWith(".partial");
-    }
-
-    private void checkOpen() {
-        if (!isOpen() || !isStaged())
-            throw new IllegalStateException("Layer is closed or unstaged, but must be open and staged for this operation");
-    }
-
-    private void checkClosed() {
-        if (isOpen())
-            throw new IllegalStateException("Layer is open, but must be closed for this operation");
-    }
-
-    private void checkNotStaged() {
-        if (isStaged())
-            throw new IllegalStateException("Layer is staged, but must not be for this operation");
-    }
-
-    private void checkPathHasNoSuffix() {
-        if (path.getFileName().toString().endsWith(".partial") || path.getFileName().toString().endsWith(".closed"))
-            throw new IllegalStateException("Layer path must not have .partial or .closed suffix");
-    }
-
-    public void close() throws IOException {
-        checkOpen();
-        path = Files.move(path, path.resolveSibling(path.getFileName() + ".closed"));
-    }
-
-    public void partial() throws IOException {
-        checkNotStaged();
-        checkPathHasNoSuffix();
-        var partialPath = path.resolveSibling(getId() + ".partial");
-        Files.createDirectories(partialPath);
-        path = partialPath;
-    }
-
-    public void open() throws IOException {
-        var openPath = path.resolveSibling(Long.toString(getId()));
-        if (path.getFileName().toString().endsWith(".closed") || path.getFileName().toString().endsWith(".partial")) {
-            if (Files.exists(path)) {
-                path = Files.move(path, openPath);
-            }
-            path = openPath;
-        }
-        else {
-            if (!isOpen() && !path.equals(openPath) && Files.exists(path)) {
-                throw new IllegalStateException("Layer staging directory is in an unexpected state: " + path);
-            }
-            path = openPath;
-        }
-    }
-
-    public boolean isStaged() {
-        return Files.exists(path);
-    }
-
-    public void delete() throws IOException {
-        if (isClosed() || isPartial()) {
-            FileUtils.deleteDirectory(path.toFile());
-            path = path.resolveSibling(Long.toString(getId()));
-        }
-        else {
-            throw new IllegalStateException("Layer is open, cannot delete");
         }
     }
 }
