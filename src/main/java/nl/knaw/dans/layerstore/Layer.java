@@ -65,9 +65,9 @@ public interface Layer {
     void close();
 
     /**
-     * Changes the state of the layer to open. It also stages the archive file in the staging directory. This operation is only allowed when the layer is in the ARCHIVED state.
+     * Changes the state of the layer to open. It also stages the archive file in the staging directory. This operation is only allowed when the layer is in the CLOSED or ARCHIVED state.
      *
-     * @throws IllegalStateException if the layer is not in the ARCHIVED state
+     * @throws IllegalStateException if the layer is not in the CLOSED or ARCHIVED state
      * @throws IOException           if the layer cannot be reopened
      */
     void reopen() throws IOException;

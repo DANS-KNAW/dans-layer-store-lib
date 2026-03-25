@@ -133,8 +133,8 @@ public class StagingDir {
     }
 
     public void checkOpen() {
-        if (!isOpen())
-            throw new IllegalStateException("Layer is closed, but must be open for this operation");
+        if (!isOpen() || !isStaged())
+            throw new IllegalStateException("Layer is closed or unstaged, but must be open and staged for this operation");
     }
 
     public void checkClosed() {
@@ -142,18 +142,42 @@ public class StagingDir {
             throw new IllegalStateException("Layer is open, but must be closed for this operation");
     }
 
+    public void checkPartial() {
+        if (!isPartial())
+            throw new IllegalStateException("Layer is not partial, but must be for this operation");
+    }
+
     public void close() throws IOException {
         checkOpen();
         path = Files.move(path, path.resolveSibling(path.getFileName() + ".closed"));
     }
 
-    public void open() throws IOException {
+    public void partial() throws IOException {
         checkClosed();
-        var openPath = path.resolveSibling(Long.toString(getId()));
+        var partialPath = path.resolveSibling(getId() + ".partial");
         if (Files.exists(path)) {
-            Files.move(path, openPath);
+            path = Files.move(path, partialPath);
         }
-        path = openPath;
+        else {
+            Files.createDirectories(partialPath);
+            path = partialPath;
+        }
+    }
+
+    public void open() throws IOException {
+        var openPath = path.resolveSibling(Long.toString(getId()));
+        if (path.getFileName().toString().endsWith(".closed") || path.getFileName().toString().endsWith(".partial")) {
+            if (Files.exists(path)) {
+                path = Files.move(path, openPath);
+            }
+            path = openPath;
+        }
+        else {
+            if (!isOpen() && !path.equals(openPath) && Files.exists(path)) {
+                throw new IllegalStateException("Layer staging directory is in an unexpected state: " + path);
+            }
+            path = openPath;
+        }
     }
 
     public boolean isStaged() {
@@ -161,7 +185,7 @@ public class StagingDir {
     }
 
     public void delete() throws IOException {
-        if (isClosed()) {
+        if (isClosed() || isPartial()) {
             FileUtils.deleteDirectory(path.toFile());
         }
         else {

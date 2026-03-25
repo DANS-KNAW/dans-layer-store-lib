@@ -113,9 +113,10 @@ The transitions between these states are as follows:
   staged files. The archive transition takes a boolean argument, `overwrite`, which determines whether to overwrite an existing archive file if it exists. If
   `overwrite` is   `false`, an error is thrown if the archive file already exists. If it is true, the existing archive is only deleted after the new archive is
   fully written.
-* **reopen** (transition: ARCHIVED -> OPEN). This is potentially a slow operation, as it involves reading the archive file and staging the files to fast storage
-  again. The archive is **not** deleted after reopening. If the open layer is subsequently edited, closed and archived again, the client should pass
-  `overwrite= true` to make sure the updates are reflected in the archive file.
+* **reopen** (transition: ARCHIVED or CLOSED -> OPEN). This is potentially a slow operation, as it involves reading the archive file and staging the files to
+  fast storage again. The archive is **not** deleted after reopening. If the open layer is subsequently edited, closed and archived again, the client should
+  pass `overwrite= true` to make sure the updates are reflected in the archive file. It is also possible to reopen a CLOSED layer, which is a fast operation
+  that does not involve reading the archive file.
 
 [OCFL]: https://ocfl.io/
 

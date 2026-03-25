@@ -121,10 +121,25 @@ class LayerImpl implements Layer {
     }
 
     @Override
-    public void reopen() throws IOException {
-        checkState(State.ARCHIVED);
-        stagingDir.open();
-        archive.unarchiveTo(stagingDir.getPath());
+    public synchronized void reopen() throws IOException {
+        State currentState = getState();
+        if (currentState == State.CLOSED) {
+            stagingDir.open();
+        }
+        else if (currentState == State.ARCHIVED) {
+            stagingDir.partial();
+            try {
+                archive.unarchiveTo(stagingDir.getPath());
+                stagingDir.open();
+            }
+            catch (Exception e) {
+                stagingDir.delete();
+                throw e;
+            }
+        }
+        else {
+            throw new IllegalStateException(String.format("Layer %d is in state %s, but must be in state CLOSED or ARCHIVED for this operation", id, currentState));
+        }
     }
 
     @Override
