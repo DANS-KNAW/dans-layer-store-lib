@@ -368,8 +368,6 @@ public class LayeredItemStore implements ItemStore {
             }
             else {
                 throw new IllegalStateException("Cannot delete files from closed layer " + layer.getId());
-                // TODO: implement deletion from closed layers, by reopening the layer, deleting the files, and closing and archiving the layer again
-                //  remember also to allow records in multiple layers by getIdFromDb
             }
         }
 
