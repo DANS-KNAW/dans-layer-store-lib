@@ -23,12 +23,14 @@ repo_url: https://github.com/dans-layer-store-lib
 
 nav:
   - Manual:
-      - DESCRIPTION: index.md
-      - INSTALLATION: installation.md
-      - API: to-api.md
-      - ⇒ Context: context.md
+      - Description: index.md
+      - Getting started: getting-started.md
+      - JavaDocs: api.md
+      - Context: context.md
   - Development:
+      - Overview: dev.md
       - Live tests: live.md
+
 plugins:
   - markdownextradata
   - search
