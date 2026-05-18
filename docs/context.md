@@ -1,7 +1,7 @@
 ---
 
-Context: DANS Data Station Architecture
-=======================================
+Context
+=======
 
 This library is a component in the [DANS Data Station Architecture]{:target=_blank}.
 
