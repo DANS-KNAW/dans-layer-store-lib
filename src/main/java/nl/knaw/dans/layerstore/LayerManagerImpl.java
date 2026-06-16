@@ -113,6 +113,9 @@ public class LayerManagerImpl implements LayerManager {
                 oldTopLayer.close();
             }
             log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());
+            if (archiveProvider.exists(oldTopLayer.getId())) {
+                throw new IllegalStateException("Old top layer with id " + oldTopLayer.getId() + " is already archived");
+            }
             archive(oldTopLayer, false);
         }
         else {

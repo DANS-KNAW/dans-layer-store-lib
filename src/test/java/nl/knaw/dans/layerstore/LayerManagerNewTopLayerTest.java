@@ -43,7 +43,7 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
 
         // When / Then
         assertThatThrownBy(layerManager::newTopLayer)
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("already archived");
     }
 
