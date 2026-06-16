@@ -29,8 +29,8 @@ public class DmfTarArchiveProvider implements ArchiveProvider {
     private final SshRunner sshRunner;
 
     @Override
-    public Archive createArchive(long layerId) {
-        return new DmfTarArchive(dmfTarRunner, layerId + ".dmftar", exists(layerId));
+    public Archive createArchive(long layerId, boolean exists) {
+        return new DmfTarArchive(dmfTarRunner, layerId + ".dmftar", exists);
     }
 
     @Override

@@ -30,7 +30,7 @@ public class TarArchiveProvider implements ArchiveProvider {
     private final Path archiveRoot;
 
     @Override
-    public Archive createArchive(long layerId) {
+    public Archive createArchive(long layerId, boolean exists) {
         return new TarArchive(archiveRoot.resolve(layerId + ".tar"));
     }
 

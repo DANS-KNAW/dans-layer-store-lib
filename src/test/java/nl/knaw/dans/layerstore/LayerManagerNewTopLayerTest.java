@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -41,7 +43,7 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
 
         // When / Then
         assertThatThrownBy(layerManager::newTopLayer)
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("already archived");
     }
 
@@ -54,8 +56,8 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
             }
 
             @Override
-            public java.util.List<String> listFiles(String flags) {
-                return java.util.Collections.emptyList();
+            public List<String> listFiles(String flags) {
+                return Collections.emptyList();
             }
         };
     }
