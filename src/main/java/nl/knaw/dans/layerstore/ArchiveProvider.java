@@ -27,10 +27,10 @@ public interface ArchiveProvider {
      * Create a new {@link Archive} instance for the given layer ID.
      *
      * @param layerId the layer ID
+     * @param exists the archive file already exists
      * @return the new archive
      */
-    Archive createArchive(long layerId);
-
+    Archive createArchive(long layerId, boolean exists);
 
     /**
      * Check if an archive exists at the given path.
@@ -39,7 +39,6 @@ public interface ArchiveProvider {
      * @return true if the archive exists, false otherwise
      */
     boolean exists(long layerId);
-
 
     /**
      * List all archived layer IDs.

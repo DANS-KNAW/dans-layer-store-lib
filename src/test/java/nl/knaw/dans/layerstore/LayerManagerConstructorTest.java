@@ -16,12 +16,16 @@
 package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Files;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
 
@@ -105,5 +109,42 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         assertThat(layerManager.getTopLayer()).isNotNull();
         assertThat(layerManager.getTopLayer().getId()).isEqualTo(existingLayerId);
         assertThat(layerManager.getTopLayer().getState()).isEqualTo(Layer.State.CLOSED);
+    }
+
+    @Test
+    public void should_validate_archive_root_by_default() throws IOException {
+        var archiveProvider = Mockito.mock(ArchiveProvider.class);
+        new LayerManagerImpl(stagingRoot, archiveProvider, new DirectLayerArchiver());
+        verify(archiveProvider, times(1)).validateRoot();
+    }
+
+    @Test
+    public void should_not_validate_archive_root_if_validateArchiveRoot_is_false() throws IOException {
+        var archiveProvider = Mockito.mock(ArchiveProvider.class);
+        new LayerManagerImpl(stagingRoot, archiveProvider, new DirectLayerArchiver(), false);
+        verify(archiveProvider, never()).validateRoot();
+    }
+
+    @Test
+    public void should_throw_if_archive_root_validation_fails_and_validateArchiveRoot_is_true() throws IOException {
+        Files.createDirectories(archiveRoot);
+        var invalidFile = "invalid-file";
+        Files.createFile(archiveRoot.resolve(invalidFile));
+
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver(), true))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Archive root")
+            .hasMessageContaining("contains illegal files")
+            .hasMessageContaining(invalidFile);
+    }
+
+    @Test
+    public void should_not_throw_if_archive_root_validation_fails_but_validateArchiveRoot_is_false() throws IOException {
+        Files.createDirectories(archiveRoot);
+        var invalidFile = "invalid-file";
+        Files.createFile(archiveRoot.resolve(invalidFile));
+
+        // Should not throw
+        new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver(), false);
     }
 }

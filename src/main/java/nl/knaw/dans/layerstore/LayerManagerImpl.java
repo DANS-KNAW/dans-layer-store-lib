@@ -33,8 +33,8 @@ import java.util.regex.Pattern;
 @Slf4j
 public class LayerManagerImpl implements LayerManager {
     /**
-     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers.
-     * Current timestamps have 13 digits. After November 2286, timestamps will have 14 digits.
+     * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers. Current timestamps have 13 digits.
+     * After November 2286, timestamps will have 14 digits.
      */
     private static final Pattern validLayerNamePattern = Pattern.compile("^\\d{13,}(\\.(closed|partial))?$");
 
@@ -48,14 +48,27 @@ public class LayerManagerImpl implements LayerManager {
     private Layer topLayer;
 
     /**
-     * Creates a new LayerManagerImpl.
+     * Creates a new LayerManagerImpl and validates the archive root.
      *
-     * @param stagingRoot     the root directory for staging layers.
-     * @param archiveProvider the archive provider to use.
-     * @param layerArchiver   the layer archiver to use.
-     * @throws IOException if the staging root directory cannot be created.
+     * @param stagingRoot     the root directory for staging layers; must not be null.
+     * @param archiveProvider the provider responsible for managing archives; must not be null.
+     * @param layerArchiver   the archiver used to handle layer archiving; must not be null.
+     * @throws IOException if the staging root directory cannot be created or accessed.
      */
     public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver) throws IOException {
+        this(stagingRoot, archiveProvider, layerArchiver, true);
+    }
+
+    /**
+     * Creates a new LayerManagerImpl.
+     *
+     * @param stagingRoot         the root directory for staging layers.
+     * @param archiveProvider     the archive provider to use.
+     * @param layerArchiver       the layer archiver to use.
+     * @param validateArchiveRoot validate that the directory containing the archived layers does not contain other files
+     * @throws IOException if the staging root directory cannot be created.
+     */
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver, boolean validateArchiveRoot) throws IOException {
         this.stagingRoot = stagingRoot;
         this.layerArchiver = layerArchiver;
         this.archiveProvider = archiveProvider;
@@ -63,13 +76,15 @@ public class LayerManagerImpl implements LayerManager {
             Files.createDirectories(this.stagingRoot);
         }
         validateStagingRoot();
-        this.archiveProvider.validateRoot();
+        if (validateArchiveRoot) {
+            this.archiveProvider.validateRoot();
+        }
         try (var pathStream = Files.list(this.stagingRoot)) {
             pathStream
                 .map(StagingDir::new)
                 .max(Comparator.comparingLong(StagingDir::getId))
                 .ifPresent(maxDir -> {
-                        topLayer = new LayerImpl(maxDir.getId(), maxDir, this.archiveProvider.createArchive(maxDir.getId()));
+                        topLayer = new LayerImpl(maxDir.getId(), maxDir, this.archiveProvider.createArchive(maxDir.getId(), false));
                     }
                 );
         }
@@ -90,7 +105,7 @@ public class LayerManagerImpl implements LayerManager {
         log.debug("Creating new top layer with id {}", id);
         var stagingDir = stagingRoot.resolve(Long.toString(id));
         Files.createDirectories(stagingDir);
-        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id));
+        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id, false));
         topLayer = newLayer;
 
         if (oldTopLayer != null) {
@@ -129,8 +144,9 @@ public class LayerManagerImpl implements LayerManager {
         }
         else {
             var stagingDir = new StagingDir(stagingRoot, id);
-            if (stagingDir.isStaged() || archiveProvider.exists(id)) {
-                return new LayerImpl(id, stagingDir, archiveProvider.createArchive(id));
+            boolean archiveFileExists = archiveProvider.exists(id);
+            if (stagingDir.isStaged() || archiveFileExists) {
+                return new LayerImpl(id, stagingDir, archiveProvider.createArchive(id, archiveFileExists));
             }
             else {
                 throw new IllegalArgumentException("No layer found with id " + id);
