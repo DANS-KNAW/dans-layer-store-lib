@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Manages {@link Layer}s. Implementations of this interface should create new layers only through the `newTopLayer` method.
  */
-public interface LayerManager {
+interface LayerManager {
     /**
      * Closes the current top layer (if present) and creates a new top layer. The old top layer will be scheduled for archiving.
      */

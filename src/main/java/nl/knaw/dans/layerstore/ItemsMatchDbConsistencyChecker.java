@@ -37,7 +37,7 @@ public class ItemsMatchDbConsistencyChecker implements LayerConsistencyChecker {
         this.layerManager = layerManager;
     }
 
-    public void setLayerManager(LayerManager layerManager) {
+    void setLayerManager(LayerManager layerManager) {
         this.layerManager = layerManager;
     }
 
