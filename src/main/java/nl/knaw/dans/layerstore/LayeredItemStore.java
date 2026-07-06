@@ -81,18 +81,19 @@ public class LayeredItemStore implements ItemStore {
         this.layerManager = layerManager;
         this.databaseBackedContentManager = Optional.ofNullable(databaseBackedContentManager).orElse(new NoopDatabaseBackedContentManager());
         this.itemsMatchDbConsistencyChecker = new ItemsMatchDbConsistencyChecker(database);
+        this.itemsMatchDbConsistencyChecker.setLayerManager(layerManager);
     }
 
     /**
      * Creates a new top layer, archiving any existing top layer.
      *
-     * @return the new top layer
+     * @return the id of the new top layer
      * @throws IOException if an I/O error occurs
      */
-    public Layer newTopLayer() throws IOException {
+    public long newTopLayer() throws IOException {
         layerManager.newTopLayer();
         database.addDirectory(layerManager.getTopLayer().getId(), "");
-        return layerManager.getTopLayer();
+        return layerManager.getTopLayer().getId();
     }
 
     /**
@@ -109,24 +110,43 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
-     * Gets a layer by id.
+     * Closes the layer with the given id.
      *
      * @param id the layer id
-     * @return the layer
      * @throws IOException if an I/O error occurs
      */
-    public Layer getLayer(long id) throws IOException {
-        return layerManager.getLayer(id);
+    public void closeLayer(long id) throws IOException {
+        layerManager.getLayer(id).close();
     }
 
     /**
-     * Gets the top layer or null if there is no top layer.
+     * Returns the id of the top layer, or {@code null} if there is no top layer.
      *
-     * @return the top layer or null if there is no top layer
-     * @throws IOException if an I/O error occurs while reading from the database or the layer manager
+     * @return the id of the top layer or {@code null}
      */
-    public Layer getTopLayer() throws IOException {
-        return layerManager.getTopLayer();
+    public Long getTopLayerId() {
+        return layerManager.getTopLayerId();
+    }
+
+    /**
+     * Returns the size in bytes of the top layer.
+     *
+     * @return the size in bytes of the top layer
+     * @throws IOException if an I/O error occurs
+     */
+    public long getTopLayerSizeInBytes() throws IOException {
+        return layerManager.getTopLayer().getSizeInBytes();
+    }
+
+    /**
+     * Returns the size in bytes of the layer with the given id.
+     *
+     * @param id the layer id
+     * @return the size in bytes
+     * @throws IOException if an I/O error occurs
+     */
+    public long getLayerSizeInBytes(long id) throws IOException {
+        return layerManager.getLayer(id).getSizeInBytes();
     }
 
     public List<Long> listLayerIds() throws IOException {
@@ -158,7 +178,7 @@ public class LayeredItemStore implements ItemStore {
      * @throws ItemsMismatchException if the items do not match
      */
     public void checkLayerItemRecords(long layerId) throws IOException, ItemsMismatchException {
-        itemsMatchDbConsistencyChecker.check(layerManager.getLayer(layerId));
+        itemsMatchDbConsistencyChecker.check(layerId);
     }
 
     @Override

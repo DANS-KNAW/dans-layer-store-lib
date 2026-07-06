@@ -44,7 +44,8 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_find_a_top_layer_with_content() throws IOException {
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
-        var topLayer = layerManager.newTopLayer();
+        layerManager.newTopLayer();
+        var topLayer = layerManager.getTopLayer();
         topLayer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
 
         // When
@@ -58,7 +59,8 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_find_an_empty_top_layer() throws IOException {
         // Given
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
-        long topLayerId = layerManager.newTopLayer().getId();
+        layerManager.newTopLayer();
+        long topLayerId = layerManager.getTopLayerId();
 
         // When
         var layer = layerManager.getLayer(topLayerId);
@@ -72,7 +74,8 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Given
         Files.createDirectories(archiveRoot);
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
-        var initialLayerId = layerManager.newTopLayer().getId();
+        layerManager.newTopLayer();
+        var initialLayerId = layerManager.getTopLayerId();
         assertThat(archiveRoot).isEmptyDirectory(); // nothing archived yet
 
         // When
@@ -90,7 +93,8 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
         // Given
         Files.createDirectories(archiveRoot);
         var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveRoot), new DirectLayerArchiver());
-        layerManager.newTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
+        layerManager.newTopLayer();
+        layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         Layer initialLayer = layerManager.getTopLayer();
         var initialLayerId = initialLayer.getId();
         layerManager.newTopLayer(); // This will archive the top layer

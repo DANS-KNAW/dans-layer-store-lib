@@ -91,7 +91,7 @@ public class LayerManagerImpl implements LayerManager {
     }
 
     @Override
-    public Layer newTopLayer() throws IOException {
+    public void newTopLayer() throws IOException {
         var oldTopLayer = topLayer;
         // Wait 2 millis before creating a new top layer to avoid name collision
         try {
@@ -121,7 +121,6 @@ public class LayerManagerImpl implements LayerManager {
         else {
             log.debug("No old top layer to archive");
         }
-        return newLayer;
     }
 
     @Override

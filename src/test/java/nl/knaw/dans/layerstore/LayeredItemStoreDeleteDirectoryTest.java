@@ -110,7 +110,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         // Given
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
-        var firstLayer = layeredStore.newTopLayer();
+        var firstLayerId = layeredStore.newTopLayer();
         layeredStore.createDirectory("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
         Files.createDirectories(archiveRoot);
@@ -123,6 +123,6 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         // When / Then
         assertThatThrownBy(() -> layeredStore.deleteFiles(List.of("a/b/c/test.txt")))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageStartingWith("Cannot delete files from closed layer " + firstLayer.getId());
+            .hasMessageStartingWith("Cannot delete files from closed layer " + firstLayerId);
     }
 }

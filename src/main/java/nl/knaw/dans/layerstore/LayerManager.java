@@ -25,7 +25,7 @@ public interface LayerManager {
     /**
      * Closes the current top layer (if present) and creates a new top layer. The old top layer will be scheduled for archiving.
      */
-    Layer newTopLayer() throws IOException;
+    void newTopLayer() throws IOException;
 
     /**
      * Returns the current top layer.
@@ -33,6 +33,16 @@ public interface LayerManager {
      * @return the current top layer
      */
     Layer getTopLayer();
+
+    /**
+     * Returns the id of the current top layer, or {@code null} if there is no top layer.
+     *
+     * @return the id of the current top layer, or {@code null} if there is no top layer
+     */
+    default Long getTopLayerId() {
+        var topLayer = getTopLayer();
+        return topLayer == null ? null : topLayer.getId();
+    }
 
     /**
      * Returns the layer with the given id.
