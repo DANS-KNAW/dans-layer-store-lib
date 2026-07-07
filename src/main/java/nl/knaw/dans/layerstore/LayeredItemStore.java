@@ -250,8 +250,15 @@ public class LayeredItemStore implements ItemStore {
     public void writeFile(String path, InputStream content) throws IOException {
         log.debug("Checking that the directory to write to exists in the item store");
         Path parentPath = Path.of(path).getParent();
-        if (parentPath != null && !database.existsPathLike(parentPath.toString())) {
-            throw new IllegalArgumentException("Parent directory does not exist in item store: " + Path.of(path).getParent());
+        if (parentPath != null) {
+            String parent = parentPath.toString();
+            var parentRecords = database.getRecordsByPath(parent);
+            if (parentRecords.isEmpty()) {
+                throw new IllegalArgumentException("Parent directory does not exist in item store: " + parent);
+            }
+            if (parentRecords.get(0).getType() != Item.Type.Directory) {
+                throw new IllegalArgumentException("Parent path is not a directory in item store: " + parent);
+            }
         }
         log.debug("Writing file {} to top layer", path);
         var topLayer = layerManager.getTopLayer();
