@@ -40,7 +40,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
+        layeredStore.createDirectories("a/b/c/d");
         layerManager.newTopLayer();
 
         assertThatThrownBy(() -> layeredStore.deleteDirectory("a/b/c")).
@@ -53,7 +53,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
+        layeredStore.createDirectories("a/b/c/d");
 
         // precondition: show database content
         var list1 = daoTestExtension.inTransaction(() ->
@@ -80,7 +80,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
+        layeredStore.createDirectories("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
 
         // precondition: show database content
@@ -111,7 +111,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         var firstLayerId = layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
+        layeredStore.createDirectories("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
         Files.createDirectories(archiveRoot);
         layerManager.newTopLayer();

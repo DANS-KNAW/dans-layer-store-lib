@@ -29,7 +29,7 @@ public interface DatabaseBackedContentManager {
     boolean test(String path);
 
     /**
-     * Process the content before it is stored in the database. The path of the file is also provided, so that the processor can decide to process the content based on the path. Note that the
+     * Process the content before it is stored in the database. The path of the file is also provided so that the processor can decide to process the content based on the path. Note that the
      * implementation should take care to select the same paths as in {@link #postRetrieve(String, byte[])}
      * <p>
      * The most important use case for this method is to compress the content before it is stored in the database.
@@ -41,7 +41,7 @@ public interface DatabaseBackedContentManager {
     byte[] preStore(String path, byte[] bytes);
 
     /**
-     * Process the content after it is retrieved from the database. The path of the file is also provided, so that the processor can decide to process the content based on the path. Note that the
+     * Process the content after it is retrieved from the database. The path of the file is also provided so that the processor can decide to process the content based on the path. Note that the
      * implementation should take care to select the same paths as in {@link #preStore(String, byte[])}
      * <p>
      * The most important use case for this method is to decompress the content after it is retrieved from the database (assuming it was compressed before it was stored).

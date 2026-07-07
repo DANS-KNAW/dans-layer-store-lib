@@ -31,7 +31,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         Files.createDirectories(stagingDir);
         layer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
-        layer.createDirectory("path/to");
+        layer.createDirectories("path/to");
         layer.writeFile("path/to/other.txt", toInputStream("Whatever", UTF_8));
 
         assertThat(layer.getSizeInBytes()).isEqualTo(20L);
@@ -42,7 +42,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
         Files.createDirectories(stagingDir);
         layer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
-        layer.createDirectory("path/to");
+        layer.createDirectories("path/to");
         layer.writeFile("path/to/other.txt", toInputStream("Whatever", UTF_8));
         layer.close();
 

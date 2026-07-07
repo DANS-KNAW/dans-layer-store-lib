@@ -30,7 +30,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When
-        layer.createDirectory("path/to/directory");
+        layer.createDirectories("path/to/directory");
 
         // Then
         assertThat(stagingDir.resolve("path/to/directory")).exists();
@@ -44,7 +44,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
         layer.close();
 
         // When / Then
-        assertThatThrownBy(() -> layer.createDirectory("path/to/directory"))
+        assertThatThrownBy(() -> layer.createDirectories("path/to/directory"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("must be in state OPEN");
     }
@@ -56,7 +56,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
-        assertThatThrownBy(() -> layer.createDirectory(null))
+        assertThatThrownBy(() -> layer.createDirectories(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Path cannot be null");
     }
@@ -68,7 +68,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
-        assertThatThrownBy(() -> layer.createDirectory(" "))
+        assertThatThrownBy(() -> layer.createDirectories(" "))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Path cannot be blank");
     }
@@ -80,7 +80,7 @@ public class LayerCreateDirectoryTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
 
         // When / Then
-        assertThatThrownBy(() -> layer.createDirectory("path/to/../../../directory"))
+        assertThatThrownBy(() -> layer.createDirectories("path/to/../../../directory"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Path is outside staging directory");
     }

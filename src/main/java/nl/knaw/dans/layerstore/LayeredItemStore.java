@@ -306,7 +306,7 @@ public class LayeredItemStore implements ItemStore {
             layerManager.getTopLayer().getId(),
             parent.toString());
         if (!newItemRecordsUpToDestination.isEmpty()) {
-            layerManager.getTopLayer().createDirectory(parent.toString());
+            layerManager.getTopLayer().createDirectories(parent.toString());
         }
 
         // Create listing records for all files in the moved directory
@@ -424,8 +424,8 @@ public class LayeredItemStore implements ItemStore {
     }
 
     @Override
-    public void createDirectory(String path) throws IOException {
-        layerManager.getTopLayer().createDirectory(path);
+    public void createDirectories(String path) throws IOException {
+        layerManager.getTopLayer().createDirectories(path);
         database.addDirectory(layerManager.getTopLayer().getId(), path);
     }
 

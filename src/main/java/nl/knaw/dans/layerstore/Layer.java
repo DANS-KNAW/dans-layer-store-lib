@@ -87,7 +87,7 @@ interface Layer {
      * @param path the path of the directory relative to the storage root
      * @throws IOException if the directory cannot be created
      */
-    void createDirectory(String path) throws IOException;
+    void createDirectories(String path) throws IOException;
 
     /**
      * Deletes the directory at the given path, including all its contents. Not allowed when the layer is closed.

@@ -42,7 +42,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
         var firstLayer = layerManager.getTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
+        layeredStore.createDirectories("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
@@ -61,7 +61,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
+        layeredStore.createDirectories("a/b/c/d");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello world!", UTF_8));
 
