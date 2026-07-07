@@ -24,7 +24,7 @@ import java.io.IOException;
  * Checks that the items found on storage are the same as the items found in the database for the layer.
  */
 @Slf4j
-public class ItemsMatchDbConsistencyChecker implements LayerConsistencyChecker {
+class ItemsMatchDbConsistencyChecker implements LayerConsistencyChecker {
     private final LayerDatabase database;
     private LayerManager layerManager;
 
