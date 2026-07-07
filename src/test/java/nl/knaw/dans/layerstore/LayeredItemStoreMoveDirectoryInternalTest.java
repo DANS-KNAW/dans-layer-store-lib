@@ -38,8 +38,8 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.createDirectory("a/b/e/f");
+        layeredStore.createDirectories("a/b/c/d");
+        layeredStore.createDirectories("a/b/e/f");
         layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!", UTF_8));
 
         layeredStore.moveDirectoryInternal("a/b/e/f", "a/b/c/d/x");
@@ -54,8 +54,8 @@ public class LayeredItemStoreMoveDirectoryInternalTest extends AbstractLayerData
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d");
-        layeredStore.createDirectory("a/b/e/f");
+        layeredStore.createDirectories("a/b/c/d");
+        layeredStore.createDirectories("a/b/e/f");
         layeredStore.writeFile("a/b/e/f/test.txt", toInputStream("Hello world!", UTF_8));
         layerManager.newTopLayer();
 

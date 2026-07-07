@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IteratorUtils;
 
@@ -25,13 +24,29 @@ import java.io.IOException;
  * Checks that the items found on storage are the same as the items found in the database for the layer.
  */
 @Slf4j
-@AllArgsConstructor
 public class ItemsMatchDbConsistencyChecker implements LayerConsistencyChecker {
     private final LayerDatabase database;
+    private LayerManager layerManager;
+
+    public ItemsMatchDbConsistencyChecker(LayerDatabase database) {
+        this.database = database;
+    }
+
+    public ItemsMatchDbConsistencyChecker(LayerDatabase database, LayerManager layerManager) {
+        this.database = database;
+        this.layerManager = layerManager;
+    }
+
+    void setLayerManager(LayerManager layerManager) {
+        this.layerManager = layerManager;
+    }
 
     @Override
-    public void check(Layer layer) throws IOException, ItemsMismatchException {
-        checkSameItemsFoundOnStorageAsInDatabase(layer);
+    public void check(long layerId) throws IOException, ItemsMismatchException {
+        if (layerManager == null) {
+            throw new IllegalStateException("LayerManager has not been set");
+        }
+        checkSameItemsFoundOnStorageAsInDatabase(layerManager.getLayer(layerId));
     }
 
     private void checkSameItemsFoundOnStorageAsInDatabase(Layer layer) throws IOException, ItemsMismatchException {

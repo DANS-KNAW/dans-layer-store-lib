@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  * Default implementation of the {@link LayerManager} interface.
  */
 @Slf4j
-public class LayerManagerImpl implements LayerManager {
+class LayerManagerImpl implements LayerManager {
     /**
      * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers. Current timestamps have 13 digits.
      * After November 2286, timestamps will have 14 digits.
@@ -91,7 +91,7 @@ public class LayerManagerImpl implements LayerManager {
     }
 
     @Override
-    public Layer newTopLayer() throws IOException {
+    public void newTopLayer() throws IOException {
         var oldTopLayer = topLayer;
         // Wait 2 millis before creating a new top layer to avoid name collision
         try {
@@ -121,7 +121,6 @@ public class LayerManagerImpl implements LayerManager {
         else {
             log.debug("No old top layer to archive");
         }
-        return newLayer;
     }
 
     @Override

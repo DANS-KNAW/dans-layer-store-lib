@@ -47,7 +47,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         layerManager.newTopLayer();
         var anotherInstance = new LayeredItemStore(db, layerManager);
 
-        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.createDirectories("a/b/c/d");
         layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
@@ -64,7 +64,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         layeredItemStore.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
-        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.createDirectories("a/b/c/d");
         layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
@@ -92,7 +92,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         layeredItemStore.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
-        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.createDirectories("a/b/c/d");
         layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
@@ -114,7 +114,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         layeredItemStore.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
-        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.createDirectories("a/b/c/d");
         layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
@@ -136,14 +136,14 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         layerManager.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
-        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.createDirectories("a/b/c/d");
         layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
         layerManager.newTopLayer();
-        layeredItemStore.createDirectory("x/y/z");
+        layeredItemStore.createDirectories("x/y/z");
         layeredItemStore.writeFile("x/y/z/file1.txt", toInputStream("Layer 2 file", UTF_8));
         layerManager.newTopLayer();
-        layeredItemStore.createDirectory("m/n");
+        layeredItemStore.createDirectories("m/n");
         layeredItemStore.writeFile("m/n/file2.txt", toInputStream("Layer 3 file", UTF_8));
 
         // When / Then
@@ -159,7 +159,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         layerManager.newTopLayer();
         var checker = new LayeredItemStore(db, layerManager);
 
-        layeredItemStore.createDirectory("a/b/c/d");
+        layeredItemStore.createDirectories("a/b/c/d");
         layeredItemStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 

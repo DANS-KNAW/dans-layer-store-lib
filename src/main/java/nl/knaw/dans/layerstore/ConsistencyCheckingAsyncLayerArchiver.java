@@ -39,7 +39,7 @@ public class ConsistencyCheckingAsyncLayerArchiver implements LayerArchiver {
         executor.execute(() -> {
             try {
                 log.info("Checking consistency of layer {}", layer.getId());
-                consistencyChecker.check(layer);
+                consistencyChecker.check(layer.getId());
                 log.info("Archiving layer {}", layer.getId());
                 layer.archive(overwrite);
                 log.info("Layer {} archived", layer.getId());

@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * An implementation of {@link ItemStore} that organizes files and directories ({@link Item}s) in an ordered stack of {@link Layer}s. Layers are either staged or archived. Staged layers can be
@@ -50,11 +51,20 @@ public class LayeredItemStore implements ItemStore {
     private final LayerDatabase database;
     private final LayerManager layerManager;
     private final DatabaseBackedContentManager databaseBackedContentManager;
-    private final ItemsMatchDbConsistencyChecker itemsMatchDbConsistencyChecker;
+    private final LayerConsistencyChecker layerConsistencyChecker;
 
     @Getter
     @Setter
     private boolean allowReadingContentFromArchives = true;
+
+    /**
+     * Returns the internal layer consistency checker.
+     *
+     * @return the layer consistency checker
+     */
+    public LayerConsistencyChecker getLayerConsistencyChecker() {
+        return layerConsistencyChecker;
+    }
 
     /**
      * Creates a new LayeredItemStore without a database-backed content manager.
@@ -62,7 +72,7 @@ public class LayeredItemStore implements ItemStore {
      * @param database     the database to use
      * @param layerManager the layer manager to use
      */
-    public LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
+    LayeredItemStore(LayerDatabase database, LayerManager layerManager) {
         this(database, layerManager, null);
     }
 
@@ -73,35 +83,51 @@ public class LayeredItemStore implements ItemStore {
      * @param layerManager                 the layer manager to use
      * @param databaseBackedContentManager the database-backed content manager to use
      */
-    public LayeredItemStore(
+    LayeredItemStore(
         LayerDatabase database,
         LayerManager layerManager,
         DatabaseBackedContentManager databaseBackedContentManager) {
+        this(database, layerManager, databaseBackedContentManager, new ItemsMatchDbConsistencyChecker(database));
+        ((ItemsMatchDbConsistencyChecker) this.layerConsistencyChecker).setLayerManager(layerManager);
+    }
+
+    /**
+     * Creates a new LayeredItemStore with a custom consistency checker.
+     *
+     * @param database                     the database to use
+     * @param layerManager                 the layer manager to use
+     * @param databaseBackedContentManager the database-backed content manager to use
+     * @param layerConsistencyChecker      the consistency checker to use
+     */
+    LayeredItemStore(
+        LayerDatabase database,
+        LayerManager layerManager,
+        DatabaseBackedContentManager databaseBackedContentManager,
+        LayerConsistencyChecker layerConsistencyChecker) {
         this.database = database;
         this.layerManager = layerManager;
         this.databaseBackedContentManager = Optional.ofNullable(databaseBackedContentManager).orElse(new NoopDatabaseBackedContentManager());
-        this.itemsMatchDbConsistencyChecker = new ItemsMatchDbConsistencyChecker(database);
+        this.layerConsistencyChecker = layerConsistencyChecker;
     }
 
     /**
      * Creates a new top layer, archiving any existing top layer.
      *
-     * @return the new top layer
+     * @return the id of the new top layer
      * @throws IOException if an I/O error occurs
      */
-    public Layer newTopLayer() throws IOException {
+    public long newTopLayer() throws IOException {
         layerManager.newTopLayer();
         database.addDirectory(layerManager.getTopLayer().getId(), "");
-        return layerManager.getTopLayer();
+        return layerManager.getTopLayer().getId();
     }
 
     /**
      * Requests the archiving of the layer with the specified id. The operation may be performed asynchronously, so the caller should check the layer's status to determine when the archiving is
      * complete.
      *
-     * @param layerId the id of the layer to archive
+     * @param layerId   the id of the layer to archive
      * @param overwrite whether to overwrite an existing archive
-     *
      * @throws IllegalArgumentException if no layer with the specified id exists
      */
     public void archiveLayer(long layerId, boolean overwrite) {
@@ -109,24 +135,43 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
-     * Gets a layer by id.
+     * Closes the layer with the given id.
      *
      * @param id the layer id
-     * @return the layer
      * @throws IOException if an I/O error occurs
      */
-    public Layer getLayer(long id) throws IOException {
-        return layerManager.getLayer(id);
+    public void closeLayer(long id) throws IOException {
+        layerManager.getLayer(id).close();
     }
 
     /**
-     * Gets the top layer or null if there is no top layer.
+     * Returns the id of the top layer, or {@code null} if there is no top layer.
      *
-     * @return the top layer or null if there is no top layer
-     * @throws IOException if an I/O error occurs while reading from the database or the layer manager
+     * @return the id of the top layer or {@code null}
      */
-    public Layer getTopLayer() throws IOException {
-        return layerManager.getTopLayer();
+    public Long getTopLayerId() {
+        return layerManager.getTopLayerId();
+    }
+
+    /**
+     * Returns the size in bytes of the top layer.
+     *
+     * @return the size in bytes of the top layer
+     * @throws IOException if an I/O error occurs
+     */
+    public long getTopLayerSizeInBytes() throws IOException {
+        return layerManager.getTopLayer().getSizeInBytes();
+    }
+
+    /**
+     * Returns the size in bytes of the layer with the given id.
+     *
+     * @param id the layer id
+     * @return the size in bytes
+     * @throws IOException if an I/O error occurs
+     */
+    public long getLayerSizeInBytes(long id) throws IOException {
+        return layerManager.getLayer(id).getSizeInBytes();
     }
 
     public List<Long> listLayerIds() throws IOException {
@@ -158,7 +203,7 @@ public class LayeredItemStore implements ItemStore {
      * @throws ItemsMismatchException if the items do not match
      */
     public void checkLayerItemRecords(long layerId) throws IOException, ItemsMismatchException {
-        itemsMatchDbConsistencyChecker.check(layerManager.getLayer(layerId));
+        layerConsistencyChecker.check(layerId);
     }
 
     @Override
@@ -203,8 +248,24 @@ public class LayeredItemStore implements ItemStore {
 
     @Override
     public void writeFile(String path, InputStream content) throws IOException {
+        log.debug("Checking that the directory to write to exists in the item store");
+        Path parentPath = Path.of(path).getParent();
+        if (parentPath != null) {
+            String parent = parentPath.toString();
+            var parentRecords = database.getRecordsByPath(parent);
+            if (parentRecords.isEmpty()) {
+                throw new IllegalArgumentException("Parent directory does not exist in item store: " + parent);
+            }
+            if (parentRecords.get(0).getType() != Item.Type.Directory) {
+                throw new IllegalArgumentException("Parent path is not a directory in item store: " + parent);
+            }
+        }
         log.debug("Writing file {} to top layer", path);
         var topLayer = layerManager.getTopLayer();
+        if (parentPath != null) {
+            // N.B. not calling topLayer.createDirectories() to ensure that ancestor directories are created in the db as well.
+            createDirectories(parentPath.toString());
+        }
         topLayer.writeFile(path, content);
 
         var recordsInTopLayer = database.getRecordsByPath(path).stream()
@@ -260,7 +321,7 @@ public class LayeredItemStore implements ItemStore {
             layerManager.getTopLayer().getId(),
             parent.toString());
         if (!newItemRecordsUpToDestination.isEmpty()) {
-            layerManager.getTopLayer().createDirectory(parent.toString());
+            layerManager.getTopLayer().createDirectories(parent.toString());
         }
 
         // Create listing records for all files in the moved directory
@@ -378,8 +439,8 @@ public class LayeredItemStore implements ItemStore {
     }
 
     @Override
-    public void createDirectory(String path) throws IOException {
-        layerManager.getTopLayer().createDirectory(path);
+    public void createDirectories(String path) throws IOException {
+        layerManager.getTopLayer().createDirectories(path);
         database.addDirectory(layerManager.getTopLayer().getId(), path);
     }
 
@@ -404,6 +465,76 @@ public class LayeredItemStore implements ItemStore {
                     IOUtils.copy(readFile(item.getPath()), os);
                 }
             }
+        }
+    }
+
+    public static class Builder {
+        private LayerDatabase database;
+        private Path stagingRoot;
+        private ArchiveProvider archiveProvider;
+        private Function<LayerConsistencyChecker, LayerArchiver> layerArchiverFactory = checker -> new DirectLayerArchiver();
+        private Function<LayerConsistencyChecker, LayerConsistencyChecker> layerConsistencyCheckerProxyFactory = Function.identity();
+        private DatabaseBackedContentManager databaseBackedContentManager;
+        private boolean validateArchiveRoot = true;
+
+        public Builder database(LayerDatabase database) {
+            this.database = database;
+            return this;
+        }
+
+        public Builder stagingRoot(Path stagingRoot) {
+            this.stagingRoot = stagingRoot;
+            return this;
+        }
+
+        public Builder archiveProvider(ArchiveProvider archiveProvider) {
+            this.archiveProvider = archiveProvider;
+            return this;
+        }
+
+        public Builder layerArchiver(LayerArchiver layerArchiver) {
+            this.layerArchiverFactory = checker -> layerArchiver;
+            return this;
+        }
+
+        public Builder layerArchiver(Function<LayerConsistencyChecker, LayerArchiver> layerArchiverFactory) {
+            this.layerArchiverFactory = layerArchiverFactory;
+            return this;
+        }
+
+        public Builder layerConsistencyCheckerProxy(Function<LayerConsistencyChecker, LayerConsistencyChecker> layerConsistencyCheckerProxyFactory) {
+            this.layerConsistencyCheckerProxyFactory = layerConsistencyCheckerProxyFactory;
+            return this;
+        }
+
+        public Builder databaseBackedContentManager(DatabaseBackedContentManager databaseBackedContentManager) {
+            this.databaseBackedContentManager = databaseBackedContentManager;
+            return this;
+        }
+
+        public Builder validateArchiveRoot(boolean validateArchiveRoot) {
+            this.validateArchiveRoot = validateArchiveRoot;
+            return this;
+        }
+
+        public LayeredItemStore build() throws IOException {
+            if (database == null) {
+                throw new IllegalStateException("database is required");
+            }
+            if (stagingRoot == null) {
+                throw new IllegalStateException("stagingRoot is required");
+            }
+            if (archiveProvider == null) {
+                throw new IllegalStateException("archiveProvider is required");
+            }
+
+            var originalChecker = new ItemsMatchDbConsistencyChecker(database);
+            var usedChecker = layerConsistencyCheckerProxyFactory.apply(originalChecker);
+            var layerArchiver = layerArchiverFactory.apply(usedChecker);
+            var layerManager = new LayerManagerImpl(stagingRoot, archiveProvider, layerArchiver, validateArchiveRoot);
+            originalChecker.setLayerManager(layerManager);
+
+            return new LayeredItemStore(database, layerManager, databaseBackedContentManager, usedChecker);
         }
     }
 }

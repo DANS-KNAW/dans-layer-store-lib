@@ -66,7 +66,7 @@ class LayerImpl implements Layer {
     }
 
     @Override
-    public void createDirectory(String path) throws IOException {
+    public void createDirectories(String path) throws IOException {
         checkState(State.OPEN);
         validatePath(path);
         Files.createDirectories(stagingDir.getPath().resolve(path));

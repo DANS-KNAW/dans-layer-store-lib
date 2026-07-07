@@ -75,7 +75,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
-        layeredStore.createDirectory("a/b/c");
+        layeredStore.createDirectories("a/b/c");
 
         assertThatThrownBy(() -> layeredStore.readFile("a/b")).
             isInstanceOf(IOException.class)

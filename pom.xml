@@ -25,7 +25,7 @@
         <relativePath />
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
-    <version>2.1.1-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <name>DANS Layer Store Library</name>
     <description>Library for storing a file/folder hierarchy in layers</description>
     <inceptionYear>2024</inceptionYear>

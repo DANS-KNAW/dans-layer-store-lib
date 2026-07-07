@@ -21,8 +21,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static nl.knaw.dans.layerstore.Item.Type.Directory;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     private static class StoreTxtContent extends NoopDatabaseBackedContentManager {
@@ -81,6 +83,46 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
             }
         });
 
+    }
+
+    @Test
+    public void should_succeed_when_file_has_no_parent_path() throws Exception {
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
+
+        // root-level path has no parent, so the parent-existence check is skipped entirely
+        layeredStore.writeFile("root-file.txt", toInputStream("content", UTF_8));
+
+        var topLayer = layerManager.getTopLayer();
+        assertThat(stagingRoot.resolve(Long.toString(topLayer.getId())).resolve("root-file.txt")).exists();
+    }
+
+    @Test
+    public void should_succeed_when_parent_directory_exists_in_item_store() throws Exception {
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
+
+        // pre-populate the database with a directory record for the parent
+        addToDb(layerManager.getTopLayer().getId(), "subdir", Directory);
+
+        layeredStore.writeFile("subdir/child.txt", toInputStream("content", UTF_8));
+
+        var topLayer = layerManager.getTopLayer();
+        assertThat(stagingRoot.resolve(Long.toString(topLayer.getId())).resolve("subdir/child.txt")).exists();
+    }
+
+    @Test
+    public void should_throw_when_parent_directory_does_not_exist_in_item_store() throws Exception {
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layeredStore = new LayeredItemStore(db, layerManager);
+        layeredStore.newTopLayer();
+
+        // "nonexistent" is not registered in the item store database
+        assertThatThrownBy(() -> layeredStore.writeFile("nonexistent/child.txt", toInputStream("content", UTF_8)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("nonexistent");
     }
 
     @Test

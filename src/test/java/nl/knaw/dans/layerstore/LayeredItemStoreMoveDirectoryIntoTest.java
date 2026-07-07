@@ -47,7 +47,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b");
+        layeredStore.createDirectories("a/b");
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c")).
             isInstanceOf(IllegalArgumentException.class)
@@ -59,7 +59,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b");
+        layeredStore.createDirectories("a/b");
 
         layeredStore.moveDirectoryInto(testDir.resolve("x"), "a/b/c");
 
@@ -85,7 +85,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b");
+        layeredStore.createDirectories("a/b");
         Files.createDirectories(archiveRoot);
         layerManager.newTopLayer();
         layeredStore.deleteDirectory("a/b");
@@ -113,7 +113,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
 
-        layeredStore.createDirectory("a/b/c");
+        layeredStore.createDirectories("a/b/c");
 
         assertThatThrownBy(() -> layeredStore.moveDirectoryInto(testDir.resolve("x"), "a")).
             isInstanceOf(IllegalArgumentException.class)

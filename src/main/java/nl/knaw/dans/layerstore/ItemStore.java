@@ -68,10 +68,13 @@ public interface ItemStore {
     InputStream readFile(String path) throws IOException;
 
     /**
-     * Writes the given content to the file at the given path. If the file does not exist yet, it is created.
+     * Writes the given content to the file at the given path. If the file does not exist yet, it is created. Note that this is different from the behavior of
+     * io.ocfl.core.storage.common.Storage#write(java.lang.String, byte[], java.lang.String), which throws an exception if the file already exists.
+     * Note also that the parent directory of the file must exist prior to this call. It can be created with {@link #createDirectories(String)}
      *
      * @param path    the path of the file relative to the storage root
      * @param content the content to write
+     * @throws IOException if the file could not be written
      */
     void writeFile(String path, InputStream content) throws IOException;
 
@@ -111,8 +114,23 @@ public interface ItemStore {
      */
     void deleteFiles(List<String> paths) throws IOException;
 
-    void createDirectory(String path) throws IOException;
+    /**
+     * Creates the directory at the specified path, including any necessary but nonexistent parent directories. If the directory already exists, no exception is thrown. If a regular file exists at the
+     * given path, a java.nio.FileAlreadyExistsException is thrown.
+     *
+     * @param path the path of the directory to create, relative to the storage root
+     * @throws IOException if an I/O error occurs while creating the directories
+     */
+    void createDirectories(String path) throws IOException;
 
+    /**
+     * Copies the contents of a specified directory from the store to a given destination
+     * outside the store. The destination directory will be created if it does not exist.
+     *
+     * @param source      the path of the directory to copy, relative to the storage root
+     * @param destination the target filesystem path where the directory content will be copied
+     * @throws IOException if an I/O error occurs during the copy process
+     */
     void copyDirectoryOutOf(String source, Path destination) throws IOException;
 
 }

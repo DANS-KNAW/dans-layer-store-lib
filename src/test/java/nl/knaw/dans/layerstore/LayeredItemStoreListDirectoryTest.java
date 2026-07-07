@@ -37,7 +37,7 @@ public class LayeredItemStoreListDirectoryTest extends AbstractLayerDatabaseTest
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
-        layeredStore.createDirectory("a/b/c/d/e/f");
+        layeredStore.createDirectories("a/b/c/d/e/f");
         layeredStore.writeFile("a/b/c/d/test1.txt", toInputStream("Hello world!", UTF_8));
         layeredStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 

@@ -25,10 +25,10 @@ public interface LayerConsistencyChecker {
     /**
      * Checks the consistency of the given layer.
      *
-     * @param layer the layer to check
+     * @param layerId the id of the layer to check
      * @throws IOException            if an I/O error occurs while reading from the layer
      * @throws ItemsMismatchException if the items do not match
      */
-    void check(Layer layer) throws IOException, ItemsMismatchException;
+    void check(long layerId) throws IOException, ItemsMismatchException;
 
 }
