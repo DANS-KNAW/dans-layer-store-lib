@@ -126,9 +126,8 @@ public class LayeredItemStore implements ItemStore {
      * Requests the archiving of the layer with the specified id. The operation may be performed asynchronously, so the caller should check the layer's status to determine when the archiving is
      * complete.
      *
-     * @param layerId the id of the layer to archive
+     * @param layerId   the id of the layer to archive
      * @param overwrite whether to overwrite an existing archive
-     *
      * @throws IllegalArgumentException if no layer with the specified id exists
      */
     public void archiveLayer(long layerId, boolean overwrite) {
@@ -249,8 +248,17 @@ public class LayeredItemStore implements ItemStore {
 
     @Override
     public void writeFile(String path, InputStream content) throws IOException {
+        log.debug("Checking that the directory to write to exists in the item store");
+        Path parentPath = Path.of(path).getParent();
+        if (parentPath != null && !database.existsPathLike(parentPath.toString())) {
+            throw new IllegalArgumentException("Parent directory does not exist in item store: " + Path.of(path).getParent());
+        }
         log.debug("Writing file {} to top layer", path);
         var topLayer = layerManager.getTopLayer();
+        if (parentPath != null) {
+            // N.B. not calling topLayer.createDirectories() to ensure that ancestor directories are created in the db as well.
+            createDirectories(parentPath.toString());
+        }
         topLayer.writeFile(path, content);
 
         var recordsInTopLayer = database.getRecordsByPath(path).stream()
