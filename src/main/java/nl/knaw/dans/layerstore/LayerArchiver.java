@@ -16,9 +16,16 @@
 package nl.knaw.dans.layerstore;
 
 /**
- * Interface for archiving layers. This interface is used by the {@link LayerManager} to archive layers.
+ * Interface for archiving layers. This interface is used by the {@link LayerManager} to schedule and execute layer archiving.
  */
 public interface LayerArchiver {
 
-    void archive(Layer layer, boolean overwrite);
+    /**
+     * Archives the specified layer.
+     *
+     * @param layerId       the id of the layer to archive
+     * @param overwrite     whether to overwrite an existing archive file
+     * @param archiveAction the callback action that executes the archiving of the layer
+     */
+    void archive(long layerId, boolean overwrite, Runnable archiveAction);
 }

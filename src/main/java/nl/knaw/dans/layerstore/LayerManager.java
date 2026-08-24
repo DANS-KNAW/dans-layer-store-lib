@@ -57,6 +57,8 @@ interface LayerManager {
      *
      * @param layer     the layer to archive
      * @param overwrite whether to overwrite an existing archive file
+     * @throws IllegalArgumentException if no layer with the given id exists
+     * @throws IllegalStateException    if the layer is already archived
      */
     void archive(Layer layer, boolean overwrite);
 
