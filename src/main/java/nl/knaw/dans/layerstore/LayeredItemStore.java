@@ -132,7 +132,7 @@ public class LayeredItemStore implements ItemStore {
      * @throws IllegalStateException    if the layer is already archived
      */
     public void archiveLayer(long layerId, boolean overwrite) {
-        layerManager.archive(layerManager.getLayer(layerId), overwrite);
+        layerManager.archive(layerId, overwrite);
     }
 
     /**

@@ -116,7 +116,7 @@ class LayerManagerImpl implements LayerManager {
             if (archiveProvider.exists(oldTopLayer.getId())) {
                 throw new IllegalStateException("Old top layer with id " + oldTopLayer.getId() + " is already archived");
             }
-            archive(oldTopLayer, false);
+            archive(oldTopLayer.getId(), false);
         }
         else {
             log.debug("No old top layer to archive");
@@ -124,16 +124,17 @@ class LayerManagerImpl implements LayerManager {
     }
 
     @Override
-    public void archive(Layer layer, boolean overwrite) {
+    public void archive(long layerId, boolean overwrite) {
         /*
          * N.B. for DmfTarArchiveProvider we need to check the existence here, instead of relying on DmfTarArchive.archive to do that. The reason is that the "archived" property of DmfTarArchive is
          * set to false when creating a new top layer. In cases where the archive file somehow exists anyway, this will not be detected by DmfTarArchive.archive, and the existing archive file will be
          * overwritten. If feasible, we should probably try to hide direct access to the Layer interface by users of the library and instead force them to use LayerManager for all operations.
          */
-        if (!overwrite && archiveProvider.exists(layer.getId())) {
-            throw new IllegalStateException("Layer with id " + layer.getId() + " is already archived");
+        if (!overwrite && archiveProvider.exists(layerId)) {
+            throw new IllegalStateException("Layer with id " + layerId + " is already archived");
         }
-        layerArchiver.archive(layer.getId(), overwrite, () -> layer.archive(overwrite));
+        var layer = getLayer(layerId);
+        layerArchiver.archive(layerId, overwrite, () -> layer.archive(overwrite));
     }
 
     public List<Long> listLayerIds() throws IOException {
