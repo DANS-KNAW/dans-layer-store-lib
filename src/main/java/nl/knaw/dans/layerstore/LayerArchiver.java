@@ -23,6 +23,9 @@ public interface LayerArchiver {
     /**
      * Archives the specified layer.
      *
+     * <p>Implementations are responsible for invoking {@code archiveAction.run()} to perform the actual archiving.
+     * The action should be invoked exactly once, either synchronously or asynchronously.
+     *
      * @param layerId       the id of the layer to archive
      * @param overwrite     whether to overwrite an existing archive file
      * @param archiveAction the callback action that executes the archiving of the layer
