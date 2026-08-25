@@ -92,7 +92,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_have_status_archived_for_the_found_layer() throws Exception {
         // Given
         Files.createDirectories(archiveRoot);
-        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new TarArchiveProvider(archiveRoot), new DirectLayerArchiver());
         layerManager.newTopLayer();
         layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         Layer initialLayer = layerManager.getTopLayer();

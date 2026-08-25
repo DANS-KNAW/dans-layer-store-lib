@@ -105,8 +105,7 @@ class LayerManagerImpl implements LayerManager {
         log.debug("Creating new top layer with id {}", id);
         var stagingDir = stagingRoot.resolve(Long.toString(id));
         Files.createDirectories(stagingDir);
-        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id, false));
-        topLayer = newLayer;
+        topLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id, false));
 
         if (oldTopLayer != null) {
             if (oldTopLayer.getState() == Layer.State.OPEN) {
@@ -116,7 +115,7 @@ class LayerManagerImpl implements LayerManager {
             if (archiveProvider.exists(oldTopLayer.getId())) {
                 throw new IllegalStateException("Old top layer with id " + oldTopLayer.getId() + " is already archived");
             }
-            archive(oldTopLayer.getId(), false);
+            archive(oldTopLayer, false);
         }
         else {
             log.debug("No old top layer to archive");
@@ -133,8 +132,11 @@ class LayerManagerImpl implements LayerManager {
         if (!overwrite && archiveProvider.exists(layerId)) {
             throw new IllegalStateException("Layer with id " + layerId + " is already archived");
         }
-        var layer = getLayer(layerId);
-        layerArchiver.archive(layerId, () -> layer.archive(overwrite));
+        archive(getLayer(layerId), overwrite);
+    }
+
+    private void archive(Layer layer, boolean overwrite) {
+        layerArchiver.archive(layer.getId(), () -> layer.archive(overwrite));
     }
 
     public List<Long> listLayerIds() throws IOException {
