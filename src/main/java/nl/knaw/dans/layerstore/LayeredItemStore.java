@@ -129,9 +129,10 @@ public class LayeredItemStore implements ItemStore {
      * @param layerId   the id of the layer to archive
      * @param overwrite whether to overwrite an existing archive
      * @throws IllegalArgumentException if no layer with the specified id exists
+     * @throws IllegalStateException    if the layer is already archived
      */
     public void archiveLayer(long layerId, boolean overwrite) {
-        layerManager.archive(layerManager.getLayer(layerId), overwrite);
+        layerManager.archive(layerId, overwrite);
     }
 
     /**

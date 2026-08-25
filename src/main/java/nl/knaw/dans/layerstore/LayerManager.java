@@ -55,10 +55,13 @@ interface LayerManager {
     /**
      * Request for the archiving of the given layer. The operation may be performed asynchronously, so the caller should check the layer's state to determine when the archiving is complete.
      *
-     * @param layer     the layer to archive
+     * @param layerId   the id of the layer to archive
      * @param overwrite whether to overwrite an existing archive file
+     * @throws IllegalArgumentException if no layer with the given id exists
+     * @throws IllegalStateException    if the layer is already archived
+     * @throws IllegalStateException    if the layer is not in the CLOSED state
      */
-    void archive(Layer layer, boolean overwrite);
+    void archive(long layerId, boolean overwrite);
 
     /**
      * Lists all layer IDs that are currently managed.

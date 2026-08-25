@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ public class TarArchive implements Archive {
     @NonNull
     private final Path tarFile;
 
+    @Getter
     private boolean archived;
 
     public TarArchive(@NonNull Path tarFile) {
@@ -116,11 +118,11 @@ public class TarArchive implements Archive {
         try {
             Stream<Path> emptyFileStream = Stream.empty();
             try (var outputStream = Files.newOutputStream(tarFile);
-                 var bufferedOutputStream = new BufferedOutputStream(outputStream);
-                 var tarOutput = new TarArchiveOutputStream(bufferedOutputStream);
-                 var files = stagingDir.toFile().exists()
-                     ? Files.walk(stagingDir)
-                     : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+                var bufferedOutputStream = new BufferedOutputStream(outputStream);
+                var tarOutput = new TarArchiveOutputStream(bufferedOutputStream);
+                var files = stagingDir.toFile().exists()
+                    ? Files.walk(stagingDir)
+                    : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
             ) {
                 tarOutput.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
                 for (var fileToArchive : files.toList()) {
@@ -132,7 +134,8 @@ public class TarArchive implements Archive {
                         var entry = new TarArchiveEntry(fileToArchive, stagingDir.relativize(fileToArchive) + (regularFile ? "" : "/"));
                         if (regularFile) {
                             entry.setSize(fileToArchive.toFile().length());
-                        } else {
+                        }
+                        else {
                             entry.setSize(0);
                         }
                         tarOutput.putArchiveEntry(entry);
@@ -149,7 +152,8 @@ public class TarArchive implements Archive {
             if (backupFile != null) {
                 try {
                     Files.delete(backupFile);
-                } catch (Exception cleanupEx) {
+                }
+                catch (Exception cleanupEx) {
                     log.warn("Could not delete backup file {} after archiving {}: {}", backupFile, tarFile, cleanupEx.toString());
                 }
             }
@@ -160,11 +164,6 @@ public class TarArchive implements Archive {
             }
             throw e;
         }
-    }
-
-    @Override
-    public boolean isArchived() {
-        return archived;
     }
 
     @Override
@@ -181,7 +180,7 @@ public class TarArchive implements Archive {
     }
 
     @Override
-    public Iterator<Item> listAllItems() throws IOException{
+    public Iterator<Item> listAllItems() throws IOException {
         return new TarArchiveItemIterator(tarFile);
     }
 }
