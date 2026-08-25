@@ -29,7 +29,7 @@ public class DirectLayerArchiverTest {
         var archiver = new DirectLayerArchiver();
         var actionExecuted = new AtomicBoolean(false);
 
-        archiver.archive(1L, false, () -> actionExecuted.set(true));
+        archiver.archive(1L, () -> actionExecuted.set(true));
 
         assertThat(actionExecuted.get()).isTrue();
     }
@@ -38,7 +38,7 @@ public class DirectLayerArchiverTest {
     public void should_propagate_runtime_exception_thrown_by_archive_action() {
         var archiver = new DirectLayerArchiver();
 
-        assertThatThrownBy(() -> archiver.archive(1L, false, () -> {
+        assertThatThrownBy(() -> archiver.archive(1L, () -> {
             throw new RuntimeException("test error");
         }))
             .isInstanceOf(RuntimeException.class)

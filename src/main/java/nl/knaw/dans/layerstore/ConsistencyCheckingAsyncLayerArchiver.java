@@ -35,7 +35,7 @@ public class ConsistencyCheckingAsyncLayerArchiver implements LayerArchiver {
     }
 
     @Override
-    public void archive(long layerId, boolean overwrite, Runnable archiveAction) {
+    public void archive(long layerId, Runnable archiveAction) {
         executor.execute(() -> {
             try {
                 log.info("Checking consistency of layer {}", layerId);

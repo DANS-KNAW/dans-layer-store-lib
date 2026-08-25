@@ -47,7 +47,7 @@ public class ConsistencyCheckingAsyncLayerArchiverTest {
         }).when(executor).execute(Mockito.any(Runnable.class));
 
         var actionExecuted = new AtomicBoolean(false);
-        archiver.archive(42L, false, () -> actionExecuted.set(true));
+        archiver.archive(42L, () -> actionExecuted.set(true));
 
         verify(consistencyChecker).check(42L);
         assertThat(actionExecuted.get()).isTrue();
@@ -61,7 +61,7 @@ public class ConsistencyCheckingAsyncLayerArchiverTest {
         var latch = new CountDownLatch(1);
         var actionExecuted = new AtomicBoolean(false);
 
-        archiver.archive(42L, false, () -> {
+        archiver.archive(42L, () -> {
             actionExecuted.set(true);
             latch.countDown();
         });
@@ -93,7 +93,7 @@ public class ConsistencyCheckingAsyncLayerArchiverTest {
         var archiver = new ConsistencyCheckingAsyncLayerArchiver(consistencyChecker, executor);
         var archiveAction = mock(Runnable.class);
 
-        archiver.archive(42L, false, archiveAction);
+        archiver.archive(42L, archiveAction);
 
         verify(consistencyChecker).check(42L);
         verify(archiveAction, never()).run();
@@ -120,7 +120,7 @@ public class ConsistencyCheckingAsyncLayerArchiverTest {
         var archiver = new ConsistencyCheckingAsyncLayerArchiver(consistencyChecker, executor);
         var archiveAction = mock(Runnable.class);
 
-        archiver.archive(42L, false, archiveAction);
+        archiver.archive(42L, archiveAction);
 
         verify(consistencyChecker).check(42L);
         verify(archiveAction, never()).run();

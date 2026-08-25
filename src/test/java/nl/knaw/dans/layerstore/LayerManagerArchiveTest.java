@@ -71,7 +71,7 @@ public class LayerManagerArchiveTest extends AbstractTestWithTestDir {
         var customArchiver = new LayerArchiver() {
 
             @Override
-            public void archive(long layerId, boolean overwrite, Runnable archiveAction) {
+            public void archive(long layerId, Runnable archiveAction) {
                 delegated.set(true);
                 archiveAction.run();
             }

@@ -134,7 +134,7 @@ class LayerManagerImpl implements LayerManager {
             throw new IllegalStateException("Layer with id " + layerId + " is already archived");
         }
         var layer = getLayer(layerId);
-        layerArchiver.archive(layerId, overwrite, () -> layer.archive(overwrite));
+        layerArchiver.archive(layerId, () -> layer.archive(overwrite));
     }
 
     public List<Long> listLayerIds() throws IOException {
