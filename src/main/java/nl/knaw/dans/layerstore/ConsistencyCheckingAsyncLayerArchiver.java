@@ -35,16 +35,16 @@ public class ConsistencyCheckingAsyncLayerArchiver implements LayerArchiver {
     }
 
     @Override
-    public void archive(long layerId, boolean overwrite, Runnable archiveAction) {
+    public void archive(Layer layer, boolean overwrite) {
         executor.execute(() -> {
             try {
-                log.info("Checking consistency of layer {}", layerId);
-                consistencyChecker.check(layerId);
-                log.info("Archiving layer {}", layerId);
-                archiveAction.run();
-                log.info("Layer {} archived", layerId);
+                log.info("Checking consistency of layer {}", layer.getId());
+                consistencyChecker.check(layer.getId());
+                log.info("Archiving layer {}", layer.getId());
+                layer.archive(overwrite);
+                log.info("Layer {} archived", layer.getId());
             }
-            catch (IOException | ItemsMismatchException e) {
+            catch (IOException|ItemsMismatchException e) {
                 throw new RuntimeException(e);
             }
         });

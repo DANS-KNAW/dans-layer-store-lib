@@ -131,9 +131,9 @@ class LayerManagerImpl implements LayerManager {
          * overwritten. If feasible, we should probably try to hide direct access to the Layer interface by users of the library and instead force them to use LayerManager for all operations.
          */
         if (!overwrite && archiveProvider.exists(layer.getId())) {
-            throw new IllegalStateException("Layer with id " + layer.getId() + " is already archived");
+            throw new IllegalArgumentException("Layer with id " + layer.getId() + " is already archived");
         }
-        layerArchiver.archive(layer.getId(), overwrite, () -> layer.archive(overwrite));
+        layerArchiver.archive(layer, overwrite);
     }
 
     public List<Long> listLayerIds() throws IOException {

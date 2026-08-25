@@ -151,7 +151,7 @@ class LayerImpl implements Layer {
     public synchronized void archive(boolean overwrite) {
         checkState(State.CLOSED);
         if (!overwrite && archive.isArchived()) {
-            throw new IllegalStateException("Layer " + id + " is already archived");
+            throw new IllegalArgumentException("Layer " + id + " is already archived");
         }
         try {
             log.debug("Start archiving layer {}", id);
