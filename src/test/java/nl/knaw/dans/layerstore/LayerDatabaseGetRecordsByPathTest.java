@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -24,7 +25,7 @@ public class LayerDatabaseGetRecordsByPathTest extends AbstractLayerDatabaseTest
     @Test
     public void should_return_empty_list_when_no_records_exist() {
         var result = daoTestExtension.inTransaction(() -> db.getRecordsByPath("file1.txt"));
-        assertThat(result).asList().isEmpty();
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class)).isEmpty();
     }
 
     @Test
@@ -33,7 +34,7 @@ public class LayerDatabaseGetRecordsByPathTest extends AbstractLayerDatabaseTest
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
         var result = daoTestExtension.inTransaction(() -> db.getRecordsByPath("file4.txt"));
-        assertThat(result).asList().isEmpty();
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class)).isEmpty();
     }
 
     @Test
@@ -42,7 +43,7 @@ public class LayerDatabaseGetRecordsByPathTest extends AbstractLayerDatabaseTest
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
         var result = daoTestExtension.inTransaction(() -> db.getRecordsByPath("file1.txt"));
-        assertThat(result).asList()
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactly(record);
     }
@@ -53,7 +54,7 @@ public class LayerDatabaseGetRecordsByPathTest extends AbstractLayerDatabaseTest
         var record2 = addToDb(2L, "file1.txt", Item.Type.File);
         var record3 = addToDb(3L, "file1.txt", Item.Type.File);
         var result = daoTestExtension.inTransaction(() -> db.getRecordsByPath("file1.txt"));
-        assertThat(result).asList()
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(record1, record2, record3);
     }
@@ -66,7 +67,7 @@ public class LayerDatabaseGetRecordsByPathTest extends AbstractLayerDatabaseTest
         addToDb(2L, "dir2", Item.Type.Directory);
         addToDb(3L, "dir2/file3.txt", Item.Type.File);
         var result = daoTestExtension.inTransaction(() -> db.getRecordsByPath("dir1/file2.txt"));
-        assertThat(result).asList()
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class))
             .containsExactly(record);
     }
 

@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static nl.knaw.dans.layerstore.Item.Type;
@@ -25,7 +26,7 @@ public class LayerDatabaseSaveRecordsTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_accept_empty_list() {
         db.saveRecords();
-        assertThat(db.getAllRecords().toList()).asList().isEmpty();
+        assertThat(db.getAllRecords().toList()).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class)).isEmpty();
     }
 
     @Test

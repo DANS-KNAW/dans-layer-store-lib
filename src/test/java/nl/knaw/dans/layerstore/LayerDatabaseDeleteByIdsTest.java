@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static nl.knaw.dans.layerstore.Item.Type;
@@ -28,14 +29,14 @@ public class LayerDatabaseDeleteByIdsTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "path", Directory);
         daoTestExtension.inTransaction(() -> db.deleteRecordsById());
         // Check that the record is still there
-        assertThat(db.getAllRecords().toList()).asList().hasSize(1);
+        assertThat(db.getAllRecords().toList()).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class)).hasSize(1);
     }
 
     @Test
     public void should_delete_one_record() {
         var record = addToDb(1L, "path", Directory);
         daoTestExtension.inTransaction(() -> db.deleteRecordsById(record.getGeneratedId()));
-        assertThat(db.getAllRecords().toList()).asList().isEmpty();
+        assertThat(db.getAllRecords().toList()).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class)).isEmpty();
     }
 
     @Test
@@ -44,7 +45,7 @@ public class LayerDatabaseDeleteByIdsTest extends AbstractLayerDatabaseTest {
         var record2 = addToDb(2L, "path2", Type.File);
         var notDeletedRecord = addToDb(3L, "path3", Directory);
         daoTestExtension.inTransaction(() -> db.deleteRecordsById(record1.getGeneratedId(), record2.getGeneratedId()));
-        assertThat(db.getAllRecords().toList()).asList()
+        assertThat(db.getAllRecords().toList()).asInstanceOf(InstanceOfAssertFactories.list(ItemRecord.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(notDeletedRecord);
     }

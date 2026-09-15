@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -91,7 +92,7 @@ public class DmfTarRunnerLiveTest {
         log.debug("Created tar file: {}", dmfTarFile);
         try {
             var list = IteratorUtils.toList(new DmfTarArchiveItemIterator(dmfTarFile, dmfTarRunner));
-            assertThat(list).asList().containsExactlyInAnyOrder(
+            assertThat(list).asInstanceOf(InstanceOfAssertFactories.list(Item.class)).containsExactlyInAnyOrder(
                 new Item("", Item.Type.Directory),
                 new Item("loro.jpeg", Item.Type.File),
                 new Item("space-galaxy.jpg", Item.Type.File),

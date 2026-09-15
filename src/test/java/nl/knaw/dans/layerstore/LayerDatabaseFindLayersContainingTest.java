@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -27,7 +28,7 @@ public class LayerDatabaseFindLayersContainingTest extends AbstractLayerDatabase
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
         var result = daoTestExtension.inTransaction(() -> db.findLayersContaining("file4.txt"));
-        assertThat(result).asList().isEmpty();
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(Long.class)).isEmpty();
     }
 
     @Test
@@ -36,7 +37,7 @@ public class LayerDatabaseFindLayersContainingTest extends AbstractLayerDatabase
         addToDb(2L, "file2.txt", Item.Type.File);
         addToDb(3L, "file3.txt", Item.Type.File);
         var result = daoTestExtension.inTransaction(() -> db.findLayersContaining("file2.txt"));
-        assertThat(result).asList().containsExactly(2L);
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(Long.class)).containsExactly(2L);
     }
 
     @Test
@@ -46,6 +47,6 @@ public class LayerDatabaseFindLayersContainingTest extends AbstractLayerDatabase
         addToDb(3L, "file3.txt", Item.Type.File);
         addToDb(4L, "file2.txt", Item.Type.File);
         var result = daoTestExtension.inTransaction(() -> db.findLayersContaining("file2.txt"));
-        assertThat(result).asList().containsExactly(2L, 4L);
+        assertThat(result).asInstanceOf(InstanceOfAssertFactories.list(Long.class)).containsExactly(2L, 4L);
     }
 }

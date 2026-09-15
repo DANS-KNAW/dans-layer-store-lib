@@ -16,6 +16,7 @@
 package nl.knaw.dans.layerstore;
 
 import org.apache.commons.collections4.IteratorUtils;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -25,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
 public class DmfTarArchiveItemIteratorTest {
-    private DmfTarRunner dmfTarRunnerMock = Mockito.mock(DmfTarRunner.class);
+    private final DmfTarRunner dmfTarRunnerMock = Mockito.mock(DmfTarRunner.class);
 
     @Test
     public void should_strip_everything_before_dot_slash_from_paths_and_remove_dmftar_cache_entries() {
@@ -44,7 +45,7 @@ public class DmfTarArchiveItemIteratorTest {
                 """.split("\n")).iterator());
 
         var list = IteratorUtils.toList(new DmfTarArchiveItemIterator("some-archive.dmftar", dmfTarRunnerMock));
-        assertThat(list).asList()
+        assertThat(list).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .containsExactlyInAnyOrder(
                 new Item("", Item.Type.Directory),
                 new Item("text", Item.Type.Directory),

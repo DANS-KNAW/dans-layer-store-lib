@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.NoSuchFileException;
@@ -28,30 +29,30 @@ public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_return_empty_list_when_no_records_in_db() throws Exception {
-        assertThat(db.listDirectory("")).asList().isEmpty();
+        assertThat(db.listDirectory("")).asInstanceOf(InstanceOfAssertFactories.list(Item.class)).isEmpty();
     }
 
     @Test
     public void should_return_empty_list_when_no_items_in_directory() throws Exception {
         addToDb(1L, "dir", Type.Directory);
-        assertThat(db.listDirectory("dir")).asList().isEmpty();
+        assertThat(db.listDirectory("dir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class)).isEmpty();
     }
 
     @Test
     public void should_return_one_item_when_one_item_in_root_directory() throws Exception {
         var record = addToDb(1L, "item", Type.Directory);
-        assertThat(db.listDirectory("")).asList()
+        assertThat(db.listDirectory("")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
-            .containsExactlyInAnyOrder(record);
+            .containsExactlyInAnyOrder(record.toItem());
     }
 
     @Test
     public void should_return_one_item_when_one_item_in_directory() throws Exception {
         addToDb(1L, "dir", Type.Directory);
         var record = addToDb(1L, "dir/file", Type.File);
-        assertThat(db.listDirectory("dir")).asList()
+        assertThat(db.listDirectory("dir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
-            .containsExactlyInAnyOrder(record);
+            .containsExactlyInAnyOrder(record.toItem());
     }
 
     @Test
@@ -59,18 +60,18 @@ public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "dir", Type.Directory);
         var record1 = addToDb(1L, "dir/file1", Type.File);
         var record2 = addToDb(1L, "dir/file2", Type.File);
-        assertThat(db.listDirectory("dir")).asList()
+        assertThat(db.listDirectory("dir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
-            .containsExactlyInAnyOrder(record1, record2);
+            .containsExactlyInAnyOrder(record1.toItem(), record2.toItem());
     }
 
     @Test
     public void should_return_two_items_when_two_items_in_root_directory() throws Exception {
         var record1 = addToDb(1L, "file1", Type.File);
         var record2 = addToDb(1L, "file2", Type.File);
-        assertThat(db.listDirectory("")).asList()
+        assertThat(db.listDirectory("")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
-            .containsExactlyInAnyOrder(record1, record2);
+            .containsExactlyInAnyOrder(record1.toItem(), record2.toItem());
     }
 
     @Test
@@ -79,16 +80,16 @@ public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
         addToDb(2L, "dir", Type.Directory);
         var record = addToDb(1L, "dir/file", Type.File);
         addToDb(2L, "dir/file", Type.File);
-        assertThat(db.listDirectory("dir")).asList()
+        assertThat(db.listDirectory("dir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
-            .containsExactlyInAnyOrder(record);
+            .containsExactlyInAnyOrder(record.toItem());
     }
 
     @Test
     void should_return_one_root_folder_item_when_item_has_records_in_multiple_layers() throws Exception {
         addToDb(1L, "file1.txt", Type.File);
         addToDb(2L, "file1.txt", Type.File);
-        assertThat(db.listDirectory("")).asList()
+        assertThat(db.listDirectory("")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(new Item("file1.txt", Type.File));
     }
@@ -98,9 +99,9 @@ public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "dir", Type.Directory);
         var record = addToDb(1L, "dir/subdir", Type.Directory);
         addToDb(1L, "dir/subdir/subfile", Type.File);
-        assertThat(db.listDirectory("dir")).asList()
+        assertThat(db.listDirectory("dir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
-            .containsExactlyInAnyOrder(record);
+            .containsExactlyInAnyOrder(record.toItem());
     }
 
     @Test
@@ -108,7 +109,7 @@ public class LayerDatabaseListDirectoryTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "dir", Type.Directory);
         addToDb(1L, "dir/file_in_dir", Type.File);
         addToDb(1L, "dir_file_outside_dir", Type.File);
-        assertThat(db.listDirectory("dir")).asList()
+        assertThat(db.listDirectory("dir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(new Item("dir/file_in_dir", Type.File));
     }

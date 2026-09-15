@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class LayerDatabaseListRecursiveTest extends AbstractLayerDatabaseTest {
     @Test
     public void listRecursive_should_return_empty_list_if_nothing_found() throws Exception {
-        assertThat(db.listRecursive("")).asList().isEmpty();
+        assertThat(db.listRecursive("")).asInstanceOf(InstanceOfAssertFactories.list(Item.class)).isEmpty();
     }
 
     @Test
@@ -38,7 +39,7 @@ public class LayerDatabaseListRecursiveTest extends AbstractLayerDatabaseTest {
         addToDb(1L, "file2", Item.Type.File);
         addToDb(2L, "subdir/file3", Item.Type.Directory);
 
-        assertThat(db.listRecursive("")).asList()
+        assertThat(db.listRecursive("")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(
                 Item.builder().path("subdir").type(Item.Type.Directory).build(),
@@ -56,7 +57,7 @@ public class LayerDatabaseListRecursiveTest extends AbstractLayerDatabaseTest {
         addToDb(2L, "subdir/subsubdir", Item.Type.Directory);
         addToDb(2L, "subdir/subsubdir/file3", Item.Type.File);
 
-        assertThat(db.listRecursive("subdir")).asList()
+        assertThat(db.listRecursive("subdir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(
                 Item.builder().path("subdir/file1").type(Item.Type.File).build(),
@@ -74,7 +75,7 @@ public class LayerDatabaseListRecursiveTest extends AbstractLayerDatabaseTest {
         addToDb(2L, "subdir/subsubdir", Item.Type.Directory);
         addToDb(2L, "subdir/subsubdir/file3", Item.Type.File);
 
-        assertThat(db.listRecursive("subdir/subsubdir")).asList()
+        assertThat(db.listRecursive("subdir/subsubdir")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(
                 Item.builder().path("subdir/subsubdir/file3").type(Item.Type.File).build()
@@ -90,7 +91,7 @@ public class LayerDatabaseListRecursiveTest extends AbstractLayerDatabaseTest {
         addToDb(3L, "dir1", Item.Type.Directory);
         addToDb(3L, "dir1/file1", Item.Type.File); // Overwrites file1 from layer 1
 
-        assertThat(db.listRecursive("dir1")).asList()
+        assertThat(db.listRecursive("dir1")).asInstanceOf(InstanceOfAssertFactories.list(Item.class))
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("generatedId")
             .containsExactlyInAnyOrder(
                 Item.builder().path("dir1/file1").type(Item.Type.File).build(),

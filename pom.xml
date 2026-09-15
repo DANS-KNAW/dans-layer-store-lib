@@ -21,7 +21,7 @@
     <parent>
         <groupId>nl.datastations</groupId>
         <artifactId>dans-core-systems-parent</artifactId>
-        <version>0.2.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath/>
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
@@ -191,7 +191,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
+                <configuration combine.children="append">
                     <argLine>-javaagent:@{org.mockito:mockito-core:jar} -Xshare:off</argLine>
                 </configuration>
             </plugin>
