@@ -21,7 +21,7 @@
     <parent>
         <groupId>nl.datastations</groupId>
         <artifactId>dans-core-systems-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath/>
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
@@ -29,20 +29,17 @@
     <name>DANS Layer Store Library</name>
     <description>Library for storing a file/folder hierarchy in layers</description>
     <inceptionYear>2024</inceptionYear>
+
     <scm>
+        <connection>scm:git:https://github.com/DANS-KNAW/${project.artifactId}</connection>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
         <tag>HEAD</tag>
     </scm>
-    <properties>
-        <dans-java-utils.version>4.1.0</dans-java-utils.version>
-    </properties>
 
     <dependencies>
         <dependency>
-            <!-- TODO: upgrade to nl.datastations version when available -->
-            <groupId>nl.knaw.dans</groupId>
+            <groupId>nl.datastations</groupId>
             <artifactId>dans-java-utils</artifactId>
-            <version>${dans-java-utils.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
