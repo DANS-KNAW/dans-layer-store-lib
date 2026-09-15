@@ -28,6 +28,7 @@
     <version>4.0.1-SNAPSHOT</version>
     <name>DANS Layer Store Library</name>
     <description>Library for storing a file/folder hierarchy in layers</description>
+    <url>https://dans-knaw.github.io/${project.artifactId}</url>
     <inceptionYear>2024</inceptionYear>
 
     <scm>
