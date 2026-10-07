@@ -17,3 +17,4 @@
 /live-test.properties
 /live-test.properties.bak
 /dmftar-cache.*
+/__pycache__*
