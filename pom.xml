@@ -16,17 +16,16 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>nl.datastations</groupId>
         <artifactId>dans-core-systems-parent</artifactId>
         <version>2.0.0</version>
-        <relativePath/>
+        <relativePath />
     </parent>
     <artifactId>dans-layer-store-lib</artifactId>
-    <version>4.0.2-SNAPSHOT</version>
+    <version>4.0.2</version>
     <name>DANS Layer Store Library</name>
     <description>Library for storing a file/folder hierarchy in layers</description>
     <url>https://dans-knaw.github.io/${project.artifactId}</url>
@@ -35,7 +34,7 @@
     <scm>
         <connection>scm:git:https://github.com/DANS-KNAW/dans-layer-store-lib</connection>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/dans-layer-store-lib</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v4.0.2</tag>
         <url>https://github.com/DANS-KNAW/dans-layer-store-lib</url>
     </scm>
 
