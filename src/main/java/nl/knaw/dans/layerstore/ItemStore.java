@@ -41,6 +41,16 @@ public interface ItemStore {
     List<Item> listDirectory(String directoryPath) throws IOException;
 
     /**
+     * Returns whether the directory at the given path is empty.
+     *
+     * @param directoryPath the directory path relative to the storage root
+     * @return true if the directory is empty, false otherwise
+     * @throws java.nio.file.NoSuchFileException   if the directory does not exist in any of the layers
+     * @throws java.nio.file.NotDirectoryException if the path exists but is not a directory
+     */
+    boolean directoryIsEmpty(String directoryPath) throws IOException;
+
+    /**
      * Returns the files and directories in the given directory and its subdirectories.
      *
      * @param directoryPath the directory path relative to the storage root

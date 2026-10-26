@@ -55,6 +55,14 @@ public interface LayerDatabase {
     List<Item> listDirectory(String directoryPath) throws IOException;
 
     /**
+     * Checks whether the directory at <code>directoryPath</code> is empty.
+     *
+     * @param directoryPath the directory path relative to the storage root
+     * @return true if the directory is empty, false otherwise
+     */
+    boolean directoryIsEmpty(String directoryPath) throws IOException;
+
+    /**
      * Lists the items in <code>directoryPath</code> recursively. It takes into account the complete stack of layers.
      *
      * @param directoryPath the directory path relative to the storage root
