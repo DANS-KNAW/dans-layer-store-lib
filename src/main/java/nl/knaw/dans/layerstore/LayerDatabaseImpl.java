@@ -231,7 +231,7 @@ public class LayerDatabaseImpl implements LayerDatabase {
             if (records.stream().anyMatch(r -> r.getType() != Type.Directory)) {
                 throw new NotDirectoryException("Not a directory: " + directoryPath);
             }
-            // Add an ending slash to directoryPath, if it doesn't have one yet.
+            // Add an ending slash to directoryPath if it doesn't have one yet.
             if (!directoryPath.endsWith("/")) {
                 directoryPath += "/";
             }
