@@ -37,7 +37,7 @@ import java.util.function.Function;
 
 /**
  * An implementation of {@link ItemStore} that organizes files and directories ({@link Item}s) in an ordered stack of {@link Layer}s. Layers are either staged or archived. Staged layers can be
- * mutable. See
+ * mutable.
  * <p>
  * To materialize the layered store into a regular directory, unarchive any archived layers to staging directories and then copy those directories into a single target directory from oldest to newest.
  * Files in newer layers overwrite files from older layers.
@@ -51,20 +51,20 @@ public class LayeredItemStore implements ItemStore {
     private final LayerDatabase database;
     private final LayerManager layerManager;
     private final DatabaseBackedContentManager databaseBackedContentManager;
-    private final LayerConsistencyChecker layerConsistencyChecker;
-
-    @Getter
-    @Setter
-    private boolean allowReadingContentFromArchives = true;
-
     /**
-     * Returns the internal layer consistency checker.
+     *  Returns the internal layer consistency checker.
      *
      * @return the layer consistency checker
      */
-    public LayerConsistencyChecker getLayerConsistencyChecker() {
-        return layerConsistencyChecker;
-    }
+    @Getter
+    private final LayerConsistencyChecker layerConsistencyChecker;
+
+    /**
+     *  Whether to allow reading content from archives.
+     */
+    @Getter
+    @Setter
+    private boolean allowReadingContentFromArchives = true;
 
     /**
      * Creates a new LayeredItemStore without a database-backed content manager.

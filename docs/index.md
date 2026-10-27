@@ -79,8 +79,8 @@ involve "physical" files and folders.
 
 Although `ItemStore` does not expose the concept of a layer, the purpose of this library is to provide a layered storage. The `ItemStore` interface is intended
 to hide the layering from the user. It is not really intended to be implemented in other ways, although that is possible. The interface is geared towards
-providing exactly the features needed to implement [ocfl-java]'s `Storage` interface without depending on any [OCFL] specific concepts. The two are connected
-through the [dans-ocfl-java-extensions-lib].
+providing exactly the features needed to implement [ocfl-java]{:target=_blank}'s `Storage` interface without depending on any [OCFL]{:target=_blank} specific
+concepts. The two are connected through the [dans-ocfl-java-extensions-lib]{:target=_blank}.
 
 ## Layer database
 
