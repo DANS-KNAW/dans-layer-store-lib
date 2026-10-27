@@ -28,7 +28,7 @@ import java.util.Iterator;
  * An iterator that traverses a directory tree and yields {@link Item}s representing files and directories. The paths of the items are relative to the provided root directory. The iterator includes
  * the root directory itself as an item with an empty path.
  */
-public class DirectoryTreeItemIterator implements Iterator<Item> {
+class DirectoryTreeItemIterator implements Iterator<Item> {
     private final Path directoryPath;
     private final Iterator<File> pathIterator;
 

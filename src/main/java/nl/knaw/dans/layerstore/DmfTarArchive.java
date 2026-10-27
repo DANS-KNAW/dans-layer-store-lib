@@ -27,7 +27,7 @@ import java.util.Iterator;
 /**
  * Implementation of {@link Archive} that uses the dmftar command line tool to create and read DMF TAR archives.
  */
-public class DmfTarArchive implements Archive {
+class DmfTarArchive implements Archive {
     private final DmfTarRunner dmfTarRunner;
 
     private final String path;

@@ -26,7 +26,7 @@ import java.util.Iterator;
 /**
  * An iterator that iterates over the {@link Item}s in a zip archive.
  */
-public class ZipArchiveItemIterator implements Iterator<Item> {
+class ZipArchiveItemIterator implements Iterator<Item> {
     private final Iterator<ZipArchiveEntry> entries;
     /**
      * The root item represents the root of the zip archive, and is implicitly present in every zip archive.

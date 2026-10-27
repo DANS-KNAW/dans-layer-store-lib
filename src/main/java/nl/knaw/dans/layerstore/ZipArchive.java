@@ -43,7 +43,7 @@ import static java.text.MessageFormat.format;
 /**
  * Implementation of {@link Archive} for ZIP archives.
  */
-public class ZipArchive implements Archive {
+class ZipArchive implements Archive {
     private static final Logger log = LoggerFactory.getLogger(ZipArchive.class);
     @NonNull
     private final Path zipFile;

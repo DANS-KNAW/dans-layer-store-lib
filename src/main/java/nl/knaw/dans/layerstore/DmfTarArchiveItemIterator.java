@@ -21,7 +21,7 @@ import java.util.NoSuchElementException;
 /**
  * An iterator that traverses the entries of a DMF TAR archive and yields {@link Item}s representing files and directories.
  */
-public class DmfTarArchiveItemIterator implements Iterator<Item> {
+class DmfTarArchiveItemIterator implements Iterator<Item> {
     private final Iterator<String> entries;
 
     private Item nextItem;
