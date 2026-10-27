@@ -25,7 +25,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_true_if_file_exists() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(layer.fileExists("path/to/file1")).isTrue();
@@ -34,7 +34,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
     @Test
     public void should_return_true_if_file_exists_in_archived_layer() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(stagingDir.resolve("path/to/file1").toFile()).exists();
@@ -51,7 +51,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
     @Test
     public void should_return_false_if_file_existed_in_destroyed_archived_layer() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         layer.close();
@@ -64,7 +64,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_false_if_file_does_not_exist() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(layer.fileExists("path/to/file3")).isFalse();

@@ -29,7 +29,7 @@ public class LayerReopenReproductionTest extends AbstractTestWithTestDir {
     @Test
     public void should_allow_reopening_from_CLOSED_state() throws Exception {
         Files.createDirectories(stagingRoot);
-        var layer = new LayerImpl(1234567890123L, new StagingDir(stagingRoot, 1234567890123L), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1234567890123L, new StagingDir(stagingRoot, 1234567890123L), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         createEmptyStagingDirFiles("file1");
         layer.close();
         assertThat(layer.getState()).isEqualTo(Layer.State.CLOSED);

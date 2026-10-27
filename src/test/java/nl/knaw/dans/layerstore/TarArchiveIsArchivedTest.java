@@ -26,18 +26,17 @@ public class TarArchiveIsArchivedTest extends AbstractTestWithTestDir {
     @Test
     public void should_change_status_to_archived() throws Exception {
         FileUtils.forceMkdir(stagingDir.toFile());
-        var archive = new TarArchive(testDir.resolve("test.tar"));
+        var archive = new TarArchive(testDir.resolve("test.tar"), false);
+        assertThat(archive.isArchived()).isFalse();
         archive.archiveFrom(stagingDir);
 
         assertThat(archive.isArchived()).isTrue();
     }
 
     @Test
-    public void should_detect_archive_created_after_instance() throws Exception {
+    public void should_be_archived_when_initialized_with_true() {
         var archiveFile = testDir.resolve("test.tar");
-        var archive = new TarArchive(archiveFile);
-
-        Files.createFile(archiveFile);
+        var archive = new TarArchive(archiveFile, true);
 
         assertThat(archive.isArchived()).isTrue();
     }

@@ -28,7 +28,7 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_content_of_file_in_archive() throws Exception {
-        TarArchive archive = new TarArchive(tarFile);
+        TarArchive archive = new TarArchive(tarFile, false);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
@@ -52,7 +52,7 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
     @Test
     @SuppressWarnings("resource") // for assertThatThrownBy
     public void should_throw_when_reading_file_not_in_archive() throws Exception {
-        TarArchive archive = new TarArchive(tarFile);
+        TarArchive archive = new TarArchive(tarFile, false);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file3", "path/to/file3 content");

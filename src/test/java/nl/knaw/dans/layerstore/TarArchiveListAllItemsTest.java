@@ -37,7 +37,7 @@ public class TarArchiveListAllItemsTest extends AbstractTestWithTestDir {
             tos.finish();
         }
 
-        var tarArchive = new TarArchive(tarFile);
+        var tarArchive = new TarArchive(tarFile, true);
         var iterator = tarArchive.listAllItems();
 
         // When
@@ -60,7 +60,7 @@ public class TarArchiveListAllItemsTest extends AbstractTestWithTestDir {
         FileUtils.writeStringToFile(tempDir.resolve("a/b/c/test2.txt").toFile(), "Hello again!", StandardCharsets.UTF_8);
         FileUtils.writeStringToFile(tempDir.resolve("a/b/test3.txt").toFile(), "Hello once more!", StandardCharsets.UTF_8);
         FileUtils.writeStringToFile(tempDir.resolve("a/test4.txt").toFile(), "Hello for the last time!", StandardCharsets.UTF_8);
-        var tarArchive = new TarArchive(tarFile);
+        var tarArchive = new TarArchive(tarFile, false);
         tarArchive.archiveFrom(tempDir);
         var iterator = tarArchive.listAllItems();
 

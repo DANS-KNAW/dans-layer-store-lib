@@ -27,7 +27,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class LayerReadFileTest extends AbstractTestWithTestDir {
     @Test
     public void should_read_file_from_staging_dir_if_layer_is_open() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         var testContents = "test file";
         FileUtils.write(stagingDir.resolve("path/to/file1").toFile(), testContents, StandardCharsets.UTF_8);
 
@@ -39,7 +39,7 @@ public class LayerReadFileTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_read_file_from_staging_dir_if_layer_is_closed_but_not_archived() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         var testContents = "test file";
         FileUtils.write(stagingDir.resolve("path/to/file1").toFile(), testContents, StandardCharsets.UTF_8);
         layer.close();
@@ -53,7 +53,7 @@ public class LayerReadFileTest extends AbstractTestWithTestDir {
     @Test
     public void should_read_file_from_archive_if_layer_is_closed_and_archived() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         var testContents = "test file";
         FileUtils.write(stagingDir.resolve("path/to/file1").toFile(), testContents, StandardCharsets.UTF_8);
         layer.close();

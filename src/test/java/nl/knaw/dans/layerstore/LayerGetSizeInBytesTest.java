@@ -28,7 +28,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_add_up_file_sizes() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         Files.createDirectories(stagingDir);
         layer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layer.createDirectories("path/to");
@@ -39,7 +39,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_add_up_file_sizes_when_closed() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         Files.createDirectories(stagingDir);
         layer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         layer.createDirectories("path/to");
@@ -52,7 +52,7 @@ public class LayerGetSizeInBytesTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_UnsupportedOperationException_when_layer_is_archived() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         Files.createDirectories(stagingDir);
         layer.close();
         layer.archive(false);

@@ -48,10 +48,9 @@ class TarArchive implements Archive {
 
     private boolean archived;
 
-    public TarArchive(@NonNull Path tarFile) {
+    public TarArchive(@NonNull Path tarFile, boolean archived) {
         this.tarFile = tarFile;
-        // If the file exists, it is assumed to be a valid tar archive
-        this.archived = Files.exists(tarFile);
+        this.archived = archived;
     }
 
     @Override
@@ -164,7 +163,7 @@ class TarArchive implements Archive {
 
     @Override
     public boolean isArchived() {
-        return archived || Files.exists(tarFile);
+        return archived;
     }
 
     @Override

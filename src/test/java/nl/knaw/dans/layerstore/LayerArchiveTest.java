@@ -34,7 +34,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
     public void throws_IllegalStateException_when_layer_is_not_closed() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
 
         // When / Then
         assertThatThrownBy(() -> layer.archive(false))
@@ -47,7 +47,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         // Given
         Files.createDirectories(archiveRoot);
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         layer.close();
         layer.archive(false);
 
@@ -64,7 +64,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         Files.createDirectories(stagingDir);
         var archiveFile = archiveRoot.resolve("test.zip");
         Files.createFile(archiveFile);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveFile));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveFile, true));
         layer.close();
 
         // When / Then
@@ -80,7 +80,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         Files.createDirectories(stagingDir);
         var archiveFile = archiveRoot.resolve("test.zip");
         Files.writeString(archiveFile, "OLD CONTENT");
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveFile));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveFile, true));
         // Write some files to staging dir
         Files.writeString(stagingDir.resolve("file1.txt"), "NEW CONTENT", StandardCharsets.UTF_8);
 
@@ -107,7 +107,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         // NOTE: archiveDir is not created
         var testZip = archiveRoot.resolve("test.zip");
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(testZip));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(testZip, false));
         layer.close();
 
         // When / Then
@@ -125,7 +125,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         // Given
         Files.createDirectories(archiveRoot);
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         createEmptyStagingDirFiles("path/to/file1");
         layer.close();
 

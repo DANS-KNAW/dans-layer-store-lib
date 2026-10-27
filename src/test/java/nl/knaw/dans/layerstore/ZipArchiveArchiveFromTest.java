@@ -31,7 +31,7 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
     @Test
     public void should_create_zipfile_and_change_status_to_archived() throws Exception {
         var archiveFile = testDir.resolve("test.zip");
-        var archive = new ZipArchive(archiveFile);
+        var archive = new ZipArchive(archiveFile, false);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");

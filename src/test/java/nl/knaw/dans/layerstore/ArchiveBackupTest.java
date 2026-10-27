@@ -29,7 +29,7 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
     public void zipArchive_should_restore_backup_on_failure() throws Exception {
         var archiveFile = testDir.resolve("test.zip");
         Files.writeString(archiveFile, "original content");
-        var archive = new ZipArchive(archiveFile);
+        var archive = new ZipArchive(archiveFile, true);
 
         Files.createDirectories(stagingDir.getParent());
         Files.createDirectory(stagingDir);
@@ -53,7 +53,7 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
     public void tarArchive_should_restore_backup_on_failure() throws Exception {
         var archiveFile = testDir.resolve("test.tar");
         Files.writeString(archiveFile, "original content");
-        var archive = new TarArchive(archiveFile);
+        var archive = new TarArchive(archiveFile, true);
 
         Files.createDirectories(stagingDir.getParent());
         Files.createDirectory(stagingDir);

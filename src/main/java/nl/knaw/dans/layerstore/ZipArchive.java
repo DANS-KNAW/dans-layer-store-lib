@@ -50,9 +50,9 @@ class ZipArchive implements Archive {
 
     private boolean archived;
 
-    public ZipArchive(Path zipFile) {
+    public ZipArchive(@NonNull Path zipFile, boolean archived) {
         this.zipFile = zipFile;
-        this.archived = Files.exists(zipFile);
+        this.archived = archived;
     }
 
     @Override
@@ -160,7 +160,7 @@ class ZipArchive implements Archive {
 
     @Override
     public boolean isArchived() {
-        return archived || Files.exists(zipFile);
+        return archived;
     }
 
     @Override
