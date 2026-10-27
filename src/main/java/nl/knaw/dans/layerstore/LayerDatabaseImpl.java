@@ -86,6 +86,20 @@ public class LayerDatabaseImpl implements LayerDatabase {
     }
 
     @Override
+    public boolean directoryIsEmpty(String directoryPath) throws IOException {
+        directoryPath = preprocessDirectoryArgument(directoryPath);
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
+        CriteriaQuery<Boolean> cq = cb.createQuery(Boolean.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        Predicate hasParentPath = cb.like(itemRecordRoot.get("path"), directoryPath + "%");
+        String pathWithoutTrailingSlash = directoryPath.endsWith("/") ? directoryPath.substring(0, directoryPath.length() - 1) : directoryPath;
+        Predicate notSamePath = cb.notEqual(itemRecordRoot.get("path"), pathWithoutTrailingSlash);
+        cq.select(cb.literal(true)).where(cb.and(hasParentPath, notSamePath));
+        TypedQuery<Boolean> query = persistenceProvider.createQuery(cq);
+        return query.getResultStream().findFirst().isEmpty();
+    }
+
+    @Override
     public List<Item> listRecursive(String directoryPath) throws IOException {
         directoryPath = preprocessDirectoryArgument(directoryPath);
         CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
@@ -217,7 +231,7 @@ public class LayerDatabaseImpl implements LayerDatabase {
             if (records.stream().anyMatch(r -> r.getType() != Type.Directory)) {
                 throw new NotDirectoryException("Not a directory: " + directoryPath);
             }
-            // Add an ending slash to directoryPath, if it doesn't have one yet.
+            // Add an ending slash to directoryPath if it doesn't have one yet.
             if (!directoryPath.endsWith("/")) {
                 directoryPath += "/";
             }

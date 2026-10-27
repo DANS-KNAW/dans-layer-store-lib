@@ -212,6 +212,11 @@ public class LayeredItemStore implements ItemStore {
     }
 
     @Override
+    public boolean directoryIsEmpty(String directoryPath) throws IOException {
+        return database.directoryIsEmpty(directoryPath);
+    }
+
+    @Override
     public List<Item> listRecursive(String directoryPath) throws IOException {
         return database.listRecursive(directoryPath);
     }
