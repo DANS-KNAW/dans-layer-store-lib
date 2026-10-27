@@ -31,7 +31,7 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
     @Test
     public void should_create_tarfile_and_change_status_to_archived() throws Exception {
         var archiveFile = testDir.resolve("test.tar");
-        var archive = new TarArchive(archiveFile);
+        var archive = new TarArchive(archiveFile, false);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");

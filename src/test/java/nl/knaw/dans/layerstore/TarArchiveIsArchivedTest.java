@@ -18,14 +18,25 @@ package nl.knaw.dans.layerstore;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class TarArchiveIsArchivedTest extends AbstractTestWithTestDir {
     @Test
     public void should_change_status_to_archived() throws Exception {
         FileUtils.forceMkdir(stagingDir.toFile());
-        var archive = new TarArchive(testDir.resolve("test.tar"));
+        var archive = new TarArchive(testDir.resolve("test.tar"), false);
+        assertThat(archive.isArchived()).isFalse();
         archive.archiveFrom(stagingDir);
+
+        assertThat(archive.isArchived()).isTrue();
+    }
+
+    @Test
+    public void should_be_archived_when_initialized_with_true() {
+        var archiveFile = testDir.resolve("test.tar");
+        var archive = new TarArchive(archiveFile, true);
 
         assertThat(archive.isArchived()).isTrue();
     }

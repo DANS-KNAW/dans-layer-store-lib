@@ -34,7 +34,7 @@ public class ZipArchiveListAllItemsTest extends AbstractTestWithTestDir {
         Files.createDirectories(testDir.resolve("emptyDir"));
         ZipUtil.zipDirectory(testDir.resolve("emptyDir"), zipFile, false);
 
-        var zipArchive = new ZipArchive(zipFile);
+        var zipArchive = new ZipArchive(zipFile, true);
         var iterator = zipArchive.listAllItems();
 
         // When
@@ -59,7 +59,7 @@ public class ZipArchiveListAllItemsTest extends AbstractTestWithTestDir {
         FileUtils.writeStringToFile(tempDir.resolve("a/test4.txt").toFile(), "Hello for the last time!", StandardCharsets.UTF_8);
         ZipUtil.zipDirectory(tempDir, zipFile, false);
 
-        var zipArchive = new ZipArchive(zipFile);
+        var zipArchive = new ZipArchive(zipFile, true);
         zipArchive.archiveFrom(tempDir);
         var iterator = zipArchive.listAllItems();
 

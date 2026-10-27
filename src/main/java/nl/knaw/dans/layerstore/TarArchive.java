@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -42,16 +43,16 @@ import static java.text.MessageFormat.format;
  * Implementation of {@link Archive} for TAR archives.
  */
 @Slf4j
-public class TarArchive implements Archive {
+class TarArchive implements Archive {
     @NonNull
     private final Path tarFile;
 
+    @Getter
     private boolean archived;
 
-    public TarArchive(@NonNull Path tarFile) {
+    public TarArchive(@NonNull Path tarFile, boolean archived) {
         this.tarFile = tarFile;
-        // If the file exists, it is assumed to be a valid tar archive
-        this.archived = Files.exists(tarFile);
+        this.archived = archived;
     }
 
     @Override
@@ -160,11 +161,6 @@ public class TarArchive implements Archive {
             }
             throw e;
         }
-    }
-
-    @Override
-    public boolean isArchived() {
-        return archived;
     }
 
     @Override

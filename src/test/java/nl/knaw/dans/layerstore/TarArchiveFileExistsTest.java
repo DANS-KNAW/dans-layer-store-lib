@@ -26,7 +26,7 @@ public class TarArchiveFileExistsTest extends AbstractTestWithTestDir {
     @Test
     public void should_return_file_existence_in_archive() throws Exception {
         Path archiveFile = testDir.resolve("test.tar");
-        TarArchive archive = new TarArchive(archiveFile);
+        TarArchive archive = new TarArchive(archiveFile, false);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
@@ -46,7 +46,7 @@ public class TarArchiveFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_false_if_the_archive_does_not_exist() {
-        var archive = new TarArchive(Path.of("does-not-exist"));
+        var archive = new TarArchive(Path.of("does-not-exist"), false);
         assertThat(archive.fileExists("xx")).isFalse();
     }
 }

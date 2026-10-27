@@ -29,7 +29,7 @@ public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
     public void should_delete_files_in_staging_dir_if_layer_is_open() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         // When
@@ -44,7 +44,7 @@ public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalStateException_if_layer_is_closed() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
         layer.close();
 
         // When / Then
@@ -57,7 +57,7 @@ public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalArgumentException_if_path_is_null() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
 
         // When / Then
         assertThatThrownBy(() -> layer.deleteFiles(null))
@@ -69,7 +69,7 @@ public class LayerDeleteFilesTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalArgumentException_if_path_contains_null() throws Exception {
         // Given
         Files.createDirectories(stagingDir);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
 
         if (!stagingDir.resolve("path/to").toFile().mkdirs() ||
             !stagingDir.resolve("path/to/file1").toFile().createNewFile()) {

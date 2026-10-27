@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.layerstore;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -43,16 +44,17 @@ import static java.text.MessageFormat.format;
 /**
  * Implementation of {@link Archive} for ZIP archives.
  */
-public class ZipArchive implements Archive {
+class ZipArchive implements Archive {
     private static final Logger log = LoggerFactory.getLogger(ZipArchive.class);
     @NonNull
     private final Path zipFile;
 
+    @Getter
     private boolean archived;
 
-    public ZipArchive(Path zipFile) {
+    public ZipArchive(@NonNull Path zipFile, boolean archived) {
         this.zipFile = zipFile;
-        this.archived = Files.exists(zipFile);
+        this.archived = archived;
     }
 
     @Override
@@ -156,11 +158,6 @@ public class ZipArchive implements Archive {
             }
             throw e;
         }
-    }
-
-    @Override
-    public boolean isArchived() {
-        return archived;
     }
 
     @Override

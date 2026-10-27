@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 /**
  * Base class for command runners.
  */
-public abstract class AbstractRunner {
+abstract class AbstractRunner {
     private static final Pattern USER_HOST_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
     private static final Pattern COMMAND_INJECTION_PATTERN = Pattern.compile("[\\s;|&`$<>]");
 
@@ -35,7 +35,7 @@ public abstract class AbstractRunner {
 
     protected static String checkUserOrHostNameForSecurity(String param) {
         if (!USER_HOST_PATTERN.matcher(param).matches()) {
-            throw new IllegalArgumentException("Invalid username: " + param);
+            throw new IllegalArgumentException("Invalid username or host name: " + param);
         }
         return param;
     }

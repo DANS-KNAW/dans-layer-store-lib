@@ -24,7 +24,7 @@ import java.util.List;
 public interface ArchiveProvider {
 
     /**
-     * Create a new {@link Archive} instance for the given layer ID.
+     * Create a new {@link Archive} instance for the given layer ID. Note that the caller must pass in the archive file existence.
      *
      * @param layerId the layer ID
      * @param exists the archive file already exists

@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class ZipArchiveProvider implements ArchiveProvider {
 
     @Override
     public Archive createArchive(long layerId, boolean exists) {
-        return new ZipArchive(archiveRoot.resolve(layerId + ".zip"));
+        return new ZipArchive(archiveRoot.resolve(layerId + ".zip"), exists);
     }
 
     @Override
@@ -40,7 +41,7 @@ public class ZipArchiveProvider implements ArchiveProvider {
 
     @Override
     public List<Long> listLayerIds() throws IOException {
-        try (var stream = java.nio.file.Files.list(archiveRoot)) {
+        try (var stream = Files.list(archiveRoot)) {
             return stream
                 .map(Path::getFileName)
                 .map(Path::toString)
@@ -53,14 +54,14 @@ public class ZipArchiveProvider implements ArchiveProvider {
 
     @Override
     public void validateRoot() throws IOException {
-        if (java.nio.file.Files.notExists(archiveRoot)) {
-            java.nio.file.Files.createDirectories(archiveRoot);
+        if (Files.notExists(archiveRoot)) {
+            Files.createDirectories(archiveRoot);
         }
-        try (var stream = java.nio.file.Files.list(archiveRoot)) {
+        try (var stream = Files.list(archiveRoot)) {
             var illegalFiles = stream
                 .filter(path -> {
                     var name = path.getFileName().toString();
-                    return !java.nio.file.Files.isRegularFile(path) ||
+                    return !Files.isRegularFile(path) ||
                         !name.endsWith(".zip") ||
                         !name.substring(0, name.length() - ".zip".length()).matches("^\\d{13,}$");
                 })

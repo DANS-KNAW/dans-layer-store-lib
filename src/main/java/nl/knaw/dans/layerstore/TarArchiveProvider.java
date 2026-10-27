@@ -31,7 +31,7 @@ public class TarArchiveProvider implements ArchiveProvider {
 
     @Override
     public Archive createArchive(long layerId, boolean exists) {
-        return new TarArchive(archiveRoot.resolve(layerId + ".tar"));
+        return new TarArchive(archiveRoot.resolve(layerId + ".tar"), exists);
     }
 
     @Override

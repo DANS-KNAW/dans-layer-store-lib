@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * A very light-weight wrapper around a Path that represents a layer staging directory. It takes care of opening and closing the directory and getting the layer id from the directory name.
  *
  */
-public class StagingDir {
+class StagingDir {
     /**
      * Pattern for valid layer names. Layer names are Unix timestamps with the optional suffix '.closed' or '.partial', for closed or partially archived layers. Current timestamps have 13 digits.
      * After November 2286, timestamps will have 14 digits.
