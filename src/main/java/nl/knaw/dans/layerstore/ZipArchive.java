@@ -160,7 +160,7 @@ public class ZipArchive implements Archive {
 
     @Override
     public boolean isArchived() {
-        return archived;
+        return archived || Files.exists(zipFile);
     }
 
     @Override

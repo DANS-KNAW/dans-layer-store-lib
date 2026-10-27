@@ -164,7 +164,7 @@ public class TarArchive implements Archive {
 
     @Override
     public boolean isArchived() {
-        return archived;
+        return archived || Files.exists(tarFile);
     }
 
     @Override

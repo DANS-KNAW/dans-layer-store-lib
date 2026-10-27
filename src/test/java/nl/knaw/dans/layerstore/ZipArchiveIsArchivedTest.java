@@ -18,6 +18,8 @@ package nl.knaw.dans.layerstore;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class ZipArchiveIsArchivedTest extends AbstractTestWithTestDir {
@@ -26,6 +28,16 @@ public class ZipArchiveIsArchivedTest extends AbstractTestWithTestDir {
         FileUtils.forceMkdir(stagingDir.toFile());
         var archive = new ZipArchive(testDir.resolve("test.zip"));
         archive.archiveFrom(stagingDir);
+
+        assertThat(archive.isArchived()).isTrue();
+    }
+
+    @Test
+    public void should_detect_archive_created_after_instance() throws Exception {
+        var archiveFile = testDir.resolve("test.zip");
+        var archive = new ZipArchive(archiveFile);
+
+        Files.createFile(archiveFile);
 
         assertThat(archive.isArchived()).isTrue();
     }

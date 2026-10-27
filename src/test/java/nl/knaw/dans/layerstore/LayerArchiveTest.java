@@ -58,7 +58,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
     }
 
     @Test
-    public void throws_IllegalArgumentException_when_overwrite_is_false_and_archive_exists() throws IOException {
+    public void throws_IllegalStateException_when_overwrite_is_false_and_archive_exists() throws IOException {
         // Given
         Files.createDirectories(archiveRoot);
         Files.createDirectories(stagingDir);
@@ -69,7 +69,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
 
         // When / Then
         assertThatThrownBy(() -> layer.archive(false))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("already archived");
     }
 
