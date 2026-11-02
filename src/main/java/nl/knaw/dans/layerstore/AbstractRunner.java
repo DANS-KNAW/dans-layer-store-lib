@@ -64,7 +64,7 @@ abstract class AbstractRunner {
             var exitCode = executor.execute(commandLine);
             var output = out.toString(StandardCharsets.UTF_8);
             if (exitCode != 0) {
-                moratoriumManager.checkOutput(output);
+                moratoriumManager.checkOutputForTrigger(output);
             }
             return new CommandResult(exitCode, output);
         }
@@ -84,8 +84,8 @@ abstract class AbstractRunner {
     /**
      * To be called when a streaming command (see ProcessInputStream) failed, so that the moratorium trigger can be detected in its error message.
      */
-    protected void checkFailure(Exception e) {
-        moratoriumManager.checkOutput(e.getMessage());
+    protected void checkFailureForMoratoriumTrigger(Exception e) {
+        moratoriumManager.checkOutputForTrigger(e.getMessage());
     }
 
     private static final Pattern USER_HOST_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");

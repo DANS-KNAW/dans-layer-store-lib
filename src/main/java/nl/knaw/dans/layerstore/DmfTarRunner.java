@@ -232,7 +232,7 @@ public class DmfTarRunner extends AbstractRunner {
             return ProcessInputStream.start(commandLine);
         }
         catch (IOException e) {
-            checkFailure(e);
+            checkFailureForMoratoriumTrigger(e);
             throw e;
         }
     }
@@ -262,7 +262,7 @@ public class DmfTarRunner extends AbstractRunner {
             return new LineIterator(reader);
         }
         catch (IOException e) {
-            checkFailure(e);
+            checkFailureForMoratoriumTrigger(e);
             throw new RuntimeException("Failed to list files in archive: " + e.getMessage(), e);
         }
     }

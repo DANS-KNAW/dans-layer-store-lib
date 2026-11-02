@@ -28,7 +28,7 @@ public class MoratoriumManagerTest {
     public void checkOutput_should_start_moratorium_when_trigger_present() {
         var manager = new MoratoriumManager("Connection refused", Duration.ofMinutes(1));
 
-        assertThat(manager.checkOutput("ssh: connect to host x port 22: Connection refused")).isTrue();
+        assertThat(manager.checkOutputForTrigger("ssh: connect to host x port 22: Connection refused")).isTrue();
 
         assertThat(manager.isUnderMoratorium()).isTrue();
         assertThatThrownBy(manager::ensureNotUnderMoratorium).isInstanceOf(MoratoriumException.class);
@@ -38,8 +38,8 @@ public class MoratoriumManagerTest {
     public void checkOutput_should_ignore_other_output() {
         var manager = new MoratoriumManager("Connection refused", Duration.ofMinutes(1));
 
-        assertThat(manager.checkOutput("Permission denied")).isFalse();
-        assertThat(manager.checkOutput(null)).isFalse();
+        assertThat(manager.checkOutputForTrigger("Permission denied")).isFalse();
+        assertThat(manager.checkOutputForTrigger(null)).isFalse();
 
         assertThat(manager.isUnderMoratorium()).isFalse();
     }
@@ -47,7 +47,7 @@ public class MoratoriumManagerTest {
     @Test
     public void moratorium_should_end() throws Exception {
         var manager = new MoratoriumManager("Connection refused", Duration.ofMillis(50));
-        manager.checkOutput("Connection refused");
+        manager.checkOutputForTrigger("Connection refused");
 
         Thread.sleep(100);
 
@@ -58,7 +58,7 @@ public class MoratoriumManagerTest {
     public void disabled_manager_never_starts_moratorium() {
         var manager = MoratoriumManager.disabled();
 
-        assertThat(manager.checkOutput("Connection refused")).isFalse();
+        assertThat(manager.checkOutputForTrigger("Connection refused")).isFalse();
         assertThat(manager.isUnderMoratorium()).isFalse();
     }
 }

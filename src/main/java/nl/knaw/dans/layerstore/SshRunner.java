@@ -133,7 +133,7 @@ public class SshRunner extends AbstractRunner {
             }
         }
         catch (IOException e) {
-            checkFailure(e);
+            checkFailureForMoratoriumTrigger(e);
             throw new RuntimeException("Failed to list files in " + remoteBaseDir + " on " + host + ": " + e.getMessage(), e);
         }
     }

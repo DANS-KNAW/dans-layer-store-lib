@@ -54,7 +54,7 @@ public class MoratoriumManager {
      * @param output output of a failed command
      * @return true if a moratorium was triggered
      */
-    public synchronized boolean checkOutput(String output) {
+    public synchronized boolean checkOutputForTrigger(String output) {
         if (triggerOn == null || output == null || !output.contains(triggerOn)) {
             return false;
         }
