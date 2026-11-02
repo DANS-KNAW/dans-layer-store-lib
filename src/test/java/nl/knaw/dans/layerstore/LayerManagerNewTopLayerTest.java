@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,7 +36,8 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
         var layerManager = new LayerManagerImpl(stagingDir,
             new DmfTarArchiveProvider(
                 getNoopDmfTarRunner(),
-                sshRunnerExpectsFileToExist(true)
+                sshRunnerExpectsFileToExist(true),
+                new DmfTarArchiveOptions(Path.of("target/test/packaging"), 0, Duration.ZERO, true, "checksum failure")
             ),
             new DirectLayerArchiver()
         );
@@ -67,7 +69,7 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
         return new DmfTarRunner(Path.of("dmftar"), ssh, "testuser", "dummyhost", Path.of("testarchive")) {
 
             @Override
-            public void tarDirectory(Path directory, String archiveName) {
+            public void packageDirectory(Path directory, Path localArchive) {
                 // Do nothing
             }
         };

@@ -34,17 +34,20 @@ import java.util.regex.Pattern;
 /**
  * A runner for the dmftar command line tool, which creates and reads DMF TAR archives on a remote host via SSH.
  * <p>
- * Security: all parameters provided to the constructor are validated to prevent command injection attacks. The {@link #tarDirectory(Path, String)} method checks that the directory to be archived does
+ * Security: all parameters provided to the constructor are validated to prevent command injection attacks. The {@link #packageDirectory(Path, Path)} method checks that the directory to be archived does
  * not contain any subdirectories prefixed with 'dmftar-cache.', as these may conflict with temporary cache directories created by dmftar itself.
  */
 @Slf4j
 public class DmfTarRunner extends AbstractRunner {
     // Only allow safe archive names: alphanumeric, dash, underscore, dot
     private static final Pattern SAFE_ARCHIVE_NAME = Pattern.compile("[a-zA-Z0-9._-]+$");
+    // Hidden, so that it is ignored by the ls calls that list the archives.
+    static final String INCOMING_DIR = ".incoming";
     private static final Pattern SAFE_FILE_NAME = Pattern.compile("[a-zA-Z0-9._/-]+$");
 
     private final Path dmfTarExecutable;
     private final SshRunner sshRunner;
+    private final RsyncRunner rsyncRunner;
 
     private final String user;
     private final String host;
@@ -59,28 +62,43 @@ public class DmfTarRunner extends AbstractRunner {
      * @param remoteBaseDir    base directory on the remote host where archives are stored
      */
     public DmfTarRunner(Path dmfTarExecutable, SshRunner sshRunner, String user, String host, Path remoteBaseDir) {
+        this(dmfTarExecutable, sshRunner, null, user, host, remoteBaseDir, null);
+    }
+
+    /**
+     * Creates a new DmfTarRunner that can upload archives with rsync.
+     *
+     * @param dmfTarExecutable  path to the dmftar executable
+     * @param sshRunner         runner for remote commands
+     * @param rsyncRunner       runner for uploading archives; may be null if {@link #uploadArchive(Path, String)} is not used
+     * @param user              username for the remote host
+     * @param host              host name or IP address of the remote host
+     * @param remoteBaseDir     base directory on the remote host where archives are stored
+     * @param moratoriumManager moratorium shared by all connections to the Data Archive; null for none
+     */
+    public DmfTarRunner(Path dmfTarExecutable, SshRunner sshRunner, RsyncRunner rsyncRunner, String user, String host, Path remoteBaseDir, MoratoriumManager moratoriumManager) {
+        super(moratoriumManager);
         this.dmfTarExecutable = Path.of(checkExecutableForSecurity(dmfTarExecutable));
         this.sshRunner = sshRunner;
+        this.rsyncRunner = rsyncRunner;
         this.user = checkUserOrHostNameForSecurity(user);
         this.host = checkUserOrHostNameForSecurity(host);
         this.remoteBaseDir = Path.of(checkRemoteBaseDirForSecurity(remoteBaseDir.toString()));
     }
 
     /**
-     * Create a DMF TAR archive from the contents of the given directory. The directory itself is not included in the archive. The directory must not contain any subdirectories prefixed with
-     * 'dmftar-cache.', as these may conflict with temporary cache directories created by dmftar itself. The resulting DMT TAR archive will be created in the remote base directory with the given
-     * name.
+     * Creates a DMF TAR archive from the contents of the given directory, locally. The directory itself is not included in the archive. The directory must not contain any subdirectories prefixed
+     * with 'dmftar-cache.', as these may conflict with temporary cache directories created by dmftar itself. The result is a directory, which can then be uploaded with
+     * {@link #uploadArchive(Path, String)}.
      *
-     * @param directory   the directory to archive
-     * @param archiveName the name of the archive to create on the remote host
+     * @param directory    the directory to archive
+     * @param localArchive the local path of the DMF TAR archive to create
      */
-    public void tarDirectory(Path directory, String archiveName) {
+    public void packageDirectory(Path directory, Path localArchive) {
         checkForDmftarCacheDirectories(directory);
-        validateArchiveName(archiveName);
-        // Use CommandLine with addArgument to avoid command injection
         var commandLine = new CommandLine(dmfTarExecutable.toAbsolutePath().toString())
             .addArgument("-cf")
-            .addArgument(getRemotePath(archiveName), false) // remote path is validated
+            .addArgument(localArchive.toAbsolutePath().toString(), false)
             .addArgument(".");
         var executor = DefaultExecutor.builder()
             .setWorkingDirectory(directory.toAbsolutePath().toFile())
@@ -91,6 +109,70 @@ public class DmfTarRunner extends AbstractRunner {
         catch (IOException e) {
             throw new RuntimeException("Failed to create tar archive: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Uploads a local DMF TAR archive to the incoming directory on the remote host. Calling this again after a failed attempt resumes the upload. The archive only becomes visible under its final name
+     * after {@link #installUploadedArchive(String)}.
+     *
+     * @param localArchive the local DMF TAR archive
+     * @param archiveName  the name of the archive on the remote host
+     */
+    public void uploadArchive(Path localArchive, String archiveName) {
+        validateArchiveName(archiveName);
+        if (rsyncRunner == null) {
+            throw new IllegalStateException("No rsync runner configured");
+        }
+        sshRunner.runCommand("mkdir -p " + quote(remoteIncomingDir().toString()));
+        rsyncRunner.upload(localArchive, INCOMING_DIR);
+    }
+
+    /**
+     * Verifies the uploaded archive in the incoming directory on the remote host.
+     *
+     * @param archiveName the name of the archive
+     * @param invalidOn   if the output of the failed verification contains this text, the archive is considered invalid
+     * @throws InvalidArchiveException if the archive is invalid
+     */
+    public void verifyUploadedArchive(String archiveName, String invalidOn) {
+        validateArchiveName(archiveName);
+        try {
+            sshRunner.runCommand("dmftar --verify -f " + quote(remoteIncomingDir().resolve(archiveName).toString()));
+        }
+        catch (RemoteCommandException e) {
+            if (invalidOn != null && e.getOutput().contains(invalidOn)) {
+                throw new InvalidArchiveException(archiveName, e.getOutput());
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Moves the uploaded archive from the incoming directory to its final name.
+     *
+     * @param archiveName the name of the archive
+     */
+    public void installUploadedArchive(String archiveName) {
+        validateArchiveName(archiveName);
+        sshRunner.runCommand("mv " + quote(remoteIncomingDir().resolve(archiveName).toString()) + " " + quote(remoteBaseDir.resolve(archiveName).toString()));
+    }
+
+    /**
+     * Removes an archive from the incoming directory, if present.
+     *
+     * @param archiveName the name of the archive
+     */
+    public void deleteUploadedArchive(String archiveName) {
+        validateArchiveName(archiveName);
+        sshRunner.runCommand("rm -rf " + quote(remoteIncomingDir().resolve(archiveName).toString()));
+    }
+
+    private Path remoteIncomingDir() {
+        return remoteBaseDir.resolve(INCOMING_DIR);
+    }
+
+    private static String quote(String path) {
+        return "'" + path.replace("'", "'\\''") + "'";
     }
 
     private void checkForDmftarCacheDirectories(Path directory) {
@@ -113,11 +195,8 @@ public class DmfTarRunner extends AbstractRunner {
             .addArgument("-xf")
             .addArgument(getRemotePath(archiveName), false)
             .addArgument("--options=--directory=" + directory.toAbsolutePath());
-        var executor = DefaultExecutor.builder()
-            .setWorkingDirectory(directory.toAbsolutePath().toFile())
-            .get();
         try {
-            executor.execute(commandLine);
+            runOrThrow(commandLine, directory.toAbsolutePath().toFile());
             // Remove any directories starting with dmtar-cache. (and their contents) in the root of the target directory
             var cacheDirs = directory.toFile().listFiles((file) -> file.isDirectory() && file.getName().startsWith("dmftar-cache."));
             if (cacheDirs != null) {
@@ -148,7 +227,14 @@ public class DmfTarRunner extends AbstractRunner {
             .addArgument("--extract")
             .addArgument("--archive=" + getRemotePath(archiveName))
             .addArgument(addPrefix(fileName));
-        return ProcessInputStream.start(commandLine);
+        moratoriumManager.ensureNotUnderMoratorium();
+        try {
+            return ProcessInputStream.start(commandLine);
+        }
+        catch (IOException e) {
+            checkFailureForMoratoriumTrigger(e);
+            throw e;
+        }
     }
 
     /*
@@ -169,12 +255,14 @@ public class DmfTarRunner extends AbstractRunner {
         var commandLine = new CommandLine(dmfTarExecutable.toAbsolutePath().toString())
             .addArgument("-qtf")
             .addArgument(getRemotePath(archiveName), false);
+        moratoriumManager.ensureNotUnderMoratorium();
         try {
             var inputStream = (InputStream) ProcessInputStream.start(commandLine);
             var reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             return new LineIterator(reader);
         }
         catch (IOException e) {
+            checkFailureForMoratoriumTrigger(e);
             throw new RuntimeException("Failed to list files in archive: " + e.getMessage(), e);
         }
     }
@@ -203,7 +291,7 @@ public class DmfTarRunner extends AbstractRunner {
         validateArchiveName(archiveName);
         // Only allow safe archive names, and quote the path
         var remotePath = remoteBaseDir.resolve(archiveName).toString();
-        sshRunner.runCommand("rm '" + remotePath.replace("'", "'\\''") + "'");
+        sshRunner.runCommand("rm -r '" + remotePath.replace("'", "'\\''") + "'");
     }
 
     public void renameRemoteFile(String oldName, String newName) {

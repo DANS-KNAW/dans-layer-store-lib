@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -59,7 +60,8 @@ public class DmfTarRunnerLiveTest {
     public void setUp() throws IOException {
         var p = new LiveTestProperties();
         var ssh = new SshRunner(Path.of("ssh"), p.getUser(), p.getHost(), p.getRemoteBaseDir());
-        dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), ssh, p.getUser(), p.getHost(), p.getRemoteBaseDir());
+        var rsync = new RsyncRunner(Path.of("rsync"), List.of("-av", "--partial", "--append"), p.getUser(), p.getHost(), p.getRemoteBaseDir(), null);
+        dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), ssh, rsync, p.getUser(), p.getHost(), p.getRemoteBaseDir(), null);
         if (p.getInputDir() != null) {
             inputDir = p.getInputDir();
         }
@@ -77,7 +79,7 @@ public class DmfTarRunnerLiveTest {
     public void createTarAndReadTarRoundTrip() throws Exception {
         var tarFile = System.currentTimeMillis() + ".dmftar";
         log.debug("tarFile: {}", tarFile);
-        dmfTarRunner.tarDirectory(inputDir, tarFile);
+        createRemoteArchive(tarFile);
         var actual = IOUtils.toString(dmfTarRunner.readFile(tarFile, "text/loro.txt"), StandardCharsets.UTF_8);
         var expected = FileUtils.readFileToString(new File("src/test/resources/live-test-input-dir/text/loro.txt"), StandardCharsets.UTF_8);
         assertThat(actual).isEqualTo(expected);
@@ -88,7 +90,7 @@ public class DmfTarRunnerLiveTest {
     public void listFilesInTar() throws Exception {
         var dmfTarFile = System.currentTimeMillis() + ".dmftar";
         log.debug("Creating tar file: {}", dmfTarFile);
-        dmfTarRunner.tarDirectory(inputDir, dmfTarFile);
+        createRemoteArchive(dmfTarFile);
         log.debug("Created tar file: {}", dmfTarFile);
         try {
             var list = IteratorUtils.toList(new DmfTarArchiveItemIterator(dmfTarFile, dmfTarRunner));
@@ -112,7 +114,7 @@ public class DmfTarRunnerLiveTest {
     public void createAndUnpackTarRoundTrip() throws Exception {
         var dmfTarFile = System.currentTimeMillis() + ".dmftar";
         log.debug("Creating tar file: {} from {}", dmfTarFile, inputDir);
-        dmfTarRunner.tarDirectory(inputDir, dmfTarFile);
+        createRemoteArchive(dmfTarFile);
         log.debug("Created tar file: {}", dmfTarFile);
         Files.createDirectory(outputDir);
         log.debug("Created directory: {}", outputDir);
@@ -121,5 +123,13 @@ public class DmfTarRunnerLiveTest {
         var actual = FileUtils.readFileToString(new File(outputDir.toFile(), "text/loro.txt"), StandardCharsets.UTF_8);
         var expected = FileUtils.readFileToString(new File("src/test/resources/live-test-input-dir/text/loro.txt"), StandardCharsets.UTF_8);
         assertThat(actual).isEqualTo(expected);
+    }
+
+    private void createRemoteArchive(String archiveName) throws IOException {
+        var localArchive = Path.of("target/live-test-packaging").resolve(archiveName);
+        Files.createDirectories(localArchive.getParent());
+        dmfTarRunner.packageDirectory(inputDir, localArchive);
+        dmfTarRunner.uploadArchive(localArchive, archiveName);
+        dmfTarRunner.installUploadedArchive(archiveName);
     }
 }

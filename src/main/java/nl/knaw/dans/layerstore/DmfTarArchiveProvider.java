@@ -15,22 +15,26 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.AllArgsConstructor;
-
 import java.io.IOException;
 import java.util.List;
 
 /**
  * An {@link ArchiveProvider} that uses the dmftar command line tool to create and read DMF TAR archives.
  */
-@AllArgsConstructor
 public class DmfTarArchiveProvider implements ArchiveProvider {
     private final DmfTarRunner dmfTarRunner;
     private final SshRunner sshRunner;
+    private final DmfTarArchiveOptions options;
+
+    public DmfTarArchiveProvider(DmfTarRunner dmfTarRunner, SshRunner sshRunner, DmfTarArchiveOptions options) {
+        this.dmfTarRunner = dmfTarRunner;
+        this.sshRunner = sshRunner;
+        this.options = options;
+    }
 
     @Override
     public Archive createArchive(long layerId, boolean exists) {
-        return new DmfTarArchive(dmfTarRunner, layerId + ".dmftar", exists);
+        return new DmfTarArchive(dmfTarRunner, options, layerId + ".dmftar", exists);
     }
 
     @Override
