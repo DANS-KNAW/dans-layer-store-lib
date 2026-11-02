@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import lombok.Getter;
 import nl.knaw.dans.lib.util.ProcessInputStream;
 import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -61,11 +60,35 @@ public class SshRunner extends AbstractRunner {
      * @param connectionTimeout connection timeout in seconds
      */
     public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir, int connectionTimeout) {
+        this(sshExecutable, user, host, remoteBaseDir, connectionTimeout, null);
+    }
+
+    /**
+     * Creates a new SshRunner.
+     *
+     * @param sshExecutable     path to the ssh executable
+     * @param user              username for the remote host
+     * @param host              host name or IP address of the remote host
+     * @param remoteBaseDir     base directory on the remote host where archives are stored
+     * @param connectionTimeout connection timeout in seconds
+     * @param moratoriumManager moratorium shared by all connections to the Data Archive; null for none
+     */
+    public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir, int connectionTimeout, MoratoriumManager moratoriumManager) {
+        super(moratoriumManager);
         this.sshExecutable = Path.of(checkExecutableForSecurity(sshExecutable));
         this.user = checkUserOrHostNameForSecurity(user);
         this.host = checkUserOrHostNameForSecurity(host);
         this.remoteBaseDir = Path.of(checkRemoteBaseDirForSecurity(remoteBaseDir.toString()));
         this.connectionTimeout = connectionTimeout;
+    }
+
+    private CommandLine sshCommandLine() {
+        return new CommandLine(sshExecutable.toAbsolutePath().toString())
+            .addArgument("-o")
+            .addArgument("BatchMode=yes")
+            .addArgument("-o")
+            .addArgument("ConnectTimeout=" + connectionTimeout)
+            .addArgument(user + "@" + host);
     }
 
     /**
@@ -75,22 +98,12 @@ public class SshRunner extends AbstractRunner {
      * @return true if the archive exists, false otherwise
      */
     public boolean fileExists(String archiveName) {
-        var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
-            .addArgument("-o")
-            .addArgument("BatchMode=yes")
-            .addArgument("-o")
-            .addArgument("ConnectTimeout=" + connectionTimeout)
-            .addArgument(user + "@" + host)
-            .addArgument("/usr/bin/test -e '" + remoteBaseDir.resolve(archiveName) + "'", false);
-        var executor = DefaultExecutor.builder().get();
-        executor.setExitValues(new int[] { 0, 1 });
-        try {
-            int exitValue = executor.execute(cmdLine);
-            return exitValue == 0;
+        var cmdLine = sshCommandLine().addArgument("/usr/bin/test -e '" + remoteBaseDir.resolve(archiveName) + "'", false);
+        var result = run(cmdLine, null);
+        if (result.exitCode() > 1) {
+            throw new RemoteCommandException("Failed to check existence of " + archiveName + " on " + host, result.exitCode(), result.output());
         }
-        catch (Exception e) {
-            throw new RuntimeException("Failed to check existence of " + archiveName + " on " + host, e);
-        }
+        return result.exitCode() == 0;
     }
 
     /**
@@ -109,13 +122,9 @@ public class SshRunner extends AbstractRunner {
      * @return a list of lines from the ls command
      */
     public List<String> listFiles(String flags) {
+        moratoriumManager.ensureNotUnderMoratorium();
         try {
-            var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
-                .addArgument("-o")
-                .addArgument("BatchMode=yes")
-                .addArgument("-o")
-                .addArgument("ConnectTimeout=" + connectionTimeout)
-                .addArgument(user + "@" + host)
+            var cmdLine = sshCommandLine()
                 .addArgument("ls -1 " + flags, false)
                 .addArgument(remoteBaseDir.toString());
             try (var in = ProcessInputStream.start(cmdLine);
@@ -124,25 +133,24 @@ public class SshRunner extends AbstractRunner {
             }
         }
         catch (IOException e) {
+            checkFailure(e);
             throw new RuntimeException("Failed to list files in " + remoteBaseDir + " on " + host + ": " + e.getMessage(), e);
         }
     }
 
-    public void runCommand(String command) {
-        var cmdLine = new CommandLine(sshExecutable.toAbsolutePath().toString())
-            .addArgument("-o")
-            .addArgument("BatchMode=yes")
-            .addArgument("-o")
-            .addArgument("ConnectTimeout=" + connectionTimeout)
-            .addArgument(user + "@" + host)
-            .addArgument(command, false);
-        var executor = DefaultExecutor.builder().get();
-        try {
-            executor.execute(cmdLine);
+    /**
+     * Runs a command on the remote host.
+     *
+     * @param command the command line to execute remotely; the caller is responsible for quoting
+     * @return the combined output of the command
+     * @throws RemoteCommandException if the command exits with a non-zero exit code
+     */
+    public String runCommand(String command) {
+        var result = run(sshCommandLine().addArgument(command, false), null);
+        if (result.exitCode() != 0) {
+            throw new RemoteCommandException("Failed to execute command '" + command + "' on " + host, result.exitCode(), result.output());
         }
-        catch (Exception e) {
-            throw new RuntimeException("Failed to execute command '" + command + "' on " + host, e);
-        }
+        return result.output();
     }
 
 }

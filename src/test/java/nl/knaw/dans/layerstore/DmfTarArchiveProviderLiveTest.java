@@ -21,6 +21,8 @@ import org.junit.jupiter.api.condition.EnabledIf;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,8 +38,9 @@ public class DmfTarArchiveProviderLiveTest {
     public void setUp() throws IOException {
         var p = new LiveTestProperties();
         sshRunner = new SshRunner(Path.of("/usr/bin/ssh"), p.getUser(), p.getHost(), p.getRemoteBaseDir());
-        dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), sshRunner, p.getUser(), p.getHost(), p.getRemoteBaseDir());
-        provider = new DmfTarArchiveProvider(dmfTarRunner, sshRunner);
+        var rsync = new RsyncRunner(Path.of("rsync"), List.of("-av", "--partial", "--append"), p.getUser(), p.getHost(), p.getRemoteBaseDir(), null);
+        dmfTarRunner = new DmfTarRunner(p.getDmfTarExecutable(), sshRunner, rsync, p.getUser(), p.getHost(), p.getRemoteBaseDir(), null);
+        provider = new DmfTarArchiveProvider(dmfTarRunner, sshRunner, new DmfTarArchiveOptions(Path.of("target/test/packaging"), 0, Duration.ZERO, true, "checksum failure"));
         if (p.getInputDir() != null) {
             inputDir = p.getInputDir();
         }
@@ -78,7 +81,7 @@ public class DmfTarArchiveProviderLiveTest {
     public void exists_should_return_true_when_archive_exists() throws IOException {
         long layerId = System.currentTimeMillis();
         String archiveName = layerId + ".dmftar";
-        dmfTarRunner.tarDirectory(inputDir, archiveName);
+        provider.createArchive(layerId, false).archiveFrom(inputDir);
 
         assertThat(provider.exists(layerId)).isTrue();
     }
@@ -92,7 +95,7 @@ public class DmfTarArchiveProviderLiveTest {
     public void listLayerIds_should_list_existing_archives() throws IOException {
         long layerId = System.currentTimeMillis();
         String archiveName = layerId + ".dmftar";
-        dmfTarRunner.tarDirectory(inputDir, archiveName);
+        provider.createArchive(layerId, false).archiveFrom(inputDir);
 
         var layerIds = provider.listLayerIds();
         assertThat(layerIds).contains(layerId);
