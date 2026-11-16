@@ -23,8 +23,8 @@ public interface LayerArchiver {
     /**
      * Archives the specified layer, telling the implementation whether an existing archive must be overwritten.
      *
-     * @param layerId       the id of the layer to archive
-     * @param overwrite     whether the layer is requested to overwrite an existing archive
+     * @param layerId   the id of the layer to archive
+     * @param overwrite whether the layer is requested to overwrite an existing archive
      */
     void archive(long layerId, boolean overwrite);
 }

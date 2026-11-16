@@ -26,24 +26,6 @@ import java.util.List;
  */
 interface Layer {
     /**
-     * The state of a layer.
-     */
-    enum State {
-        /**
-         * The layer is open for writing.
-         */
-        OPEN,
-        /**
-         * The layer is closed for writing and may be (re)archived.
-         */
-        CLOSED,
-        /**
-         * The layer is archived.
-         */
-        ARCHIVED
-    }
-
-    /**
      * Returns the id of the layer.
      *
      * @return the id of the layer
@@ -165,4 +147,22 @@ interface Layer {
      * @throws IOException if the items cannot be listed
      */
     Iterator<Item> listAllItems() throws IOException;
+
+    /**
+     * The state of a layer.
+     */
+    enum State {
+        /**
+         * The layer is open for writing.
+         */
+        OPEN,
+        /**
+         * The layer is closed for writing and may be (re)archived.
+         */
+        CLOSED,
+        /**
+         * The layer is archived.
+         */
+        ARCHIVED
+    }
 }

@@ -52,7 +52,7 @@ public class LayeredItemStore implements ItemStore {
     private final LayerManager layerManager;
     private final DatabaseBackedContentManager databaseBackedContentManager;
     /**
-     *  Returns the internal layer consistency checker.
+     * Returns the internal layer consistency checker.
      *
      * @return the layer consistency checker
      */
@@ -60,7 +60,7 @@ public class LayeredItemStore implements ItemStore {
     private final LayerConsistencyChecker layerConsistencyChecker;
 
     /**
-     *  Whether to allow reading content from archives.
+     * Whether to allow reading content from archives.
      */
     @Getter
     @Setter

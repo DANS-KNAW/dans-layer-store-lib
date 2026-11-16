@@ -120,11 +120,11 @@ class ZipArchive implements Archive {
         try {
             Stream<Path> emptyFileStream = Stream.empty();
             try (var outputStream = Files.newOutputStream(zipFile);
-                 var bufferedOutputStream = new BufferedOutputStream(outputStream);
-                 var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
-                 var files = stagingDir.toFile().exists()
-                     ? Files.walk(stagingDir)
-                     : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
+                var bufferedOutputStream = new BufferedOutputStream(outputStream);
+                var zipOutput = new ZipArchiveOutputStream(bufferedOutputStream);
+                var files = stagingDir.toFile().exists()
+                    ? Files.walk(stagingDir)
+                    : emptyFileStream // supports LayerManager.newTopLayer() in case of an empty staging directory
             ) {
                 for (var fileToArchive : files.toList()) {
                     if (!fileToArchive.equals(stagingDir)) {
@@ -147,7 +147,8 @@ class ZipArchive implements Archive {
             if (backupFile != null) {
                 try {
                     Files.delete(backupFile);
-                } catch (Exception cleanupEx) {
+                }
+                catch (Exception cleanupEx) {
                     log.warn("Could not delete backup file {} after archiving {}: {}", backupFile, zipFile, cleanupEx.toString());
                 }
             }

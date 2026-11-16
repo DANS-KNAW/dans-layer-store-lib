@@ -69,6 +69,47 @@ class StagingDir {
         }
     }
 
+    // Static helpers (used by constructors)
+    private static void validateState(Path path) {
+        String fileName = path.getFileName().toString();
+        long id;
+        if (fileName.endsWith(".closed")) {
+            id = Long.parseLong(fileName.substring(0, fileName.length() - ".closed".length()));
+        }
+        else if (fileName.endsWith(".partial")) {
+            id = Long.parseLong(fileName.substring(0, fileName.length() - ".partial".length()));
+        }
+        else {
+            id = Long.parseLong(fileName);
+        }
+
+        Path openPath = path.resolveSibling(Long.toString(id));
+        Path closedPath = path.resolveSibling(id + ".closed");
+        Path partialPath = path.resolveSibling(id + ".partial");
+
+        int existsCount = 0;
+        if (Files.exists(openPath))
+            existsCount++;
+        if (Files.exists(closedPath))
+            existsCount++;
+        if (Files.exists(partialPath))
+            existsCount++;
+
+        if (existsCount > 1) {
+            throw new IllegalArgumentException("Layer " + id + " has multiple staging directories");
+        }
+
+        if (existsCount == 1 && !Files.exists(path)) {
+            throw new IllegalArgumentException("Layer " + id + " has a different staging directory than " + path.getFileName());
+        }
+    }
+
+    private static void validateName(String name) {
+        if (!validLayerNamePattern.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid layer name: " + name);
+        }
+    }
+
     // Public API
     public Long getId() {
         int lastDot = path.getFileName().toString().lastIndexOf('.');
@@ -147,47 +188,6 @@ class StagingDir {
         }
         else {
             throw new IllegalStateException("Layer is open, cannot delete");
-        }
-    }
-
-    // Static helpers (used by constructors)
-    private static void validateState(Path path) {
-        String fileName = path.getFileName().toString();
-        long id;
-        if (fileName.endsWith(".closed")) {
-            id = Long.parseLong(fileName.substring(0, fileName.length() - ".closed".length()));
-        }
-        else if (fileName.endsWith(".partial")) {
-            id = Long.parseLong(fileName.substring(0, fileName.length() - ".partial".length()));
-        }
-        else {
-            id = Long.parseLong(fileName);
-        }
-
-        Path openPath = path.resolveSibling(Long.toString(id));
-        Path closedPath = path.resolveSibling(id + ".closed");
-        Path partialPath = path.resolveSibling(id + ".partial");
-
-        int existsCount = 0;
-        if (Files.exists(openPath))
-            existsCount++;
-        if (Files.exists(closedPath))
-            existsCount++;
-        if (Files.exists(partialPath))
-            existsCount++;
-
-        if (existsCount > 1) {
-            throw new IllegalArgumentException("Layer " + id + " has multiple staging directories");
-        }
-
-        if (existsCount == 1 && !Files.exists(path)) {
-            throw new IllegalArgumentException("Layer " + id + " has a different staging directory than " + path.getFileName());
-        }
-    }
-
-    private static void validateName(String name) {
-        if (!validLayerNamePattern.matcher(name).matches()) {
-            throw new IllegalArgumentException("Invalid layer name: " + name);
         }
     }
 }

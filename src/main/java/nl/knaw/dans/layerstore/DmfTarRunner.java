@@ -220,7 +220,6 @@ public class DmfTarRunner extends AbstractRunner {
         return user + "@" + host + ":" + remoteBaseDir.resolve(archiveName);
     }
 
-
     private void validateArchiveName(String name) {
         if (name == null || !SAFE_ARCHIVE_NAME.matcher(name).matches() || name.startsWith("../")) {
             throw new IllegalArgumentException("Invalid archive name: " + name);

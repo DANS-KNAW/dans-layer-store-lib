@@ -65,7 +65,8 @@ class DmfTarArchive implements Archive {
             if (backupPath != null) {
                 try {
                     dmfTarRunner.deleteRemoteFile(backupPath);
-                } catch (Exception cleanupEx) {
+                }
+                catch (Exception cleanupEx) {
                     // Logging is not available here, so ignore or print warning if needed
                 }
             }

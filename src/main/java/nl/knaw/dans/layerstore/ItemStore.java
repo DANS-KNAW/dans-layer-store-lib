@@ -79,8 +79,8 @@ public interface ItemStore {
 
     /**
      * Writes the given content to the file at the given path. If the file does not exist yet, it is created. Note that this is different from the behavior of
-     * io.ocfl.core.storage.common.Storage#write(java.lang.String, byte[], java.lang.String), which throws an exception if the file already exists.
-     * Note also that the parent directory of the file must exist prior to this call. It can be created with {@link #createDirectories(String)}
+     * io.ocfl.core.storage.common.Storage#write(java.lang.String, byte[], java.lang.String), which throws an exception if the file already exists. Note also that the parent directory of the file must
+     * exist prior to this call. It can be created with {@link #createDirectories(String)}
      *
      * @param path    the path of the file relative to the storage root
      * @param content the content to write
@@ -134,8 +134,7 @@ public interface ItemStore {
     void createDirectories(String path) throws IOException;
 
     /**
-     * Copies the contents of a specified directory from the store to a given destination
-     * outside the store. The destination directory will be created if it does not exist.
+     * Copies the contents of a specified directory from the store to a given destination outside the store. The destination directory will be created if it does not exist.
      *
      * @param source      the path of the directory to copy, relative to the storage root
      * @param destination the target filesystem path where the directory content will be copied

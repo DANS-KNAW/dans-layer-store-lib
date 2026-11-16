@@ -43,6 +43,13 @@ import static nl.knaw.dans.layerstore.Item.Type;
 public class LayerDatabaseImpl implements LayerDatabase {
     private PersistenceProvider<ItemRecord> persistenceProvider;
 
+    private static Subquery<Long> getMaxLayerIdSubquery(CriteriaQuery<ItemRecord> cq, CriteriaBuilder cb, Root<ItemRecord> itemRecordRoot) {
+        Subquery<Long> subquery = cq.subquery(Long.class);
+        Root<ItemRecord> subRoot = subquery.from(ItemRecord.class);
+        subquery.select(cb.max(subRoot.get("layerId"))).where(cb.equal(subRoot.get("path"), itemRecordRoot.get("path")));
+        return subquery;
+    }
+
     @Override
     public void saveRecords(ItemRecord... records) {
         for (var record : records) {
@@ -112,13 +119,6 @@ public class LayerDatabaseImpl implements LayerDatabase {
 
         TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
         return query.getResultStream().map(ItemRecord::toItem).collect(Collectors.toList());
-    }
-
-    private static Subquery<Long> getMaxLayerIdSubquery(CriteriaQuery<ItemRecord> cq, CriteriaBuilder cb, Root<ItemRecord> itemRecordRoot) {
-        Subquery<Long> subquery = cq.subquery(Long.class);
-        Root<ItemRecord> subRoot = subquery.from(ItemRecord.class);
-        subquery.select(cb.max(subRoot.get("layerId"))).where(cb.equal(subRoot.get("path"), itemRecordRoot.get("path")));
-        return subquery;
     }
 
     @Override
