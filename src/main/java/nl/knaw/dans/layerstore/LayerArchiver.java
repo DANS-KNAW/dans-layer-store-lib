@@ -29,4 +29,16 @@ public interface LayerArchiver {
      * @param archiveAction the action that performs the archiving
      */
     void archive(long layerId, Runnable archiveAction);
+
+    /**
+     * Archives the specified layer, telling the implementation whether an existing archive must be overwritten. The action already takes this into account; the flag is for implementations that
+     * need to know it, for example to persist it. The default implementation ignores the flag.
+     *
+     * @param layerId       the id of the layer to archive
+     * @param overwrite     whether the layer is requested to overwrite an existing archive
+     * @param archiveAction the action that performs the archiving
+     */
+    default void archive(long layerId, boolean overwrite, Runnable archiveAction) {
+        archive(layerId, archiveAction);
+    }
 }

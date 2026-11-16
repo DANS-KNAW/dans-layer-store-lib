@@ -137,7 +137,7 @@ class LayerManagerImpl implements LayerManager {
     }
 
     private void archive(Layer layer, boolean overwrite) {
-        layerArchiver.archive(layer.getId(), () -> layer.archive(overwrite));
+        layerArchiver.archive(layer.getId(), overwrite, () -> layer.archive(overwrite));
     }
 
     public List<Long> listLayerIds() throws IOException {

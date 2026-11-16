@@ -80,4 +80,30 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
         assertThat(delegated).isTrue();
         assertThat(archiveRoot.resolve(layer.getId() + ".zip")).exists();
     }
+
+    @Test
+    void should_pass_overwrite_flag_to_archiver() throws Exception {
+        Files.createDirectories(archiveRoot);
+        var received = new java.util.ArrayList<Boolean>();
+        var archiver = new LayerArchiver() {
+            @Override
+            public void archive(long layerId, Runnable archiveAction) {
+                throw new AssertionError("two-argument variant must not be called by the layer manager");
+            }
+
+            @Override
+            public void archive(long layerId, boolean overwrite, Runnable archiveAction) {
+                received.add(overwrite);
+            }
+        };
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), archiver);
+        layerManager.newTopLayer();
+        var layer = layerManager.getTopLayer();
+        layer.close();
+
+        layerManager.archive(layer.getId(), true);
+        layerManager.archive(layer.getId(), false);
+
+        assertThat(received).containsExactly(true, false);
+    }
 }

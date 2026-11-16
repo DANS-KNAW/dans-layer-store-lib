@@ -136,6 +136,30 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
+     * Archives the layer with the specified id in the calling thread, bypassing the configured {@link LayerArchiver}. This is meant for {@link LayerArchiver} implementations that run the archiving
+     * themselves at a later moment, for example from a persisted job queue.
+     *
+     * @param layerId   the id of the layer to archive
+     * @param overwrite whether to overwrite an existing archive
+     * @throws IllegalArgumentException if no layer with the specified id exists
+     * @throws IllegalStateException    if the layer is already archived or not in the CLOSED state
+     */
+    public void archiveLayerDirectly(long layerId, boolean overwrite) {
+        layerManager.getLayer(layerId).archive(overwrite);
+    }
+
+    /**
+     * Returns whether the layer with the specified id is in the ARCHIVED state.
+     *
+     * @param layerId the id of the layer
+     * @return true if the layer is archived
+     * @throws IllegalArgumentException if no layer with the specified id exists
+     */
+    public boolean isLayerArchived(long layerId) {
+        return layerManager.getLayer(layerId).getState() == Layer.State.ARCHIVED;
+    }
+
+    /**
      * Closes the layer with the given id.
      *
      * @param id the layer id
