@@ -38,6 +38,11 @@
         <url>https://github.com/DANS-KNAW/dans-layer-store-lib</url>
     </scm>
 
+    <properties>
+        <commons-compress.version>1.28.0</commons-compress.version>
+        <commons-codec.version>1.23.0</commons-codec.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>nl.datastations</groupId>
