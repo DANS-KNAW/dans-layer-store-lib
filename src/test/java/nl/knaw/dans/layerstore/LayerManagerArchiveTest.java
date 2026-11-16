@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class LayerManagerArchiveTest extends AbstractTestWithTestDir {
     @Test
     void should_throw_when_layer_id_does_not_exist() throws IOException {
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
 
         assertThatThrownBy(() -> layerManager.archive(1234567890123L, false))
             .isInstanceOf(IllegalArgumentException.class)
@@ -37,7 +37,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
     @Test
     void should_archive_layer_by_id() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         var layer = layerManager.getTopLayer();
         layer.close();
@@ -50,7 +50,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
     @Test
     void should_reject_already_archived_layer_when_overwrite_is_false() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         var layer = layerManager.getTopLayer();
         layer.close();
@@ -65,10 +65,9 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
     void should_delegate_archive_action_with_layer_id_to_custom_archiver() throws Exception {
         Files.createDirectories(archiveRoot);
         var delegated = new AtomicBoolean();
-        var customArchiver = (LayerArchiver) (layerId, archiveAction) -> {
+        var customArchiver = (LayerArchiver) (layerId, overwrite) -> {
             assertThat(layerId).isPositive();
             delegated.set(true);
-            archiveAction.run();
         };
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), customArchiver);
         layerManager.newTopLayer();
@@ -78,7 +77,6 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
         layerManager.archive(layer.getId(), false);
 
         assertThat(delegated).isTrue();
-        assertThat(archiveRoot.resolve(layer.getId() + ".zip")).exists();
     }
 
     @Test
@@ -87,12 +85,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
         var received = new java.util.ArrayList<Boolean>();
         var archiver = new LayerArchiver() {
             @Override
-            public void archive(long layerId, Runnable archiveAction) {
-                throw new AssertionError("two-argument variant must not be called by the layer manager");
-            }
-
-            @Override
-            public void archive(long layerId, boolean overwrite, Runnable archiveAction) {
+            public void archive(long layerId, boolean overwrite) {
                 received.add(overwrite);
             }
         };

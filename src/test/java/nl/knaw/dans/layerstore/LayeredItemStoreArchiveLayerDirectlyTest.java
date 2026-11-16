@@ -28,9 +28,8 @@ public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatab
     public void should_archive_layer_without_involving_the_layer_archiver() throws Exception {
         Files.createDirectories(archiveRoot);
         var archiverCalls = new AtomicInteger();
-        LayerArchiver countingArchiver = (layerId, action) -> {
+        LayerArchiver countingArchiver = (layerId, overwrite) -> {
             archiverCalls.incrementAndGet();
-            action.run();
         };
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), countingArchiver);
         var layeredItemStore = new LayeredItemStore(db, layerManager);

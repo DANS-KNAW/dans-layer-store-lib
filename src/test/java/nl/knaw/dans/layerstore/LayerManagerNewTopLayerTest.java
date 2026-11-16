@@ -36,8 +36,7 @@ public class LayerManagerNewTopLayerTest extends AbstractCapturingTest {
             new DmfTarArchiveProvider(
                 getNoopDmfTarRunner(),
                 sshRunnerExpectsFileToExist(true)
-            ),
-            new DirectLayerArchiver()
+            )
         );
         layerManager.newTopLayer(); // Create the first layer
 

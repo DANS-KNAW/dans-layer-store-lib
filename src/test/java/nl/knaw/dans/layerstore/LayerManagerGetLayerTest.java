@@ -30,7 +30,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_when_layer_id_does_not_exist() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot));
 
         // When
         assertThatThrownBy(() -> layerManager.getLayer(1234567890123L))
@@ -43,7 +43,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_a_top_layer_with_content() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         var topLayer = layerManager.getTopLayer();
         topLayer.writeFile("test.txt", toInputStream("Hello world!", UTF_8));
@@ -58,7 +58,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_an_empty_top_layer() throws IOException {
         // Given
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         long topLayerId = layerManager.getTopLayerId();
 
@@ -73,7 +73,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_find_an_empty_archived_layer() throws Exception {
         // Given
         Files.createDirectories(archiveRoot);
-        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         var initialLayerId = layerManager.getTopLayerId();
         assertThat(archiveRoot).isEmptyDirectory(); // nothing archived yet
@@ -92,7 +92,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     public void should_have_status_archived_for_the_found_layer() throws Exception {
         // Given
         Files.createDirectories(archiveRoot);
-        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));
         Layer initialLayer = layerManager.getTopLayer();

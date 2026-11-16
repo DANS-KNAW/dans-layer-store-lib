@@ -32,7 +32,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_create_empty_staging_root() throws IOException {
         assertThat(stagingRoot).doesNotExist();
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         assertThat(stagingRoot).exists();
         try (var stream = Files.list(stagingRoot)) {
             assertThat(stream).isEmpty();
@@ -45,7 +45,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var existingLayerId = 1234567890123L;
         Files.createDirectories(stagingRoot.resolve(String.valueOf(existingLayerId)));
 
-        var topLayerId = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver())
+        var topLayerId = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot))
             .getTopLayer().getId();
         assertThat(topLayerId).isEqualTo(existingLayerId);
     }
@@ -56,7 +56,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidFileBetweenLayerDirs = "1234567890123";
         Files.createFile(stagingRoot.resolve(invalidFileBetweenLayerDirs));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot)))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Staging root")
             .hasMessageContaining("contains illegal files")
@@ -68,7 +68,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var existingLayerDir = "123456789012";
         Files.createDirectories(stagingRoot.resolve(existingLayerDir));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot)))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Staging root")
             .hasMessageContaining("contains illegal files")
@@ -80,7 +80,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidDirBetweenLayerDirs = "abcdefghijklmnopqrstuvwxyz";
         Files.createDirectories(stagingRoot.resolve(invalidDirBetweenLayerDirs));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot)))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Staging root")
             .hasMessageContaining("contains illegal files")
@@ -92,7 +92,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidDirBetweenLayerDirs = "1.2";
         Files.createDirectories(stagingRoot.resolve(invalidDirBetweenLayerDirs));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver()))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot)))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Staging root")
             .hasMessageContaining("contains illegal files")
@@ -105,7 +105,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var closedLayerDir = existingLayerId + ".closed";
         Files.createDirectories(stagingRoot.resolve(closedLayerDir));
 
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         assertThat(layerManager.getTopLayer()).isNotNull();
         assertThat(layerManager.getTopLayer().getId()).isEqualTo(existingLayerId);
         assertThat(layerManager.getTopLayer().getState()).isEqualTo(Layer.State.CLOSED);
@@ -114,14 +114,14 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_validate_archive_root_by_default() throws IOException {
         var archiveProvider = Mockito.mock(ArchiveProvider.class);
-        new LayerManagerImpl(stagingRoot, archiveProvider, new DirectLayerArchiver());
+        new LayerManagerImpl(stagingRoot, archiveProvider);
         verify(archiveProvider, times(1)).validateRoot();
     }
 
     @Test
     public void should_not_validate_archive_root_if_validateArchiveRoot_is_false() throws IOException {
         var archiveProvider = Mockito.mock(ArchiveProvider.class);
-        new LayerManagerImpl(stagingRoot, archiveProvider, new DirectLayerArchiver(), false);
+        new LayerManagerImpl(stagingRoot, archiveProvider, false);
         verify(archiveProvider, never()).validateRoot();
     }
 
@@ -131,7 +131,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidFile = "invalid-file";
         Files.createFile(archiveRoot.resolve(invalidFile));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver(), true))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), true))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Archive root")
             .hasMessageContaining("contains illegal files")
@@ -145,6 +145,6 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         Files.createFile(archiveRoot.resolve(invalidFile));
 
         // Should not throw
-        new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver(), false);
+        new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), false);
     }
 }

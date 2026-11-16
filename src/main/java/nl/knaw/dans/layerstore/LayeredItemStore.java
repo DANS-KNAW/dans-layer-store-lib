@@ -502,7 +502,7 @@ public class LayeredItemStore implements ItemStore {
         private LayerDatabase database;
         private Path stagingRoot;
         private ArchiveProvider archiveProvider;
-        private Function<LayerConsistencyChecker, LayerArchiver> layerArchiverFactory = checker -> new DirectLayerArchiver();
+        private Function<LayerConsistencyChecker, LayerArchiver> layerArchiverFactory = checker -> null;
         private Function<LayerConsistencyChecker, LayerConsistencyChecker> layerConsistencyCheckerProxyFactory = Function.identity();
         private DatabaseBackedContentManager databaseBackedContentManager;
         private boolean validateArchiveRoot = true;

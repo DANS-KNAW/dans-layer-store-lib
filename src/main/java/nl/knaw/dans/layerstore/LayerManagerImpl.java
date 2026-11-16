@@ -52,10 +52,33 @@ class LayerManagerImpl implements LayerManager {
      *
      * @param stagingRoot     the root directory for staging layers; must not be null.
      * @param archiveProvider the provider responsible for managing archives; must not be null.
-     * @param layerArchiver   the archiver used to handle layer archiving; must not be null.
      * @throws IOException if the staging root directory cannot be created or accessed.
      */
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver) throws IOException {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, boolean validateArchiveRoot) throws IOException {
+        this(stagingRoot, archiveProvider, null, validateArchiveRoot);
+    }
+
+
+    /**
+     * Creates a new LayerManagerImpl and validates the archive root.
+     *
+     * @param stagingRoot     the root directory for staging layers; must not be null.
+     * @param archiveProvider the provider responsible for managing archives; must not be null.
+     * @throws IOException if the staging root directory cannot be created or accessed.
+     */
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) throws IOException {
+        this(stagingRoot, archiveProvider, null, true);
+    }
+
+    /**
+     * Creates a new LayerManagerImpl and validates the archive root.
+     *
+     * @param stagingRoot     the root directory for staging layers; must not be null.
+     * @param archiveProvider the provider responsible for managing archives; must not be null.
+     * @param layerArchiver   the archiver used to handle layer archiving; may be null.
+     * @throws IOException if the staging root directory cannot be created or accessed.
+     */
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, LayerArchiver layerArchiver) throws IOException {
         this(stagingRoot, archiveProvider, layerArchiver, true);
     }
 
@@ -68,7 +91,7 @@ class LayerManagerImpl implements LayerManager {
      * @param validateArchiveRoot validate that the directory containing the archived layers does not contain other files
      * @throws IOException if the staging root directory cannot be created.
      */
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver, boolean validateArchiveRoot) throws IOException {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, LayerArchiver layerArchiver, boolean validateArchiveRoot) throws IOException {
         this.stagingRoot = stagingRoot;
         this.layerArchiver = layerArchiver;
         this.archiveProvider = archiveProvider;
@@ -137,7 +160,12 @@ class LayerManagerImpl implements LayerManager {
     }
 
     private void archive(Layer layer, boolean overwrite) {
-        layerArchiver.archive(layer.getId(), overwrite, () -> layer.archive(overwrite));
+        if (layerArchiver == null) {
+            layer.archive(overwrite);
+        }
+        else {
+            layerArchiver.archive(layer.getId(), overwrite);
+        }
     }
 
     public List<Long> listLayerIds() throws IOException {

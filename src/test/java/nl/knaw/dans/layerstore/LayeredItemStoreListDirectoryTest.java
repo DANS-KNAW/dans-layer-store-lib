@@ -34,7 +34,7 @@ public class LayeredItemStoreListDirectoryTest extends AbstractLayerDatabaseTest
 
     @Test
     public void should_return_a_shallow_list() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectories("a/b/c/d/e/f");

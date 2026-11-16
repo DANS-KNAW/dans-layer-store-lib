@@ -36,7 +36,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_write_file_to_staging_dir_when_layer_is_open() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
 
@@ -52,7 +52,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_write_copy_of_content_to_database_if_filter_applies() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
@@ -69,7 +69,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_overwrite_content_in_the_database_if_filter_applies() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingRoot, new TarArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new TarArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
@@ -87,7 +87,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_succeed_when_file_has_no_parent_path() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
 
@@ -100,7 +100,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_succeed_when_parent_directory_exists_in_item_store() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
 
@@ -115,7 +115,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_when_parent_directory_does_not_exist_in_item_store() throws Exception {
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
 
@@ -128,7 +128,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_add_copies_to_the_database_if_filter_applies() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();
 
