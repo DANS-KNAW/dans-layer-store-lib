@@ -121,7 +121,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_not_validate_archive_root_if_validateArchiveRoot_is_false() throws IOException {
         var archiveProvider = Mockito.mock(ArchiveProvider.class);
-        new LayerManagerImpl(stagingRoot, archiveProvider, false);
+        new LayerManagerImpl(stagingRoot, archiveProvider, null, false);
         verify(archiveProvider, never()).validateRoot();
     }
 
@@ -131,7 +131,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var invalidFile = "invalid-file";
         Files.createFile(archiveRoot.resolve(invalidFile));
 
-        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), true))
+        assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), null, true))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Archive root")
             .hasMessageContaining("contains illegal files")
@@ -145,6 +145,6 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         Files.createFile(archiveRoot.resolve(invalidFile));
 
         // Should not throw
-        new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), false);
+        new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), null, false);
     }
 }

@@ -502,7 +502,7 @@ public class LayeredItemStore implements ItemStore {
         private LayerDatabase database;
         private Path stagingRoot;
         private ArchiveProvider archiveProvider;
-        private Function<LayerConsistencyChecker, LayerArchiver> layerArchiverFactory = checker -> null;
+        private LayerArchiver layerArchiver;
         private Function<LayerConsistencyChecker, LayerConsistencyChecker> layerConsistencyCheckerProxyFactory = Function.identity();
         private DatabaseBackedContentManager databaseBackedContentManager;
         private boolean validateArchiveRoot = true;
@@ -523,12 +523,7 @@ public class LayeredItemStore implements ItemStore {
         }
 
         public Builder layerArchiver(LayerArchiver layerArchiver) {
-            this.layerArchiverFactory = checker -> layerArchiver;
-            return this;
-        }
-
-        public Builder layerArchiver(Function<LayerConsistencyChecker, LayerArchiver> layerArchiverFactory) {
-            this.layerArchiverFactory = layerArchiverFactory;
+            this.layerArchiver = layerArchiver;
             return this;
         }
 
@@ -560,7 +555,6 @@ public class LayeredItemStore implements ItemStore {
 
             var originalChecker = new ItemsMatchDbConsistencyChecker(database);
             var usedChecker = layerConsistencyCheckerProxyFactory.apply(originalChecker);
-            var layerArchiver = layerArchiverFactory.apply(usedChecker);
             var layerManager = new LayerManagerImpl(stagingRoot, archiveProvider, layerArchiver, validateArchiveRoot);
             originalChecker.setLayerManager(layerManager);
 

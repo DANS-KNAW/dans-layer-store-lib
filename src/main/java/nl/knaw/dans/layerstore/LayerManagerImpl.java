@@ -48,19 +48,7 @@ class LayerManagerImpl implements LayerManager {
     private Layer topLayer;
 
     /**
-     * Creates a new LayerManagerImpl and validates the archive root.
-     *
-     * @param stagingRoot     the root directory for staging layers; must not be null.
-     * @param archiveProvider the provider responsible for managing archives; must not be null.
-     * @throws IOException if the staging root directory cannot be created or accessed.
-     */
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, boolean validateArchiveRoot) throws IOException {
-        this(stagingRoot, archiveProvider, null, validateArchiveRoot);
-    }
-
-
-    /**
-     * Creates a new LayerManagerImpl and validates the archive root.
+     * Creates a new LayerManagerImpl that archives layers directly and validates the archive root.
      *
      * @param stagingRoot     the root directory for staging layers; must not be null.
      * @param archiveProvider the provider responsible for managing archives; must not be null.
@@ -71,23 +59,11 @@ class LayerManagerImpl implements LayerManager {
     }
 
     /**
-     * Creates a new LayerManagerImpl and validates the archive root.
-     *
-     * @param stagingRoot     the root directory for staging layers; must not be null.
-     * @param archiveProvider the provider responsible for managing archives; must not be null.
-     * @param layerArchiver   the archiver used to handle layer archiving; may be null.
-     * @throws IOException if the staging root directory cannot be created or accessed.
-     */
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, LayerArchiver layerArchiver) throws IOException {
-        this(stagingRoot, archiveProvider, layerArchiver, true);
-    }
-
-    /**
      * Creates a new LayerManagerImpl.
      *
      * @param stagingRoot         the root directory for staging layers.
      * @param archiveProvider     the archive provider to use.
-     * @param layerArchiver       the layer archiver to use.
+     * @param layerArchiver       the layer archiver to use; if null, layers are archived directly in the calling thread.
      * @param validateArchiveRoot validate that the directory containing the archived layers does not contain other files
      * @throws IOException if the staging root directory cannot be created.
      */

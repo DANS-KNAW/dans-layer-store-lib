@@ -69,7 +69,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
             assertThat(layerId).isPositive();
             delegated.set(true);
         };
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), customArchiver);
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), customArchiver, true);
         layerManager.newTopLayer();
         var layer = layerManager.getTopLayer();
         layer.close();
@@ -89,7 +89,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
                 received.add(overwrite);
             }
         };
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), archiver);
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), archiver, true);
         layerManager.newTopLayer();
         var layer = layerManager.getTopLayer();
         layer.close();

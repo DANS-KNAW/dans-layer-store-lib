@@ -31,7 +31,7 @@ public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatab
         LayerArchiver countingArchiver = (layerId, overwrite) -> {
             archiverCalls.incrementAndGet();
         };
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), countingArchiver);
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), countingArchiver, true);
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         var layerId = layeredItemStore.newTopLayer();
         layeredItemStore.closeLayer(layerId);
