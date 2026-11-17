@@ -18,8 +18,6 @@ package nl.knaw.dans.layerstore;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class TarArchiveIsArchivedTest extends AbstractTestWithTestDir {
