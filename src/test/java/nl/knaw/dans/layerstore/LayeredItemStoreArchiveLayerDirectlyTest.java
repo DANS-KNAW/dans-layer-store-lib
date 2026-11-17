@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatabaseTest {
 
@@ -41,5 +42,21 @@ public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatab
 
         assertThat(archiverCalls).hasValue(0);
         assertThat(layeredItemStore.isLayerArchived(layerId)).isTrue();
+    }
+
+    @Test
+    public void should_not_overwrite_existing_archive_when_overwrite_is_false() throws Exception {
+        Files.createDirectories(archiveRoot);
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), null, true);
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+        var layerId = layeredItemStore.newTopLayer();
+        layeredItemStore.closeLayer(layerId);
+        var existingArchive = archiveRoot.resolve(layerId + ".zip");
+        Files.writeString(existingArchive, "existing");
+
+        assertThatThrownBy(() -> layeredItemStore.archiveLayerDirectly(layerId, false))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("already archived");
+        assertThat(existingArchive).hasContent("existing");
     }
 }

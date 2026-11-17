@@ -129,10 +129,20 @@ class LayerManagerImpl implements LayerManager {
          * set to false when creating a new top layer. In cases where the archive file somehow exists anyway, this will not be detected by DmfTarArchive.archive, and the existing archive file will be
          * overwritten. If feasible, we should probably try to hide direct access to the Layer interface by users of the library and instead force them to use LayerManager for all operations.
          */
+        failIfArchiveExists(layerId, overwrite);
+        archive(getLayer(layerId), overwrite);
+    }
+
+    @Override
+    public void archiveDirectly(long layerId, boolean overwrite) {
+        failIfArchiveExists(layerId, overwrite);
+        getLayer(layerId).archive(overwrite);
+    }
+
+    private void failIfArchiveExists(long layerId, boolean overwrite) {
         if (!overwrite && archiveProvider.exists(layerId)) {
             throw new IllegalStateException("Layer with id " + layerId + " is already archived");
         }
-        archive(getLayer(layerId), overwrite);
     }
 
     private void archive(Layer layer, boolean overwrite) {

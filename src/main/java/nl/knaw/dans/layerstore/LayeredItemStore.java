@@ -145,7 +145,7 @@ public class LayeredItemStore implements ItemStore {
      * @throws IllegalStateException    if the layer is already archived or not in the CLOSED state
      */
     public void archiveLayerDirectly(long layerId, boolean overwrite) {
-        layerManager.getLayer(layerId).archive(overwrite);
+        layerManager.archiveDirectly(layerId, overwrite);
     }
 
     /**
