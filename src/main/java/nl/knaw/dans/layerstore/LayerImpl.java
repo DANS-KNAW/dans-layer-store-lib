@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 @Slf4j
 class LayerImpl implements Layer {
@@ -40,14 +41,19 @@ class LayerImpl implements Layer {
     @NonNull
     private final Archive archive;
 
-    LayerImpl(long id, @NonNull StagingDir stagingDir, @NonNull Archive archive) {
+    // Checks storage on every call; the Archive's own flag may be stale when other instances for the same layer archive it
+    private final BooleanSupplier archiveExists;
+
+    LayerImpl(long id, @NonNull StagingDir stagingDir, @NonNull Archive archive, @NonNull BooleanSupplier archiveExists) {
         this.id = id;
         this.stagingDir = stagingDir;
         this.archive = archive;
+        this.archiveExists = archiveExists;
     }
 
     @Override
     public synchronized State getState() {
+        stagingDir.refresh();
         if (stagingDir.isStaged()) {
             if (stagingDir.isOpen()) {
                 return State.OPEN;
@@ -55,11 +61,8 @@ class LayerImpl implements Layer {
             if (stagingDir.isClosed()) {
                 return State.CLOSED;
             }
-            if (stagingDir.isPartial()) {
-                return State.ARCHIVED;
-            }
         }
-        if (archive.isArchived()) {
+        if (archiveExists.getAsBoolean()) {
             return State.ARCHIVED;
         }
         throw new IllegalStateException("Layer " + id + " is in an inconsistent state: not staged and not archived");
@@ -150,7 +153,7 @@ class LayerImpl implements Layer {
     @Override
     public synchronized void archive(boolean overwrite) {
         checkState(State.CLOSED);
-        if (!overwrite && archive.isArchived()) {
+        if (!overwrite && archiveExists.getAsBoolean()) {
             throw new IllegalStateException("Layer " + id + " is already archived");
         }
         try {

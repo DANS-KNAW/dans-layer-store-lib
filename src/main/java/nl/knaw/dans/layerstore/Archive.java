@@ -35,27 +35,18 @@ public interface Archive {
     InputStream readFile(String filePath) throws IOException;
 
     /**
-     * Unarchives the archive to the given staging directory. Note that the {@link #isArchived()} will <em>not</em> return {@code false} after this operation, as the archive file is not removed.
+     * Unarchives the archive to the given staging directory. Note that the archive file is not removed.
      *
      * @param stagingDir the directory to unarchive to
      */
     void unarchiveTo(Path stagingDir);
 
     /**
-     * Archives the given staging directory overwriting the backing file, if it exists. If this the archive is created successfully, {@link #isArchived()} will return {@code true}.
+     * Archives the given staging directory overwriting the backing file, if it exists.
      *
      * @param stagingDir the directory to archive
      */
     void archiveFrom(Path stagingDir);
-
-    // TODO: is it possible that archived changes back to false? What this exact meaning of this attribute?
-
-    /**
-     * Returns whether the archive has been created.
-     *
-     * @return whether the archive has been created.
-     */
-    boolean isArchived();
 
     /**
      * Returns whether the file exists in the archive.

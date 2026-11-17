@@ -26,6 +26,15 @@ import lombok.Data;
 @Builder
 public class Item {
     /**
+     * The path of the item. The path is relative to the root of the {@link ItemStore}. Note that directory paths should <b>not</b> end with a slash.
+     */
+    private final String path;
+    /**
+     * The type of the item.
+     */
+    private final Type type;
+
+    /**
      * The type of the item.
      */
     public enum Type {
@@ -38,14 +47,4 @@ public class Item {
          */
         Directory
     }
-
-    /**
-     * The path of the item. The path is relative to the root of the {@link ItemStore}. Note that directory paths should <b>not</b> end with a slash.
-     */
-    private final String path;
-
-    /**
-     * The type of the item.
-     */
-    private final Type type;
 }

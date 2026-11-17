@@ -43,8 +43,8 @@ public class SshRunner extends AbstractRunner {
      * Creates a new SshRunner.
      *
      * @param sshExecutable path to the ssh executable
-     * @param user username for the remote host
-     * @param host host name or IP address of the remote host
+     * @param user          username for the remote host
+     * @param host          host name or IP address of the remote host
      * @param remoteBaseDir base directory on the remote host where archives are stored
      */
     public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir) {
@@ -54,10 +54,10 @@ public class SshRunner extends AbstractRunner {
     /**
      * Creates a new SshRunner.
      *
-     * @param sshExecutable path to the ssh executable
-     * @param user username for the remote host
-     * @param host host name or IP address of the remote host
-     * @param remoteBaseDir base directory on the remote host where archives are stored
+     * @param sshExecutable     path to the ssh executable
+     * @param user              username for the remote host
+     * @param host              host name or IP address of the remote host
+     * @param remoteBaseDir     base directory on the remote host where archives are stored
      * @param connectionTimeout connection timeout in seconds
      */
     public SshRunner(Path sshExecutable, String user, String host, Path remoteBaseDir, int connectionTimeout) {

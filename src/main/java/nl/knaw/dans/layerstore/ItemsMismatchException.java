@@ -23,7 +23,7 @@ import java.util.List;
  * Exception thrown when the items in the database and the items in the storage do not match.
  */
 @Getter
-public class ItemsMismatchException extends Exception{
+public class ItemsMismatchException extends Exception {
     private final List<Item> missingInDb;
     private final List<Item> missingInStorage;
 

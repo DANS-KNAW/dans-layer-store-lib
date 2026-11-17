@@ -38,7 +38,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     @Test
     public void should_copy_an_empty_child_directory() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectories("a/b/c/d/e");
@@ -56,7 +56,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     @Test
     public void should_overwrite_existing_files() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectories("a/b/c/d/e");
@@ -75,7 +75,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     @Test
     public void should_not_copy_an_empty_source_directory() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectories("a/b/c/d/e");
@@ -93,7 +93,7 @@ public class LayeredItemStoreCopyDirectoryOutOfTest extends AbstractLayerDatabas
     @Test
     public void should_copy_the_files_of_a_source_which_has_no_child_directories() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectories("a/b/c/d");

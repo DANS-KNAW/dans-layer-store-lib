@@ -20,12 +20,13 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 public class LayerFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_true_if_file_exists() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(layer.fileExists("path/to/file1")).isTrue();
@@ -34,7 +35,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
     @Test
     public void should_return_true_if_file_exists_in_archived_layer() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(stagingDir.resolve("path/to/file1").toFile()).exists();
@@ -49,9 +50,9 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
     }
 
     @Test
-    public void should_return_false_if_file_existed_in_destroyed_archived_layer() throws Exception {
+    public void should_throw_if_archive_of_archived_layer_was_destroyed() throws Exception {
         Files.createDirectories(archiveRoot);
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         layer.close();
@@ -59,12 +60,14 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
         if (!archiveRoot.resolve("test.zip").toFile().delete()) {
             throw new Exception("Could not delete test.zip");
         }
-        assertThat(layer.fileExists("path/to/file1")).isFalse();
+        assertThatThrownBy(() -> layer.fileExists("path/to/file1"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("inconsistent state");
     }
 
     @Test
     public void should_return_false_if_file_does_not_exist() throws Exception {
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
 
         assertThat(layer.fileExists("path/to/file3")).isFalse();

@@ -38,7 +38,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_not_delete_a_file_in_a_closed_layer() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
         var firstLayer = layerManager.getTopLayer();
@@ -58,7 +58,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_delete_files_from_the_top_layer() throws Exception {
         // Given
-        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), new DirectLayerArchiver());
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
         layeredStore.createDirectories("a/b/c/d");

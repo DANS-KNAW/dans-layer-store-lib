@@ -29,7 +29,14 @@ nav:
       - Context: context.md
   - Development:
       - Overview: dev.md
+      - Design: design.md
       - Live tests: live.md
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
 
 plugins:
   - markdownextradata

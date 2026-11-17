@@ -28,7 +28,7 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_content_of_file_in_archive() throws Exception {
-        TarArchive archive = new TarArchive(tarFile, false);
+        TarArchive archive = new TarArchive(tarFile);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
@@ -40,7 +40,6 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
 
         // Check that the tar file exists
         assertThat(tarFile).exists();
-        assertThat(archive.isArchived()).isTrue();
 
         // Check that the content is archived
         try (var inputStream = archive.readFile("path/to/file2")) {
@@ -52,7 +51,7 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
     @Test
     @SuppressWarnings("resource") // for assertThatThrownBy
     public void should_throw_when_reading_file_not_in_archive() throws Exception {
-        TarArchive archive = new TarArchive(tarFile, false);
+        TarArchive archive = new TarArchive(tarFile);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file3", "path/to/file3 content");
@@ -62,7 +61,6 @@ public class TarArchiveReadFileTest extends AbstractTestWithTestDir {
 
         // Check that the tar file exists
         assertThat(tarFile).exists();
-        assertThat(archive.isArchived()).isTrue();
 
         // Read the content of a file that is not in the archive
         assertThatThrownBy(() -> archive.readFile("path/to/file2").readAllBytes())

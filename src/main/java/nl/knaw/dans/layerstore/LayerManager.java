@@ -63,6 +63,16 @@ interface LayerManager {
     void archive(long layerId, boolean overwrite);
 
     /**
+     * Archives the given layer in the calling thread, bypassing any configured {@link LayerArchiver}, but still checking that the archive does not exist yet if overwrite is false.
+     *
+     * @param layerId   the id of the layer to archive
+     * @param overwrite whether to overwrite an existing archive file
+     * @throws IllegalArgumentException if no layer with the given id exists
+     * @throws IllegalStateException    if the layer is already archived (and overwrite is false) or not in the CLOSED state
+     */
+    void archiveDirectly(long layerId, boolean overwrite);
+
+    /**
      * Lists all layer IDs that are currently managed.
      *
      * @return a list of layer IDs

@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,15 +49,14 @@ class LayerManagerImpl implements LayerManager {
     private Layer topLayer;
 
     /**
-     * Creates a new LayerManagerImpl and validates the archive root.
+     * Creates a new LayerManagerImpl that archives layers directly and validates the archive root.
      *
      * @param stagingRoot     the root directory for staging layers; must not be null.
      * @param archiveProvider the provider responsible for managing archives; must not be null.
-     * @param layerArchiver   the archiver used to handle layer archiving; must not be null.
      * @throws IOException if the staging root directory cannot be created or accessed.
      */
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver) throws IOException {
-        this(stagingRoot, archiveProvider, layerArchiver, true);
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider) throws IOException {
+        this(stagingRoot, archiveProvider, null, true);
     }
 
     /**
@@ -64,17 +64,18 @@ class LayerManagerImpl implements LayerManager {
      *
      * @param stagingRoot         the root directory for staging layers.
      * @param archiveProvider     the archive provider to use.
-     * @param layerArchiver       the layer archiver to use.
+     * @param layerArchiver       the layer archiver to use; if null, layers are archived directly in the calling thread.
      * @param validateArchiveRoot validate that the directory containing the archived layers does not contain other files
      * @throws IOException if the staging root directory cannot be created.
      */
-    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, @NonNull LayerArchiver layerArchiver, boolean validateArchiveRoot) throws IOException {
+    public LayerManagerImpl(@NonNull Path stagingRoot, @NonNull ArchiveProvider archiveProvider, LayerArchiver layerArchiver, boolean validateArchiveRoot) throws IOException {
         this.stagingRoot = stagingRoot;
         this.layerArchiver = layerArchiver;
         this.archiveProvider = archiveProvider;
         if (Files.notExists(this.stagingRoot)) {
             Files.createDirectories(this.stagingRoot);
         }
+        removeLeftoverDeletingDirs();
         validateStagingRoot();
         if (validateArchiveRoot) {
             this.archiveProvider.validateRoot();
@@ -84,7 +85,7 @@ class LayerManagerImpl implements LayerManager {
                 .map(StagingDir::new)
                 .max(Comparator.comparingLong(StagingDir::getId))
                 .ifPresent(maxDir -> {
-                        topLayer = new LayerImpl(maxDir.getId(), maxDir, this.archiveProvider.createArchive(maxDir.getId(), false));
+                        topLayer = new LayerImpl(maxDir.getId(), maxDir, this.archiveProvider.createArchive(maxDir.getId()), () -> this.archiveProvider.exists(maxDir.getId()));
                     }
                 );
         }
@@ -105,8 +106,7 @@ class LayerManagerImpl implements LayerManager {
         log.debug("Creating new top layer with id {}", id);
         var stagingDir = stagingRoot.resolve(Long.toString(id));
         Files.createDirectories(stagingDir);
-        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id, false));
-        topLayer = newLayer;
+        topLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id), () -> archiveProvider.exists(id));
 
         if (oldTopLayer != null) {
             if (oldTopLayer.getState() == Layer.State.OPEN) {
@@ -130,19 +130,36 @@ class LayerManagerImpl implements LayerManager {
          * set to false when creating a new top layer. In cases where the archive file somehow exists anyway, this will not be detected by DmfTarArchive.archive, and the existing archive file will be
          * overwritten. If feasible, we should probably try to hide direct access to the Layer interface by users of the library and instead force them to use LayerManager for all operations.
          */
-        if (!overwrite && archiveProvider.exists(layerId)) {
-            throw new IllegalStateException("Layer with id " + layerId + " is already archived");
-        }
+        failIfArchiveExists(layerId, overwrite);
         archive(getLayer(layerId), overwrite);
     }
 
+    @Override
+    public void archiveDirectly(long layerId, boolean overwrite) {
+        failIfArchiveExists(layerId, overwrite);
+        getLayer(layerId).archive(overwrite);
+    }
+
+    private void failIfArchiveExists(long layerId, boolean overwrite) {
+        if (!overwrite && archiveProvider.exists(layerId)) {
+            throw new IllegalStateException("Layer with id " + layerId + " is already archived");
+        }
+    }
+
     private void archive(Layer layer, boolean overwrite) {
-        layerArchiver.archive(layer.getId(), () -> layer.archive(overwrite));
+        if (layerArchiver == null) {
+            layer.archive(overwrite);
+        }
+        else {
+            layerArchiver.archive(layer.getId(), overwrite);
+        }
     }
 
     public List<Long> listLayerIds() throws IOException {
         try (var pathStream = Files.list(stagingRoot)) {
             var allIds = new HashSet<>(pathStream
+                // Exclude deleting layers
+                .filter(p -> !p.getFileName().toString().endsWith(StagingDir.DELETING_SUFFIX))
                 .map(StagingDir::new)
                 .map(StagingDir::getId)
                 .toList());
@@ -160,10 +177,20 @@ class LayerManagerImpl implements LayerManager {
             var stagingDir = new StagingDir(stagingRoot, id);
             boolean archiveFileExists = archiveProvider.exists(id);
             if (stagingDir.isStaged() || archiveFileExists) {
-                return new LayerImpl(id, stagingDir, archiveProvider.createArchive(id, archiveFileExists));
+                return new LayerImpl(id, stagingDir, archiveProvider.createArchive(id), () -> archiveProvider.exists(id));
             }
             else {
                 throw new IllegalArgumentException("No layer found with id " + id);
+            }
+        }
+    }
+
+    // Leftovers of a deletion interrupted by a crash; the layer was archived before deletion started
+    private void removeLeftoverDeletingDirs() throws IOException {
+        try (var pathStream = Files.list(stagingRoot)) {
+            for (var path : pathStream.filter(p -> Files.isDirectory(p) && p.getFileName().toString().matches("^\\d{13,}\\.deleting$")).toList()) {
+                log.warn("Removing leftover directory {}", path);
+                FileUtils.deleteDirectory(path.toFile());
             }
         }
     }

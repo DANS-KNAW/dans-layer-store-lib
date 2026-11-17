@@ -30,8 +30,8 @@ public class ZipArchiveProvider implements ArchiveProvider {
     private final Path archiveRoot;
 
     @Override
-    public Archive createArchive(long layerId, boolean exists) {
-        return new ZipArchive(archiveRoot.resolve(layerId + ".zip"), exists);
+    public Archive createArchive(long layerId) {
+        return new ZipArchive(archiveRoot.resolve(layerId + ".zip"));
     }
 
     @Override

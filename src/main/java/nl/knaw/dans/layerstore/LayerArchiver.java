@@ -21,12 +21,10 @@ package nl.knaw.dans.layerstore;
 public interface LayerArchiver {
 
     /**
-     * Archives the specified layer.
+     * Archives the specified layer, telling the implementation whether an existing archive must be overwritten.
      *
-     * <p>Implementations must invoke the action exactly once, synchronously or asynchronously.
-     *
-     * @param layerId       the id of the layer to archive
-     * @param archiveAction the action that performs the archiving
+     * @param layerId   the id of the layer to archive
+     * @param overwrite whether the layer is requested to overwrite an existing archive
      */
-    void archive(long layerId, Runnable archiveAction);
+    void archive(long layerId, boolean overwrite);
 }

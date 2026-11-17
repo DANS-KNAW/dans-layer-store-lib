@@ -24,13 +24,12 @@ import java.util.List;
 public interface ArchiveProvider {
 
     /**
-     * Create a new {@link Archive} instance for the given layer ID. Note that the caller must pass in the archive file existence.
+     * Create a new {@link Archive} instance for the given layer ID.
      *
      * @param layerId the layer ID
-     * @param exists the archive file already exists
      * @return the new archive
      */
-    Archive createArchive(long layerId, boolean exists);
+    Archive createArchive(long layerId);
 
     /**
      * Check if an archive exists at the given path.
