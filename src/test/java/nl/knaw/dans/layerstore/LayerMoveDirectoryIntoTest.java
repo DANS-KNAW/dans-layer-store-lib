@@ -17,6 +17,8 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -25,7 +27,7 @@ public class LayerMoveDirectoryIntoTest extends AbstractTestWithTestDir {
     public void should_move_directory_into_staging_dir_when_layer_is_open() throws Exception {
         var inputDir = testDir.resolve("input-roundtrip");
 
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
 
         // Create some files in the input directory
         if (!inputDir.resolve("path/to").toFile().mkdirs() ||
@@ -55,7 +57,7 @@ public class LayerMoveDirectoryIntoTest extends AbstractTestWithTestDir {
     public void should_throw_IllegalStateException_when_layer_is_closed() throws Exception {
         var inputDir = testDir.resolve("input-roundtrip");
 
-        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip"), false));
+        var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
 
         // Create some files in the input directory
         if (!inputDir.resolve("path/to").toFile().mkdirs() ||

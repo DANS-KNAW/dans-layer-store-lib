@@ -31,7 +31,7 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
     @Test
     public void should_create_zipfile_and_change_status_to_archived() throws Exception {
         var archiveFile = testDir.resolve("test.zip");
-        var archive = new ZipArchive(archiveFile, false);
+        var archive = new ZipArchive(archiveFile);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
@@ -55,7 +55,6 @@ public class ZipArchiveArchiveFromTest extends AbstractTestWithTestDir {
                 entry("path/to/file3", "path/to/file3 content")
             );
         }
-        assertThat(archive.isArchived()).isTrue();
 
         // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
         assertThat(stagingDir).isNotEmptyDirectory();

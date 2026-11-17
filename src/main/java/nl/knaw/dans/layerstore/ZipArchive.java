@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -49,12 +48,8 @@ class ZipArchive implements Archive {
     @NonNull
     private final Path zipFile;
 
-    @Getter
-    private boolean archived;
-
-    public ZipArchive(@NonNull Path zipFile, boolean archived) {
+    public ZipArchive(@NonNull Path zipFile) {
         this.zipFile = zipFile;
-        this.archived = archived;
     }
 
     @Override
@@ -143,7 +138,6 @@ class ZipArchive implements Archive {
                     }
                 }
             }
-            archived = true;
             if (backupFile != null) {
                 try {
                     Files.delete(backupFile);

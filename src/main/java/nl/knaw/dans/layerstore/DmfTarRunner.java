@@ -199,6 +199,11 @@ public class DmfTarRunner extends AbstractRunner {
         return false;
     }
 
+    public boolean archiveExists(String archiveName) {
+        validateArchiveName(archiveName);
+        return sshRunner.fileExists(archiveName);
+    }
+
     public void deleteRemoteFile(String archiveName) {
         validateArchiveName(archiveName);
         // Only allow safe archive names, and quote the path

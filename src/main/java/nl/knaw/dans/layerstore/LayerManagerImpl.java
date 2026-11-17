@@ -18,6 +18,7 @@ package nl.knaw.dans.layerstore;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -74,6 +75,7 @@ class LayerManagerImpl implements LayerManager {
         if (Files.notExists(this.stagingRoot)) {
             Files.createDirectories(this.stagingRoot);
         }
+        removeLeftoverDeletingDirs();
         validateStagingRoot();
         if (validateArchiveRoot) {
             this.archiveProvider.validateRoot();
@@ -83,7 +85,7 @@ class LayerManagerImpl implements LayerManager {
                 .map(StagingDir::new)
                 .max(Comparator.comparingLong(StagingDir::getId))
                 .ifPresent(maxDir -> {
-                        topLayer = new LayerImpl(maxDir.getId(), maxDir, this.archiveProvider.createArchive(maxDir.getId(), false));
+                        topLayer = new LayerImpl(maxDir.getId(), maxDir, this.archiveProvider.createArchive(maxDir.getId()), () -> this.archiveProvider.exists(maxDir.getId()));
                     }
                 );
         }
@@ -104,7 +106,7 @@ class LayerManagerImpl implements LayerManager {
         log.debug("Creating new top layer with id {}", id);
         var stagingDir = stagingRoot.resolve(Long.toString(id));
         Files.createDirectories(stagingDir);
-        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id, false));
+        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id), () -> archiveProvider.exists(id));
         topLayer = newLayer;
 
         if (oldTopLayer != null) {
@@ -174,10 +176,20 @@ class LayerManagerImpl implements LayerManager {
             var stagingDir = new StagingDir(stagingRoot, id);
             boolean archiveFileExists = archiveProvider.exists(id);
             if (stagingDir.isStaged() || archiveFileExists) {
-                return new LayerImpl(id, stagingDir, archiveProvider.createArchive(id, archiveFileExists));
+                return new LayerImpl(id, stagingDir, archiveProvider.createArchive(id), () -> archiveProvider.exists(id));
             }
             else {
                 throw new IllegalArgumentException("No layer found with id " + id);
+            }
+        }
+    }
+
+    // Leftovers of a deletion interrupted by a crash; the layer was archived before deletion started
+    private void removeLeftoverDeletingDirs() throws IOException {
+        try (var pathStream = Files.list(stagingRoot)) {
+            for (var path : pathStream.filter(p -> p.getFileName().toString().endsWith(StagingDir.DELETING_SUFFIX)).toList()) {
+                log.warn("Removing leftover directory {}", path);
+                FileUtils.deleteDirectory(path.toFile());
             }
         }
     }

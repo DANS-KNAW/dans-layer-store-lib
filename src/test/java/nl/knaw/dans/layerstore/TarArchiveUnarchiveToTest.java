@@ -34,7 +34,7 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_unarchive_tarfile() throws Exception {
         var tarFile = testDir.resolve("test.tar");
-        var archive = new TarArchive(tarFile, false);
+        var archive = new TarArchive(tarFile);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
@@ -45,7 +45,6 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
 
         // Check that the tar file exists
         assertThat(tarFile).exists();
-        AssertionsForClassTypes.assertThat(archive.isArchived()).isTrue();
 
         // Unarchive the files
         var unarchived = testDir.resolve("unarchived");
@@ -60,7 +59,7 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_unarchive_tarfile_with_empty_directory() throws Exception {
         var tarFile = testDir.resolve("test.tar");
-        var archive = new TarArchive(tarFile, false);
+        var archive = new TarArchive(tarFile);
         // Create an empty directory to archive
         Path emptyDir = stagingDir.resolve("emptyDir");
         FileUtils.forceMkdir(emptyDir.toFile());
@@ -76,7 +75,7 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_report_zip_slip() throws Exception {
         var tarFile = testDir.resolve("test.tar");
-        var archive = new TarArchive(tarFile, false);
+        var archive = new TarArchive(tarFile);
 
         createStagingFileWithContent("file1", "file1 content");
 
@@ -85,7 +84,6 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
 
         // Check that the tar file exists
         assertThat(tarFile).exists();
-        AssertionsForClassTypes.assertThat(archive.isArchived()).isTrue();
 
         // add malicious file to the archive
         try (var tar = new TarArchiveOutputStream(new FileOutputStream(tarFile.toFile()))) {
@@ -106,9 +104,8 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
     @Test
     public void should_throw_exception_when_unarchiving_non_existing_tarfile() {
         var tarFile = testDir.resolve("non-existing.tar");
-        var archive = new TarArchive(tarFile, false);
+        var archive = new TarArchive(tarFile);
         assertThat(tarFile).doesNotExist();
-        assertThat(archive.isArchived()).isFalse();
         assertThatThrownBy(() -> archive.unarchiveTo(testDir.resolve("unarchived")))
             .isInstanceOf(RuntimeException.class)
             .hasMessage("Could not unarchive target/test/TarArchiveUnarchiveToTest/non-existing.tar")

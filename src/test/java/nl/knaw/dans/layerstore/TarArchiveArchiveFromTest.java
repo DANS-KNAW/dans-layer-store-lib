@@ -31,7 +31,7 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
     @Test
     public void should_create_tarfile_and_change_status_to_archived() throws Exception {
         var archiveFile = testDir.resolve("test.tar");
-        var archive = new TarArchive(archiveFile, false);
+        var archive = new TarArchive(archiveFile);
 
         createStagingFileWithContent("file1", "file1 content");
         createStagingFileWithContent("path/to/file2", "path/to/file2 content");
@@ -53,7 +53,6 @@ public class TarArchiveArchiveFromTest extends AbstractTestWithTestDir {
                 entry("path/to/file3", "path/to/file3 content")
             );
         }
-        assertThat(archive.isArchived()).isTrue();
 
         // note that LayerImpl.doArchive clears the stagingDir after calling Archive.archiveFrom
         assertThat(stagingDir).isNotEmptyDirectory();

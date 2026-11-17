@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
@@ -32,13 +31,9 @@ class DmfTarArchive implements Archive {
 
     private final String path;
 
-    @Getter
-    private boolean archived;
-
-    public DmfTarArchive(@NonNull DmfTarRunner dmfTarRunner, @NonNull String path, boolean archived) {
+    public DmfTarArchive(@NonNull DmfTarRunner dmfTarRunner, @NonNull String path) {
         this.dmfTarRunner = dmfTarRunner;
         this.path = path;
-        this.archived = archived;
     }
 
     @Override
@@ -54,14 +49,13 @@ class DmfTarArchive implements Archive {
     @Override
     public void archiveFrom(Path stagingDir) {
         String backupPath = null;
-        if (archived) {
+        if (dmfTarRunner.archiveExists(path)) {
             backupPath = path + ".bak";
             dmfTarRunner.renameRemoteFile(path, backupPath);
         }
 
         try {
             dmfTarRunner.tarDirectory(stagingDir, path);
-            archived = true;
             if (backupPath != null) {
                 try {
                     dmfTarRunner.deleteRemoteFile(backupPath);

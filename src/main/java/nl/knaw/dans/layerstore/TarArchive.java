@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.layerstore;
 
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -47,12 +46,8 @@ class TarArchive implements Archive {
     @NonNull
     private final Path tarFile;
 
-    @Getter
-    private boolean archived;
-
-    public TarArchive(@NonNull Path tarFile, boolean archived) {
+    public TarArchive(@NonNull Path tarFile) {
         this.tarFile = tarFile;
-        this.archived = archived;
     }
 
     @Override
@@ -147,7 +142,6 @@ class TarArchive implements Archive {
                     }
                 }
             }
-            archived = true;
             if (backupFile != null) {
                 try {
                     Files.delete(backupFile);
