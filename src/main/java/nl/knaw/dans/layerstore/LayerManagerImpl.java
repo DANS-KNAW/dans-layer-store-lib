@@ -187,7 +187,7 @@ class LayerManagerImpl implements LayerManager {
     // Leftovers of a deletion interrupted by a crash; the layer was archived before deletion started
     private void removeLeftoverDeletingDirs() throws IOException {
         try (var pathStream = Files.list(stagingRoot)) {
-            for (var path : pathStream.filter(p -> p.getFileName().toString().endsWith(StagingDir.DELETING_SUFFIX)).toList()) {
+            for (var path : pathStream.filter(p -> Files.isDirectory(p) && p.getFileName().toString().matches("^\\d{13,}\\.deleting$")).toList()) {
                 log.warn("Removing leftover directory {}", path);
                 FileUtils.deleteDirectory(path.toFile());
             }
