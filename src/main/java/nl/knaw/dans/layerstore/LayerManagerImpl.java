@@ -106,8 +106,7 @@ class LayerManagerImpl implements LayerManager {
         log.debug("Creating new top layer with id {}", id);
         var stagingDir = stagingRoot.resolve(Long.toString(id));
         Files.createDirectories(stagingDir);
-        var newLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id), () -> archiveProvider.exists(id));
-        topLayer = newLayer;
+        topLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id), () -> archiveProvider.exists(id));
 
         if (oldTopLayer != null) {
             if (oldTopLayer.getState() == Layer.State.OPEN) {
@@ -159,6 +158,8 @@ class LayerManagerImpl implements LayerManager {
     public List<Long> listLayerIds() throws IOException {
         try (var pathStream = Files.list(stagingRoot)) {
             var allIds = new HashSet<>(pathStream
+                // Exclude deleting layers
+                .filter(p -> !p.getFileName().toString().endsWith(StagingDir.DELETING_SUFFIX))
                 .map(StagingDir::new)
                 .map(StagingDir::getId)
                 .toList());
