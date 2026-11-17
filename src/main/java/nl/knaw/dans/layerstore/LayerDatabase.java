@@ -96,6 +96,14 @@ public interface LayerDatabase {
     List<ItemRecord> getRecordsByPath(String path);
 
     /**
+     * Returns whether the given path exists in the database.
+     *
+     * @param path the path relative to the root of the storage
+     * @return true if the path exists in the database, false otherwise
+     */
+    boolean existsPath(String path);
+
+    /**
      * Returns whether the path pattern matches any path in the database.
      *
      * @param pathPattern a path pattern that may contain wildcards

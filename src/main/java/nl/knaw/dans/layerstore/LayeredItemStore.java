@@ -247,18 +247,22 @@ public class LayeredItemStore implements ItemStore {
     }
 
     @Override
+    public boolean existsPath(String path) {
+        return database.existsPath(path);
+    }
+
+    @Override
     public boolean existsPathLike(String path) {
         return database.existsPathLike(path);
     }
 
     @Override
     public InputStream readFile(String path) throws IOException {
-        // Check that the file exists and is a file
-        if (!database.existsPathLike(path)) {
-            // Emulate the behavior of Files.readAllBytes(Path) by throwing a NoSuchFileException
+        var records = database.getRecordsByPath(path);
+        if (records.isEmpty()) {
             throw new NoSuchFileException(path);
         }
-        var latestRecord = database.getRecordsByPath(path).get(0);
+        var latestRecord = records.get(0);
         if (latestRecord.getType() == Item.Type.Directory) {
             // Emulate the behavior of Files.readAllBytes(Path) by throwing a generic IOException
             throw new IOException("Path is a directory: " + path);

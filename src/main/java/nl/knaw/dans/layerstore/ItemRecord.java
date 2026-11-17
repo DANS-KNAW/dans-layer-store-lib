@@ -25,7 +25,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Lob;
+import javax.persistence.Table;
 
 /**
  * A record in the database that represents a file or directory (i.e., {@link Item}) in a layer.
@@ -35,6 +37,11 @@ import javax.persistence.Lob;
 @AllArgsConstructor
 @Builder
 @Entity(name = "listing_record")
+@Table(name = "listing_record", indexes = {
+    @Index(name = "idx_listing_record_path", columnList = "path"),
+    @Index(name = "idx_listing_record_path_layer", columnList = "path, layer_id"),
+    @Index(name = "idx_listing_record_layer_id", columnList = "layer_id")
+})
 public class ItemRecord {
     @Id
     @Column(name = "generated_id")

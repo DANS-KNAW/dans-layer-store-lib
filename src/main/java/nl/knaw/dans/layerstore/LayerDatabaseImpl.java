@@ -24,12 +24,13 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,13 +43,6 @@ import static nl.knaw.dans.layerstore.Item.Type;
 @Slf4j
 public class LayerDatabaseImpl implements LayerDatabase {
     private PersistenceProvider<ItemRecord> persistenceProvider;
-
-    private static Subquery<Long> getMaxLayerIdSubquery(CriteriaQuery<ItemRecord> cq, CriteriaBuilder cb, Root<ItemRecord> itemRecordRoot) {
-        Subquery<Long> subquery = cq.subquery(Long.class);
-        Root<ItemRecord> subRoot = subquery.from(ItemRecord.class);
-        subquery.select(cb.max(subRoot.get("layerId"))).where(cb.equal(subRoot.get("path"), itemRecordRoot.get("path")));
-        return subquery;
-    }
 
     @Override
     public void saveRecords(ItemRecord... records) {
@@ -85,11 +79,15 @@ public class LayerDatabaseImpl implements LayerDatabase {
         Predicate hasParentPath = cb.like(itemRecordRoot.get("path"), directoryPath + "%");
         Predicate notSubdirectory = cb.notLike(itemRecordRoot.get("path"), directoryPath + "%/%");
         Predicate notSamePath = cb.notEqual(itemRecordRoot.get("path"), directoryPath);
-        Predicate hasMaxLayerId = cb.equal(itemRecordRoot.get("layerId"), getMaxLayerIdSubquery(cq, cb, itemRecordRoot));
-        cq.where(cb.and(hasParentPath, notSubdirectory, notSamePath, hasMaxLayerId));
+        cq.where(cb.and(hasParentPath, notSubdirectory, notSamePath));
+        cq.orderBy(cb.asc(itemRecordRoot.get("path")), cb.desc(itemRecordRoot.get("layerId")));
 
         TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
-        return query.getResultStream().map(ItemRecord::toItem).collect(Collectors.toList());
+        Map<String, ItemRecord> latestByPath = new LinkedHashMap<>();
+        for (ItemRecord record : query.getResultList()) {
+            latestByPath.putIfAbsent(record.getPath(), record);
+        }
+        return latestByPath.values().stream().map(ItemRecord::toItem).collect(Collectors.toList());
     }
 
     @Override
@@ -114,11 +112,15 @@ public class LayerDatabaseImpl implements LayerDatabase {
         Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
         Predicate hasParentPath = cb.like(itemRecordRoot.get("path"), directoryPath + "%");
         Predicate notSamePath = cb.notEqual(itemRecordRoot.get("path"), directoryPath);
-        Predicate hasMaxLayerId = cb.equal(itemRecordRoot.get("layerId"), getMaxLayerIdSubquery(cq, cb, itemRecordRoot));
-        cq.where(cb.and(hasParentPath, notSamePath, hasMaxLayerId));
+        cq.where(cb.and(hasParentPath, notSamePath));
+        cq.orderBy(cb.asc(itemRecordRoot.get("path")), cb.desc(itemRecordRoot.get("layerId")));
 
         TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
-        return query.getResultStream().map(ItemRecord::toItem).collect(Collectors.toList());
+        Map<String, ItemRecord> latestByPath = new LinkedHashMap<>();
+        for (ItemRecord record : query.getResultList()) {
+            latestByPath.putIfAbsent(record.getPath(), record);
+        }
+        return latestByPath.values().stream().map(ItemRecord::toItem).collect(Collectors.toList());
     }
 
     @Override
@@ -186,6 +188,16 @@ public class LayerDatabaseImpl implements LayerDatabase {
 
         TypedQuery<ItemRecord> query = persistenceProvider.createQuery(cq);
         return query.getResultStream();
+    }
+
+    @Override
+    public boolean existsPath(String path) {
+        CriteriaBuilder cb = persistenceProvider.getCriteriaBuilder();
+        CriteriaQuery<Boolean> cq = cb.createQuery(Boolean.class);
+        Root<ItemRecord> itemRecordRoot = cq.from(ItemRecord.class);
+        cq.select(cb.literal(true)).where(cb.equal(itemRecordRoot.get("path"), path));
+        TypedQuery<Boolean> query = persistenceProvider.createQuery(cq);
+        return query.getResultStream().findFirst().orElse(false);
     }
 
     @Override

@@ -61,6 +61,14 @@ public interface ItemStore {
     List<Item> listRecursive(String directoryPath) throws IOException;
 
     /**
+     * Returns whether the given path exists in the store.
+     *
+     * @param path the path relative to the storage root
+     * @return true if the path exists in the store, false otherwise
+     */
+    boolean existsPath(String path);
+
+    /**
      * Returns whether a path with the given pattern exists in the store.
      *
      * @param path a path, which may contain the SQL wildcard character '%'
