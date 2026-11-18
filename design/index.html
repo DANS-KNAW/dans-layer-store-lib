@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Design - dans-layer-store-lib</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../stylesheets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Design";
+        var mkdocs_page_input_path = "design.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> dans-layer-store-lib
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Manual</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">Description</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../getting-started/">Getting started</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">JavaDocs</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../context/">Context</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../dev/">Overview</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Design</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#layer-state-is-derived-from-storage-not-from-the-database">Layer state is derived from storage, not from the database</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#layers-and-staging-directories">Layers and staging directories</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#stack-semantics">Stack semantics</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#database-backed-content">Database-backed content</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#consistency-checking">Consistency checking</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#archiving">Archiving</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../live/">Live tests</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">dans-layer-store-lib</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Development</li>
+      <li class="breadcrumb-item active">Design</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/dans-layer-store-lib/edit/master/docs/design.md">Edit on DANS-KNAW/dans-layer-store-lib</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="design">Design<a class="headerlink" href="#design" title="Permanent link">&para;</a></h1>
+<script>
+window.addEventListener('load', function() {
+    setColumnWidths("Part", "25%", "75%");
+    setColumnWidths("Observation on storage", "25%", "75%");
+});
+</script>
+
+<p>This page documents the most important design decisions of the library, for future developers. It is a first draft; extend it as the design evolves.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p><code>LayeredItemStore</code> (the implementation of <code>ItemStore</code>) is a facade over three collaborating parts:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LayerManager</code> / <code>Layer</code></td>
+<td>Manage the stack of layers and their life cycle (staging directories and archives).</td>
+</tr>
+<tr>
+<td><code>LayerDatabase</code></td>
+<td>An index with an <code>ItemRecord</code> for every file and directory in every layer. Used for listing and lookups.</td>
+</tr>
+<tr>
+<td><code>ArchiveProvider</code> / <code>Archive</code></td>
+<td>Create, read and write the archive (e.g. ZIP, TAR, DMF-TAR) for a layer.</td>
+</tr>
+</tbody>
+</table>
+<p>The database exists because archives may live on media that are too slow for direct access (e.g. tape). Listing directories, checking existence and finding
+the layer that holds the latest version of a path can therefore be answered without touching the archives.</p>
+<h2 id="layer-state-is-derived-from-storage-not-from-the-database">Layer state is derived from storage, not from the database<a class="headerlink" href="#layer-state-is-derived-from-storage-not-from-the-database" title="Permanent link">&para;</a></h2>
+<p>A layer is in one of the states <code>OPEN</code>, <code>CLOSED</code> or <code>ARCHIVED</code>. <strong>This state is not stored in the database.</strong> It is derived on every call to
+<code>Layer.getState()</code> from what is actually present on storage:</p>
+<table>
+<thead>
+<tr>
+<th>Observation on storage</th>
+<th>State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Staging directory <code>&lt;id&gt;</code> exists</td>
+<td><code>OPEN</code></td>
+</tr>
+<tr>
+<td>Staging directory <code>&lt;id&gt;.closed</code> exists</td>
+<td><code>CLOSED</code></td>
+</tr>
+<tr>
+<td>No staging directory, but the archive exists</td>
+<td><code>ARCHIVED</code></td>
+</tr>
+<tr>
+<td>Neither staging directory nor archive exists</td>
+<td>Error: inconsistent state (<code>IllegalStateException</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Rationale:</p>
+<ul>
+<li><strong>Single source of truth.</strong> The files on storage are what actually matter. A separately stored state can get out of sync with them (crash between a file
+  system operation and a database update, manual intervention, restore from backup). A derived state cannot.</li>
+<li><strong>Crash safety.</strong> Every state transition is a single atomic file system operation: closing is a rename of <code>&lt;id&gt;</code> to <code>&lt;id&gt;.closed</code>; archiving ends with
+  the removal of the staging directory after the archive has been written. There is no window in which "the state" and "the storage" disagree.</li>
+<li><strong>The database is an index, not a state store.</strong> It only describes items, and its consistency with storage can be verified (see below).</li>
+</ul>
+<p>Consequences for implementers:</p>
+<ul>
+<li>Do not cache the layer state. <code>LayerImpl.getState()</code> refreshes the <code>StagingDir</code> and asks the <code>ArchiveProvider</code> on every call (the <code>Archive</code> object's own
+  "archived" flag may be stale if another instance for the same layer archived it).</li>
+<li>A layer is archived only when the archive exists <strong>and</strong> the staging directory is gone. Therefore the staging directory is deleted as the last step of
+  archiving. While both exist, the layer is still considered <code>CLOSED</code>.</li>
+<li>Operations check the required state first (<code>checkState</code>) and are <code>synchronized</code> where a state change could otherwise race with the check.</li>
+</ul>
+<h2 id="layers-and-staging-directories">Layers and staging directories<a class="headerlink" href="#layers-and-staging-directories" title="Permanent link">&para;</a></h2>
+<ul>
+<li>A layer ID is a Unix timestamp in milliseconds; the IDs define the stacking order. The layer with the highest ID is the top layer. Only the top layer is
+  written to by normal operations. <code>newTopLayer()</code> waits a few milliseconds to avoid ID collisions, then closes and archives the previous top layer.</li>
+<li>The staging directory name encodes the staging state: <code>&lt;id&gt;</code> (open), <code>&lt;id&gt;.closed</code> (closed), <code>&lt;id&gt;.partial</code> (being unarchived for a <code>reopen</code>, not yet usable)
+  and <code>&lt;id&gt;.deleting</code> (removal in progress; leftovers are removed on start-up because the layer was archived before deletion started).</li>
+<li><code>StagingDir</code> validates that there is never more than one staging directory per layer ID, and the <code>LayerManagerImpl</code> constructor validates that the staging
+  root contains nothing but correctly named layer directories (and, optionally, that the archive root contains only valid archives).</li>
+<li><code>reopen()</code> of an archived layer unarchives into a <code>.partial</code> directory first and renames it to <code>&lt;id&gt;</code> only when complete; on failure the partial directory is
+  deleted. Layers are thus never visible as open in a half-restored state.</li>
+</ul>
+<h2 id="stack-semantics">Stack semantics<a class="headerlink" href="#stack-semantics" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Materializing the store means copying layers from oldest to newest; newer files overwrite older ones. Within <code>LayeredItemStore</code> this is implemented by the
+  database: the first of <code>getRecordsByPath(path)</code> is the latest version, and its <code>layerId</code> tells which layer to read from.</li>
+<li>Writes go to the top layer only. Operations that must change files existing only in older layers (e.g. <code>moveDirectoryInternal</code>) fail if the source files are
+  not all in the top layer (<code>checkAllSourceFilesOnlyInTopLayer</code>).</li>
+<li>Parent directories must exist in the store before a file is written; missing ancestors are created in both the top layer and the database.</li>
+</ul>
+<h2 id="database-backed-content">Database-backed content<a class="headerlink" href="#database-backed-content" title="Permanent link">&para;</a></h2>
+<p>Small files can optionally have a copy of their content in the database (<code>DatabaseBackedContentManager</code>), selected by path and optionally pre-processed (e.g.
+compressed) before storage. <code>readFile</code> serves such content from the database, which avoids touching archives. <code>NoopDatabaseBackedContentManager</code> is
+the default.</p>
+<h2 id="consistency-checking">Consistency checking<a class="headerlink" href="#consistency-checking" title="Permanent link">&para;</a></h2>
+<p>Because the database and storage are separate, they can diverge. The library therefore offers checks instead of trying to prevent every possible divergence:</p>
+<ul>
+<li><code>checkSameLayersOnStorageAndDb()</code> compares the layer IDs found on storage with those known to the database (<code>LayerIdsMismatchException</code>).</li>
+<li><code>checkLayerItemRecords(layerId)</code> compares the items in a layer on storage with the database records for that layer (<code>ItemsMismatchException</code>).</li>
+</ul>
+<p>Since layer state lives only on storage, these checks never need to reconcile layer <em>state</em>, only layer and item <em>existence</em>.</p>
+<p>Known limitation: file system changes and database updates in <code>LayeredItemStore</code> are not transactional (see the TODO in <code>writeFile</code>). A failed database update
+after a successful file write leaves a discrepancy that the consistency checks will report.</p>
+<h2 id="archiving">Archiving<a class="headerlink" href="#archiving" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Archive formats are pluggable through <code>ArchiveProvider</code>/<code>Archive</code>. Implementations: ZIP, TAR and DMF-TAR (the latter runs <code>dmftar</code> locally or over SSH via the
+  <code>AbstractRunner</code> implementations).</li>
+<li>Archiving can be done synchronously in the calling thread (<code>archiveDirectly</code>) or delegated to a <code>LayerArchiver</code> (typically a background executor) so that
+  <code>newTopLayer()</code> returns quickly. Because state is derived from storage, a layer being archived in the background simply remains <code>CLOSED</code> until the archive
+  is complete and the staging directory has been removed; no extra "archiving" state needs to be tracked.</li>
+<li>Archiving refuses to overwrite an existing archive unless <code>overwrite</code> is set. The check is made against the <code>ArchiveProvider</code> (i.e. against storage) rather
+  than against flags on <code>Archive</code> objects.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../dev/" class="btn btn-neutral float-left" title="Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../live/" class="btn btn-neutral float-right" title="Live tests">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/dans-layer-store-lib" class="fa fa-code-fork" style="color: #fcfcfc"> DANS-KNAW/dans-layer-store-lib</a>
+        </span>
+    
+    
+      <span><a href="../dev/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../live/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../javascripts/extra.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

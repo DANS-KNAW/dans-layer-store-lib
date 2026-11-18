@@ -1,0 +1,23 @@
+/* Custom CSS for dans-datastation-architecture */
+
+/* Ensure tables are limited to the width of the page and wrap text in cells */
+.wy-table-responsive table {
+    width: 100% !important;
+}
+
+.wy-table-responsive td, .wy-table-responsive th {
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+
+table {
+    width: 100%;
+    table-layout: auto;
+}
+
+td, th {
+    word-wrap: break-word;
+    white-space: normal;
+    vertical-align: top;
+}
+
