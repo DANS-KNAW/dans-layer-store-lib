@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * This interface represents a layer in the {@link LayeredItemStore}. See <a href="../../../../../#layer-status">this page</a> for more information about layer status.
  */
-interface Layer {
+public interface Layer {
     /**
      * Returns the id of the layer.
      *

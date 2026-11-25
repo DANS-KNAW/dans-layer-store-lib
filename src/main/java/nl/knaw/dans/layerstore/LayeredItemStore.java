@@ -156,7 +156,18 @@ public class LayeredItemStore implements ItemStore {
      * @throws IllegalArgumentException if no layer with the specified id exists
      */
     public boolean isLayerArchived(long layerId) {
-        return layerManager.getLayer(layerId).getState() == Layer.State.ARCHIVED;
+        return getLayerState(layerId) == Layer.State.ARCHIVED;
+    }
+
+    /**
+     * Returns the current state of a layer.
+     *
+     * @param layerId the layer identifier
+     * @return the layer state
+     * @throws IllegalArgumentException if no layer with the specified id exists
+     */
+    public Layer.State getLayerState(long layerId) {
+        return layerManager.getLayer(layerId).getState();
     }
 
     /**

@@ -35,13 +35,24 @@ public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatab
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), countingArchiver, true);
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         var layerId = layeredItemStore.newTopLayer();
+        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(Layer.State.OPEN);
         layeredItemStore.closeLayer(layerId);
+        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(Layer.State.CLOSED);
         assertThat(layeredItemStore.isLayerArchived(layerId)).isFalse();
 
         layeredItemStore.archiveLayerDirectly(layerId, false);
 
         assertThat(archiverCalls).hasValue(0);
         assertThat(layeredItemStore.isLayerArchived(layerId)).isTrue();
+        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(Layer.State.ARCHIVED);
+    }
+
+    @Test
+    public void should_reject_state_lookup_for_missing_layer() throws Exception {
+        var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), null, true);
+        var layeredItemStore = new LayeredItemStore(db, layerManager);
+
+        assertThatThrownBy(() -> layeredItemStore.getLayerState(123L)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
