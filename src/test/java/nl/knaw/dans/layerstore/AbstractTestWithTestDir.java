@@ -19,11 +19,16 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * A test class that creates a test directory for each test method.
+ * Base class for tests that require an isolated filesystem workspace.
+ *
+ * Provides a per-test-class directory under the build target directory and recreates it before each test run. The workspace includes locations
+ * intended for staging files and archive output, allowing tests to create and inspect temporary file structures without sharing state with other test
+ * classes.
  */
 public abstract class AbstractTestWithTestDir {
     protected final Path testDir = Path.of("target/test")
@@ -35,32 +40,42 @@ public abstract class AbstractTestWithTestDir {
 
     protected final Path archiveRoot = testDir.resolve("archive_root");
 
-    public void createStagingFileWithContent(String path, String content) throws IOException {
-        var filePath = stagingDir.resolve(path);
-        FileUtils.forceMkdir(filePath.getParent().toFile());
-        FileUtils.write(filePath.toFile(), content, "UTF-8");
-    }
-
     @BeforeEach
     public void setUp() throws Exception {
         if (testDir.toFile().exists()) {
-            // github stumbled: https://github.com/DANS-KNAW/dans-layer-store-lib/actions/runs/8705753485/job/23876831089?pr=7#step:4:106
             FileUtils.deleteDirectory(testDir.toFile());
         }
         Files.createDirectories(testDir);
     }
 
-    public void createEmptyStagingDirFiles(String... paths) {
+    /**
+     * Writes content to a file in the staging directory, creating parent directories as needed.
+     *
+     * @param path    the path of the file to write, relative to the staging directory
+     * @param content the text content to write using UTF-8 encoding
+     * @throws IOException if the parent directories or staging file cannot be created or written
+     */
+    protected void writeStagingFile(String path, String content) throws IOException {
+        var file = stagingDir.resolve(path);
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, content, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Creates empty files in the staging directory for the specified relative paths. Parent directories are created as needed.
+     *
+     * @param paths the paths of the empty staging files to create, relative to the staging directory
+     * @throws RuntimeException if a staging file or one of its parent directories cannot be created
+     */
+    protected void createEmptyStagingFiles(String... paths) {
         for (String path : paths) {
-            var message = "Could not create staging file: " + path;
-            var parent = stagingDir.resolve(path).getParent().toFile();
+            var file = stagingDir.resolve(path);
             try {
-                if ((!parent.exists() && !parent.mkdirs()) ||
-                        !stagingDir.resolve(path).toFile().createNewFile()) {
-                    throw new RuntimeException(message);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(message, e);
+                Files.createDirectories(file.getParent());
+                Files.createFile(file);
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Could not create staging file: " + path, e);
             }
         }
     }

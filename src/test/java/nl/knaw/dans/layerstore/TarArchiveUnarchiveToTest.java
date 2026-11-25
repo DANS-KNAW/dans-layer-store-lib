@@ -36,9 +36,9 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var tarFile = testDir.resolve("test.tar");
         var archive = new TarArchive(tarFile);
 
-        createStagingFileWithContent("file1", "file1 content");
-        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
-        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
+        writeStagingFile("file1", "file1 content");
+        writeStagingFile("path/to/file2", "path/to/file2 content");
+        writeStagingFile("path/to/file3", "path/to/file3 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);
@@ -77,7 +77,7 @@ public class TarArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var tarFile = testDir.resolve("test.tar");
         var archive = new TarArchive(tarFile);
 
-        createStagingFileWithContent("file1", "file1 content");
+        writeStagingFile("file1", "file1 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);

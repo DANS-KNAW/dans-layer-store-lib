@@ -28,8 +28,8 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
         // Given
         Files.createDirectories(stagingDir);
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
-        createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
-        createEmptyStagingDirFiles("path/too/file1", "path/too/file2");
+        createEmptyStagingFiles("path/to/file1", "path/to/file2");
+        createEmptyStagingFiles("path/too/file1", "path/too/file2");
 
         // When
         layer.deleteDirectory("path/to");
@@ -50,8 +50,8 @@ public class LayerDeleteDirectoryTest extends AbstractTestWithTestDir {
         // Given
         Files.createDirectories(stagingDir);
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
-        createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
-        createEmptyStagingDirFiles("path/too/file1", "path/too/file2");
+        createEmptyStagingFiles("path/to/file1", "path/to/file2");
+        createEmptyStagingFiles("path/too/file1", "path/too/file2");
         layer.close();
 
         // When / Then

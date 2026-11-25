@@ -27,6 +27,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+/**
+ * Base class for tests that need an isolated test directory together with captured standard output, standard error, and Logback logging events.
+ *
+ * The test directory setup is inherited from {@link AbstractTestWithTestDir}. Before each test, the class initializes output capture for
+ * {@link System#out} and {@link System#err}, and attaches a {@link ListAppender} to the configured logger so that emitted log events can be inspected
+ * by subclasses. After each test, the original standard output and error streams are restored.
+ *
+ * This class is intended for test classes that verify console output, error output, or logged messages while also relying on the temporary directory
+ * structure provided by the superclass.
+ */
 public abstract class AbstractCapturingTest extends AbstractTestWithTestDir {
     private final PrintStream originalStdout = System.out;
     private final PrintStream originalStderr = System.err;

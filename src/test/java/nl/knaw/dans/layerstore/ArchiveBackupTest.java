@@ -23,6 +23,12 @@ import java.nio.file.Files;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Tests backup restoration behavior for archive implementations when archive creation fails.
+ *
+ * Verifies that ZIP and TAR archive writers preserve the original archive content if archiving from the staging directory throws an exception, and
+ * that temporary backup files are not left behind after the failed operation.
+ */
 public class ArchiveBackupTest extends AbstractTestWithTestDir {
 
     @Test

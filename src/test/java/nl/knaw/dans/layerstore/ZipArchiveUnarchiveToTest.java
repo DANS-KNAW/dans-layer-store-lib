@@ -36,9 +36,9 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var zipFile = testDir.resolve("test.zip");
         var archive = new ZipArchive(zipFile);
 
-        createStagingFileWithContent("file1", "file1 content");
-        createStagingFileWithContent("path/to/file2", "path/to/file2 content");
-        createStagingFileWithContent("path/to/file3", "path/to/file3 content");
+        writeStagingFile("file1", "file1 content");
+        writeStagingFile("path/to/file2", "path/to/file2 content");
+        writeStagingFile("path/to/file3", "path/to/file3 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);
@@ -77,7 +77,7 @@ public class ZipArchiveUnarchiveToTest extends AbstractTestWithTestDir {
         var zipFile = testDir.resolve("test.tar");
         var archive = new ZipArchive(zipFile);
 
-        createStagingFileWithContent("file1", "file1 content");
+        writeStagingFile("file1", "file1 content");
 
         // Archive the files
         archive.archiveFrom(stagingDir);

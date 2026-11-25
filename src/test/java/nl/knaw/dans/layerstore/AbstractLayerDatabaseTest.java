@@ -23,6 +23,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static nl.knaw.dans.layerstore.Item.Type;
 
+/**
+ * Base class for tests that require a {@link LayerDatabase} backed by a
+ * Dropwizard DAO test extension.
+ *
+ * Provides a fresh test directory through {@link AbstractTestWithTestDir} and
+ * initializes a {@link LayerDatabaseImpl} before each test method. Subclasses can
+ * use the configured database fixture to test layer database behavior and
+ * higher-level components that depend on layer metadata persistence.
+ */
 @ExtendWith(DropwizardExtensionsSupport.class)
 public abstract class AbstractLayerDatabaseTest extends AbstractTestWithTestDir {
     protected final DAOTestExtension daoTestExtension = DAOTestExtension.newBuilder()

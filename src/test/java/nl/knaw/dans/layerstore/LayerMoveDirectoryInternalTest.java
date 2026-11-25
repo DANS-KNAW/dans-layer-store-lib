@@ -26,7 +26,7 @@ public class LayerMoveDirectoryInternalTest extends AbstractTestWithTestDir {
     @Test
     public void should_move_directory_from_staging_dir_to_staging_dir_if_layer_is_open() throws Exception {
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
-        createEmptyStagingDirFiles("path/to/file1", "path/to/file2");
+        createEmptyStagingFiles("path/to/file1", "path/to/file2");
 
         layer.moveDirectoryInternal("path/to/", "path/too/");
         assertThat(stagingDir.resolve("path/to")).doesNotExist();

@@ -22,6 +22,14 @@ import java.nio.file.Files;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Verifies archive root validation for ZIP and TAR archive providers.
+ *
+ * The test suite checks that providers reject archive root contents that do not match the expected archive file naming rules, including unsupported
+ * file extensions, directory entries with archive-like names, invalid timestamp prefixes, and closed archive marker files.
+ *
+ * It also verifies that valid archive files with timestamp-based names and the expected provider-specific extension are accepted without error.
+ */
 public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test

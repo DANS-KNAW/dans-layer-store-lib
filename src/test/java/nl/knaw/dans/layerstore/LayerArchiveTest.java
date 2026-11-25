@@ -126,7 +126,7 @@ public class LayerArchiveTest extends AbstractCapturingTest {
         Files.createDirectories(archiveRoot);
         Files.createDirectories(stagingDir);
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
-        createEmptyStagingDirFiles("path/to/file1");
+        createEmptyStagingFiles("path/to/file1");
         layer.close();
 
         // When

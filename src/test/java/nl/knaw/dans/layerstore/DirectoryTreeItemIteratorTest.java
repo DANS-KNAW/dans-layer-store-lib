@@ -39,10 +39,10 @@ public class DirectoryTreeItemIteratorTest extends AbstractTestWithTestDir {
     @Test
     public void should_yield_files_and_directories_in_a_directory_tree() throws Exception {
         // Given
-        createStagingFileWithContent("a/b/c/d/test1.txt", "Hello world!");
-        createStagingFileWithContent("a/b/c/test2.txt", "Hello again!");
-        createStagingFileWithContent("a/b/test3.txt", "Hello once more!");
-        createStagingFileWithContent("a/test4.txt", "Hello for the last time!");
+        writeStagingFile("a/b/c/d/test1.txt", "Hello world!");
+        writeStagingFile("a/b/c/test2.txt", "Hello again!");
+        writeStagingFile("a/b/test3.txt", "Hello once more!");
+        writeStagingFile("a/test4.txt", "Hello for the last time!");
         var iterator = new DirectoryTreeItemIterator(stagingDir);
 
         // When - Then
