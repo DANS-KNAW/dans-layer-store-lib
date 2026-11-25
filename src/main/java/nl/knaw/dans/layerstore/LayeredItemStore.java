@@ -156,7 +156,7 @@ public class LayeredItemStore implements ItemStore {
      * @throws IllegalArgumentException if no layer with the specified id exists
      */
     public boolean isLayerArchived(long layerId) {
-        return getLayerState(layerId) == Layer.State.ARCHIVED;
+        return getLayerState(layerId) == LayerState.ARCHIVED;
     }
 
     /**
@@ -166,7 +166,7 @@ public class LayeredItemStore implements ItemStore {
      * @return the layer state
      * @throws IllegalArgumentException if no layer with the specified id exists
      */
-    public Layer.State getLayerState(long layerId) {
+    public LayerState getLayerState(long layerId) {
         return layerManager.getLayer(layerId).getState();
     }
 
@@ -280,7 +280,7 @@ public class LayeredItemStore implements ItemStore {
         }
         if (latestRecord.getContent() == null) {
             log.debug("Reading file {} from layer {}", path, latestRecord.getLayerId());
-            if (!allowReadingContentFromArchives && layerManager.getLayer(latestRecord.getLayerId()).getState() == Layer.State.ARCHIVED) {
+            if (!allowReadingContentFromArchives && layerManager.getLayer(latestRecord.getLayerId()).getState() == LayerState.ARCHIVED) {
                 throw new IOException("Reading from archived layer not allowed: " + latestRecord.getLayerId());
             }
             return layerManager.getLayer(latestRecord.getLayerId()).readFile(path);
@@ -469,7 +469,7 @@ public class LayeredItemStore implements ItemStore {
         // Delete the files in each layer, assuming old layers are closed
         for (var entry : layerPaths.entrySet().stream().sorted().toList()) {
             var layer = layerManager.getLayer(entry.getKey());
-            if (layer.getState() == Layer.State.OPEN) {
+            if (layer.getState() == LayerState.OPEN) {
                 layer.deleteFiles(entry.getValue());
             }
             else {

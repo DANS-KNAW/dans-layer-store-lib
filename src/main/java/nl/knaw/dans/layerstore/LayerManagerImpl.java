@@ -109,7 +109,7 @@ class LayerManagerImpl implements LayerManager {
         topLayer = new LayerImpl(id, new StagingDir(stagingDir), archiveProvider.createArchive(id), () -> archiveProvider.exists(id));
 
         if (oldTopLayer != null) {
-            if (oldTopLayer.getState() == Layer.State.OPEN) {
+            if (oldTopLayer.getState() == LayerState.OPEN) {
                 oldTopLayer.close();
             }
             log.debug("Scheduling old top layer with id {} for archiving", oldTopLayer.getId());

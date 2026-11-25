@@ -35,16 +35,16 @@ public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatab
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), countingArchiver, true);
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         var layerId = layeredItemStore.newTopLayer();
-        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(Layer.State.OPEN);
+        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(LayerState.OPEN);
         layeredItemStore.closeLayer(layerId);
-        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(Layer.State.CLOSED);
+        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(LayerState.CLOSED);
         assertThat(layeredItemStore.isLayerArchived(layerId)).isFalse();
 
         layeredItemStore.archiveLayerDirectly(layerId, false);
 
         assertThat(archiverCalls).hasValue(0);
         assertThat(layeredItemStore.isLayerArchived(layerId)).isTrue();
-        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(Layer.State.ARCHIVED);
+        assertThat(layeredItemStore.getLayerState(layerId)).isEqualTo(LayerState.ARCHIVED);
     }
 
     @Test

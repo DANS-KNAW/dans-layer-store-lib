@@ -41,11 +41,11 @@ public class LayerStaleInstanceStateTest extends AbstractTestWithTestDir {
         var layerId = layerManager.listLayerIds().get(0);
         var poller = layerManager.getLayer(layerId); // sees archived=false when created
         var worker = layerManager.getLayer(layerId);
-        assertThat(poller.getState()).isEqualTo(Layer.State.CLOSED);
+        assertThat(poller.getState()).isEqualTo(LayerState.CLOSED);
 
         worker.archive(false);
 
-        assertThat(poller.getState()).isEqualTo(Layer.State.ARCHIVED);
+        assertThat(poller.getState()).isEqualTo(LayerState.ARCHIVED);
     }
 
     @Test
@@ -55,7 +55,7 @@ public class LayerStaleInstanceStateTest extends AbstractTestWithTestDir {
         var stale = layerManager.getLayer(layerId);
         layerManager.getLayer(layerId).reopen();
 
-        assertThat(stale.getState()).isEqualTo(Layer.State.OPEN);
+        assertThat(stale.getState()).isEqualTo(LayerState.OPEN);
     }
 
     @Test

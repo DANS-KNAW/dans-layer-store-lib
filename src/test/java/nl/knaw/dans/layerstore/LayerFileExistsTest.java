@@ -46,7 +46,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
         assertThat(layer.fileExists("path/to/file1")).isTrue();
         assertThat(stagingDir.resolve("path/to/file1").toFile()).doesNotExist();
         assertThat(archiveRoot.resolve("test.zip").toFile()).exists();
-        assertThat(layer.getState()).isEqualTo(Layer.State.ARCHIVED);
+        assertThat(layer.getState()).isEqualTo(LayerState.ARCHIVED);
     }
 
     @Test

@@ -32,12 +32,12 @@ public class LayerReopenReproductionTest extends AbstractTestWithTestDir {
         var layer = new LayerImpl(1234567890123L, new StagingDir(stagingRoot, 1234567890123L), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingDirFiles("file1");
         layer.close();
-        assertThat(layer.getState()).isEqualTo(Layer.State.CLOSED);
+        assertThat(layer.getState()).isEqualTo(LayerState.CLOSED);
         assertThat(stagingRoot.resolve("1234567890123.closed")).exists();
 
         layer.reopen();
 
-        assertThat(layer.getState()).isEqualTo(Layer.State.OPEN);
+        assertThat(layer.getState()).isEqualTo(LayerState.OPEN);
         assertThat(stagingRoot.resolve("1234567890123")).exists();
         assertThat(stagingRoot.resolve("1234567890123.closed")).doesNotExist();
     }
@@ -79,13 +79,13 @@ public class LayerReopenReproductionTest extends AbstractTestWithTestDir {
         };
 
         var layer = new LayerImpl(1234567890123L, new StagingDir(stagingRoot, 1234567890123L), faultyArchive, () -> true);
-        assertThat(layer.getState()).isEqualTo(Layer.State.ARCHIVED);
+        assertThat(layer.getState()).isEqualTo(LayerState.ARCHIVED);
 
         assertThatThrownBy(layer::reopen)
             .isInstanceOf(RuntimeException.class)
             .hasMessage("Unarchiving failed");
 
-        assertThat(layer.getState()).isEqualTo(Layer.State.ARCHIVED);
+        assertThat(layer.getState()).isEqualTo(LayerState.ARCHIVED);
         assertThat(stagingRoot.resolve("1234567890123.partial")).doesNotExist();
         assertThat(stagingRoot.resolve("1234567890123")).doesNotExist();
     }

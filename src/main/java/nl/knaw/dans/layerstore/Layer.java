@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * This interface represents a layer in the {@link LayeredItemStore}. See <a href="../../../../../#layer-status">this page</a> for more information about layer status.
  */
-public interface Layer {
+interface Layer {
     /**
      * Returns the id of the layer.
      *
@@ -37,7 +37,7 @@ public interface Layer {
      *
      * @return the state of the layer
      */
-    State getState();
+    LayerState getState();
 
     /**
      * Changes the state of the layer to 'closed'. Not allowed when the layer is not open.
@@ -148,21 +148,4 @@ public interface Layer {
      */
     Iterator<Item> listAllItems() throws IOException;
 
-    /**
-     * The state of a layer.
-     */
-    enum State {
-        /**
-         * The layer is open for writing.
-         */
-        OPEN,
-        /**
-         * The layer is closed for writing and may be (re)archived.
-         */
-        CLOSED,
-        /**
-         * The layer is archived.
-         */
-        ARCHIVED
-    }
 }

@@ -108,7 +108,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         assertThat(layerManager.getTopLayer()).isNotNull();
         assertThat(layerManager.getTopLayer().getId()).isEqualTo(existingLayerId);
-        assertThat(layerManager.getTopLayer().getState()).isEqualTo(Layer.State.CLOSED);
+        assertThat(layerManager.getTopLayer().getState()).isEqualTo(LayerState.CLOSED);
     }
 
     @Test
