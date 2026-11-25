@@ -34,8 +34,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void zip_archive_provider_should_throw_on_illegal_files() throws IOException {
-        Files.createDirectories(archiveRoot);
-        Files.createFile(archiveRoot.resolve("illegal.txt"));
+        createEmptyArchiveFiles("illegal.txt");
         var provider = new ZipArchiveProvider(archiveRoot);
 
         assertThatThrownBy(provider::validateRoot)
@@ -47,7 +46,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void zip_archive_provider_should_throw_on_directory() throws IOException {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         Files.createDirectories(archiveRoot.resolve("1234567890123.zip"));
         var provider = new ZipArchiveProvider(archiveRoot);
 
@@ -60,8 +59,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void zip_archive_provider_should_throw_on_invalid_timestamp() throws IOException {
-        Files.createDirectories(archiveRoot);
-        Files.createFile(archiveRoot.resolve("123.zip"));
+        createEmptyArchiveFiles("123.zip");
         var provider = new ZipArchiveProvider(archiveRoot);
 
         assertThatThrownBy(provider::validateRoot)
@@ -73,9 +71,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void zip_archive_provider_should_pass_on_valid_files() throws IOException {
-        Files.createDirectories(archiveRoot);
-        Files.createFile(archiveRoot.resolve("1234567890123.zip"));
-        Files.createFile(archiveRoot.resolve("9876543210987.zip"));
+        createEmptyArchiveFiles("1234567890123.zip", "9876543210987.zip");
         var provider = new ZipArchiveProvider(archiveRoot);
 
         provider.validateRoot();
@@ -83,8 +79,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void tar_archive_provider_should_throw_on_illegal_files() throws IOException {
-        Files.createDirectories(archiveRoot);
-        Files.createFile(archiveRoot.resolve("illegal.txt"));
+        createEmptyArchiveFiles("illegal.txt");
         var provider = new TarArchiveProvider(archiveRoot);
 
         assertThatThrownBy(provider::validateRoot)
@@ -96,8 +91,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void tar_archive_provider_should_pass_on_valid_files() throws IOException {
-        Files.createDirectories(archiveRoot);
-        Files.createFile(archiveRoot.resolve("1234567890123.tar"));
+        createEmptyArchiveFiles("1234567890123.tar");
         var provider = new TarArchiveProvider(archiveRoot);
 
         provider.validateRoot();
@@ -105,8 +99,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void zip_archive_provider_should_throw_on_closed_extension() throws IOException {
-        Files.createDirectories(archiveRoot);
-        Files.createFile(archiveRoot.resolve("1234567890123.zip.closed"));
+        createEmptyArchiveFiles("1234567890123.zip.closed");
         var provider = new ZipArchiveProvider(archiveRoot);
 
         assertThatThrownBy(provider::validateRoot)
@@ -118,8 +111,7 @@ public class ArchiveProviderValidateRootTest extends AbstractTestWithTestDir {
 
     @Test
     public void tar_archive_provider_should_throw_on_closed_extension() throws IOException {
-        Files.createDirectories(archiveRoot);
-        Files.createFile(archiveRoot.resolve("1234567890123.tar.closed"));
+        createEmptyArchiveFiles("1234567890123.tar.closed");
         var provider = new TarArchiveProvider(archiveRoot);
 
         assertThatThrownBy(provider::validateRoot)

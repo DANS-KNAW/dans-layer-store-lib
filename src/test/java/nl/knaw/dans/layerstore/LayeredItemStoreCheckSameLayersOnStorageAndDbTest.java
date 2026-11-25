@@ -30,7 +30,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
     @Test
     public void should_pass_if_store_and_database_are_empty() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredItemStore = new LayeredItemStore(db, layerManager);
 
@@ -41,7 +41,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
     @Test
     public void should_pass_when_store_and_database_are_in_sync() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
@@ -58,7 +58,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
     @Test
     public void should_fail_when_database_contains_layer_missing_on_storage() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         layeredItemStore.newTopLayer();
@@ -86,7 +86,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
     @Test
     public void should_fail_when_staging_contains_layer_missing_in_database() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         layeredItemStore.newTopLayer();
@@ -108,7 +108,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
     @Test
     public void should_fail_when_archive_contains_layer_missing_in_database() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         layeredItemStore.newTopLayer();
@@ -119,8 +119,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         layeredItemStore.writeFile("a/b/c/test2.txt", toInputStream("Hello again!", UTF_8));
 
         var nonExistentLayerId = layerManager.getTopLayer().getId() + 1;
-        var newArchivedLayer = archiveRoot.resolve(Long.toString(nonExistentLayerId) + ".zip");
-        Files.createFile(newArchivedLayer);
+        createEmptyArchiveFiles(Long.toString(nonExistentLayerId) + ".zip");
 
         // When / Then
         assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)
@@ -130,7 +129,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
     @Test
     public void should_pass_when_multiple_layers_exist_and_store_is_in_sync_with_database() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
@@ -153,7 +152,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
     @Test
     public void should_fail_and_report_all_missing_layers_on_both_sides() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         layerManager.newTopLayer();
@@ -183,8 +182,7 @@ public class LayeredItemStoreCheckSameLayersOnStorageAndDbTest extends AbstractL
         var nonExistentLayerIdInDb2 = layerManager.getTopLayer().getId() + 4;
         var newStagingDir = stagingRoot.resolve(Long.toString(nonExistentLayerIdInDb1));
         Files.createDirectories(newStagingDir);
-        var newArchivedLayer = archiveRoot.resolve(Long.toString(nonExistentLayerIdInDb2) + ".zip");
-        Files.createFile(newArchivedLayer);
+        createEmptyArchiveFiles(Long.toString(nonExistentLayerIdInDb2) + ".zip");
 
         // When / Then
         assertThatThrownBy(checker::checkSameLayersOnStorageAndDb)

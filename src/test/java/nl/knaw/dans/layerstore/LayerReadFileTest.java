@@ -52,7 +52,7 @@ public class LayerReadFileTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_read_file_from_archive_if_layer_is_closed_and_archived() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         var testContents = "test file";
         FileUtils.write(stagingDir.resolve("path/to/file1").toFile(), testContents, StandardCharsets.UTF_8);

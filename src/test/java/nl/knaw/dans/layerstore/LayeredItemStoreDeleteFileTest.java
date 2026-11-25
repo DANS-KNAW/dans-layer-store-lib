@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class LayeredItemStoreDeleteFileTest extends AbstractLayerDatabaseTest {
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
     }
 
     @Test

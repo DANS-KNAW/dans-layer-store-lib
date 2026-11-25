@@ -17,7 +17,6 @@ package nl.knaw.dans.layerstore;
 
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +26,7 @@ public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatab
 
     @Test
     public void should_archive_layer_without_involving_the_layer_archiver() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var archiverCalls = new AtomicInteger();
         LayerArchiver countingArchiver = (layerId, overwrite) -> {
             archiverCalls.incrementAndGet();
@@ -57,13 +56,13 @@ public class LayeredItemStoreArchiveLayerDirectlyTest extends AbstractLayerDatab
 
     @Test
     public void should_not_overwrite_existing_archive_when_overwrite_is_false() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), null, true);
         var layeredItemStore = new LayeredItemStore(db, layerManager);
         var layerId = layeredItemStore.newTopLayer();
         layeredItemStore.closeLayer(layerId);
         var existingArchive = archiveRoot.resolve(layerId + ".zip");
-        Files.writeString(existingArchive, "existing");
+        writeArchiveFile(layerId + ".zip", "existing");
 
         assertThatThrownBy(() -> layeredItemStore.archiveLayerDirectly(layerId, false))
             .isInstanceOf(IllegalStateException.class)

@@ -19,7 +19,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -38,7 +37,7 @@ public class LayeredItemStoreReadFileTest extends AbstractLayerDatabaseTest {
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
     }
 
     @Test

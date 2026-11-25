@@ -43,7 +43,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
     @Test
     public void should_use_the_existing_staging_directory() throws IOException {
         var existingLayerId = 1234567890123L;
-        Files.createDirectories(stagingRoot.resolve(String.valueOf(existingLayerId)));
+        createStagingDir();
 
         var topLayerId = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot))
             .getTopLayer().getId();
@@ -52,7 +52,7 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_on_a_regular_file_in_the_staging_root() throws IOException {
-        Files.createDirectories(stagingRoot);
+        createStagingRoot();
         var invalidFileBetweenLayerDirs = "1234567890123";
         Files.createFile(stagingRoot.resolve(invalidFileBetweenLayerDirs));
 
@@ -127,9 +127,9 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_throw_if_archive_root_validation_fails_and_validateArchiveRoot_is_true() throws IOException {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var invalidFile = "invalid-file";
-        Files.createFile(archiveRoot.resolve(invalidFile));
+        createEmptyArchiveFiles(invalidFile);
 
         assertThatThrownBy(() -> new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), null, true))
             .isInstanceOf(IllegalStateException.class)
@@ -140,9 +140,9 @@ public class LayerManagerConstructorTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_not_throw_if_archive_root_validation_fails_but_validateArchiveRoot_is_false() throws IOException {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var invalidFile = "invalid-file";
-        Files.createFile(archiveRoot.resolve(invalidFile));
+        createEmptyArchiveFiles(invalidFile);
 
         // Should not throw
         new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot), null, false);

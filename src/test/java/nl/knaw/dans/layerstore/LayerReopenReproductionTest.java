@@ -28,7 +28,7 @@ public class LayerReopenReproductionTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_allow_reopening_from_CLOSED_state() throws Exception {
-        Files.createDirectories(stagingRoot);
+        createStagingRoot();
         var layer = new LayerImpl(1234567890123L, new StagingDir(stagingRoot, 1234567890123L), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingFiles("file1");
         layer.close();
@@ -44,7 +44,7 @@ public class LayerReopenReproductionTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_throw_exception_and_cleanup_when_unarchiving_fails() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         // Create a faulty archive that throws an exception during unarchiving
         Archive faultyArchive = new Archive() {
             @Override

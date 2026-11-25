@@ -71,7 +71,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         ).exists();
 
         // assert content is in DB
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         layerManager.getTopLayer().close();
         layerManager.getTopLayer().archive(false);
         assertThat(stagingRoot).isEmptyDirectory();
@@ -86,7 +86,7 @@ public class LayeredItemStoreMoveDirectoryIntoTest extends AbstractLayerDatabase
         var layeredStore = new LayeredItemStore(db, layerManager);
         layeredStore.newTopLayer();
         layeredStore.createDirectories("a/b");
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         layerManager.newTopLayer();
         layeredStore.deleteDirectory("a/b");
 

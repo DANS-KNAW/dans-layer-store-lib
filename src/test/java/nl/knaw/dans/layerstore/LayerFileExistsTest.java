@@ -34,7 +34,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_return_true_if_file_exists_in_archived_layer() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingFiles("path/to/file1", "path/to/file2");
 
@@ -51,7 +51,7 @@ public class LayerFileExistsTest extends AbstractTestWithTestDir {
 
     @Test
     public void should_throw_if_archive_of_archived_layer_was_destroyed() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layer = new LayerImpl(1, new StagingDir(stagingDir), new ZipArchive(archiveRoot.resolve("test.zip")), () -> Files.exists(archiveRoot.resolve("test.zip")));
         createEmptyStagingFiles("path/to/file1", "path/to/file2");
 

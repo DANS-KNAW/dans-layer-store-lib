@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LayerStaleInstanceStateTest extends AbstractTestWithTestDir {
 
     private LayerManagerImpl newManagerWithClosedLayer() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot), (id, overwrite) -> { }, true);
         layerManager.newTopLayer();
         layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello", UTF_8));

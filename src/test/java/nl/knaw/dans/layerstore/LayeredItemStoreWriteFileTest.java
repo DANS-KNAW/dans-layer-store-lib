@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static nl.knaw.dans.layerstore.Item.Type.Directory;
@@ -127,7 +126,7 @@ public class LayeredItemStoreWriteFileTest extends AbstractLayerDatabaseTest {
 
     @Test
     public void should_add_copies_to_the_database_if_filter_applies() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         var layeredStore = new LayeredItemStore(db, layerManager, new StoreTxtContent());
         layeredStore.newTopLayer();

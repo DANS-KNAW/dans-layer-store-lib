@@ -18,8 +18,6 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,7 +27,7 @@ public class LayeredItemStoreExistsPathLikeTest extends AbstractLayerDatabaseTes
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
     }
 
     @Test

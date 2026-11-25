@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
     }
 
     @Test
@@ -113,7 +112,7 @@ public class LayeredItemStoreDeleteDirectoryTest extends AbstractLayerDatabaseTe
         var firstLayerId = layeredStore.newTopLayer();
         layeredStore.createDirectories("a/b/c/d");
         layeredStore.writeFile("a/b/c/test.txt", toInputStream("Hello world!", UTF_8));
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         layerManager.newTopLayer();
         var list1 = daoTestExtension.inTransaction(() ->
             db.getAllRecords().toList().stream().map(ItemRecord::getPath)

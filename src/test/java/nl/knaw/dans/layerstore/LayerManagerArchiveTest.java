@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +35,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
 
     @Test
     void should_archive_layer_by_id() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         var layer = layerManager.getTopLayer();
@@ -49,7 +48,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
 
     @Test
     void should_reject_already_archived_layer_when_overwrite_is_false() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingRoot, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         var layer = layerManager.getTopLayer();
@@ -63,7 +62,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
 
     @Test
     void should_delegate_archive_action_with_layer_id_to_custom_archiver() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var delegated = new AtomicBoolean();
         var customArchiver = (LayerArchiver) (layerId, overwrite) -> {
             assertThat(layerId).isPositive();
@@ -81,7 +80,7 @@ class LayerManagerArchiveTest extends AbstractTestWithTestDir {
 
     @Test
     void should_pass_overwrite_flag_to_archiver() throws Exception {
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var received = new java.util.ArrayList<Boolean>();
         var archiver = new LayerArchiver() {
             @Override

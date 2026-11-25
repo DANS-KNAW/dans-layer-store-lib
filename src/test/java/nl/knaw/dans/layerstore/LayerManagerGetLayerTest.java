@@ -18,7 +18,6 @@ package nl.knaw.dans.layerstore;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
@@ -72,7 +71,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_find_an_empty_archived_layer() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingDir, new ZipArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         var initialLayerId = layerManager.getTopLayerId();
@@ -91,7 +90,7 @@ public class LayerManagerGetLayerTest extends AbstractTestWithTestDir {
     @Test
     public void should_have_status_archived_for_the_found_layer() throws Exception {
         // Given
-        Files.createDirectories(archiveRoot);
+        createArchiveRoot();
         var layerManager = new LayerManagerImpl(stagingDir, new TarArchiveProvider(archiveRoot));
         layerManager.newTopLayer();
         layerManager.getTopLayer().writeFile("test.txt", toInputStream("Hello world!", UTF_8));

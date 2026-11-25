@@ -33,12 +33,11 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
 
     @Test
     public void zipArchive_should_restore_backup_on_failure() throws Exception {
-        var archiveFile = testDir.resolve("test.zip");
-        Files.writeString(archiveFile, "original content");
+        var archiveFile = writeArchiveFile("test.zip", "original content");
         var archive = new ZipArchive(archiveFile);
 
-        Files.createDirectories(stagingDir.getParent());
-        Files.createDirectory(stagingDir);
+        createStagingDir();
+        // Fail because the staging dir is not readable.
         Assumptions.assumeTrue(stagingDir.toFile().setReadable(false), "setReadable not supported");
 
         try {
@@ -46,7 +45,7 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
                 .isInstanceOf(Exception.class);
 
             assertThat(Files.readString(archiveFile)).isEqualTo("original content");
-            assertThat(Files.exists(testDir.resolve("test.zip.bak"))).isFalse();
+            assertThat(Files.exists(archiveRoot.resolve("test.zip.bak"))).isFalse();
         }
         finally {
             if (!stagingDir.toFile().setReadable(true)) {
@@ -57,12 +56,11 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
 
     @Test
     public void tarArchive_should_restore_backup_on_failure() throws Exception {
-        var archiveFile = testDir.resolve("test.tar");
-        Files.writeString(archiveFile, "original content");
+        var archiveFile = writeArchiveFile("test.tar", "original content");
         var archive = new TarArchive(archiveFile);
 
-        Files.createDirectories(stagingDir.getParent());
-        Files.createDirectory(stagingDir);
+        createStagingDir();
+        // Fail because the staging dir is not readable.
         Assumptions.assumeTrue(stagingDir.toFile().setReadable(false), "setReadable not supported");
 
         try {
@@ -70,7 +68,7 @@ public class ArchiveBackupTest extends AbstractTestWithTestDir {
                 .isInstanceOf(Exception.class);
 
             assertThat(Files.readString(archiveFile)).isEqualTo("original content");
-            assertThat(Files.exists(testDir.resolve("test.tar.bak"))).isFalse();
+            assertThat(Files.exists(archiveRoot.resolve("test.tar.bak"))).isFalse();
         }
         finally {
             if (!stagingDir.toFile().setReadable(true)) {

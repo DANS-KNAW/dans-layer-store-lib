@@ -53,12 +53,22 @@ public abstract class AbstractTestWithTestDir {
      *
      * @param path    the path of the file to write, relative to the staging directory
      * @param content the text content to write using UTF-8 encoding
+     * @return the path of the written file
      * @throws IOException if the parent directories or staging file cannot be created or written
      */
-    protected void writeStagingFile(String path, String content) throws IOException {
-        var file = stagingDir.resolve(path);
+    protected Path writeStagingFile(String path, String content) throws IOException {
+        return writeFile(stagingDir, path, content);
+    }
+
+    /** Writes a UTF-8 file relative to the archive root and returns its path, creating parent directories as needed. */
+    protected Path writeArchiveFile(String path, String content) throws IOException {
+        return writeFile(archiveRoot, path, content);
+    }
+
+    private Path writeFile(Path root, String path, String content) throws IOException {
+        var file = root.resolve(path);
         Files.createDirectories(file.getParent());
-        Files.writeString(file, content, StandardCharsets.UTF_8);
+        return Files.writeString(file, content, StandardCharsets.UTF_8);
     }
 
     /**
@@ -68,14 +78,38 @@ public abstract class AbstractTestWithTestDir {
      * @throws RuntimeException if a staging file or one of its parent directories cannot be created
      */
     protected void createEmptyStagingFiles(String... paths) {
+        createEmptyFiles(stagingDir, "staging", paths);
+    }
+
+    /** Creates empty files relative to the archive root, including any needed parent directories. */
+    protected void createEmptyArchiveFiles(String... paths) {
+        createEmptyFiles(archiveRoot, "archive", paths);
+    }
+
+    /** Creates the staging root if it does not exist. */
+    protected void createStagingRoot() throws IOException {
+        Files.createDirectories(stagingRoot);
+    }
+
+    /** Creates the staging directory and its parents if they do not exist. */
+    protected void createStagingDir() throws IOException {
+        Files.createDirectories(stagingDir);
+    }
+
+    /** Creates the archive root if it does not exist. */
+    protected void createArchiveRoot() throws IOException {
+        Files.createDirectories(archiveRoot);
+    }
+
+    private void createEmptyFiles(Path root, String kind, String... paths) {
         for (String path : paths) {
-            var file = stagingDir.resolve(path);
+            var file = root.resolve(path);
             try {
                 Files.createDirectories(file.getParent());
                 Files.createFile(file);
             }
             catch (IOException e) {
-                throw new RuntimeException("Could not create staging file: " + path, e);
+                throw new RuntimeException("Could not create " + kind + " file: " + path, e);
             }
         }
     }
