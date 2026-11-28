@@ -38,13 +38,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
- * An implementation of {@link ItemStore} that organizes files and directories ({@link Item}s) in an ordered stack of {@link Layer}s. Layers are either staged or archived. Staged layers can be
- * mutable.
+ * An implementation of {@link ItemStore} that organizes files and directories ({@link Item}s) in an ordered stack of {@link Layer}s. Layers are
+ * either staged or archived. Staged layers can be mutable.
  * <p>
- * To materialize the layered store into a regular directory, unarchive any archived layers to staging directories and then copy those directories into a single target directory from oldest to newest.
- * Files in newer layers overwrite files from older layers.
+ * To materialize the layered store into a regular directory, unarchive any archived layers to staging directories and then copy those directories
+ * into a single target directory from oldest to newest. Files in newer layers overwrite files from older layers.
  * <p>
- * The LayeredItemStore is backed by a {@link LayerDatabase}, enabling storage on media that may be too slow for direct access (e.g., tape). See the {@link LayerDatabase} interface for details.
+ * The LayeredItemStore is backed by a {@link LayerDatabase}, enabling storage on media that may be too slow for direct access (e.g., tape). See the
+ * {@link LayerDatabase} interface for details.
  *
  * @see LayerDatabase
  */
@@ -130,8 +131,8 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
-     * Requests the archiving of the layer with the specified id. The operation may be performed asynchronously, so the caller should check the layer's status to determine when the archiving is
-     * complete.
+     * Requests the archiving of the layer with the specified id. The operation may be performed asynchronously, so the caller should check the
+     * layer's status to determine when the archiving is complete.
      *
      * @param layerId   the id of the layer to archive
      * @param overwrite whether to overwrite an existing archive
@@ -143,8 +144,8 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
-     * Archives the layer with the specified id in the calling thread, bypassing the configured {@link LayerArchiver}. This is meant for {@link LayerArchiver} implementations that run the archiving
-     * themselves at a later moment, for example from a persisted job queue.
+     * Archives the layer with the specified id in the calling thread, bypassing the configured {@link LayerArchiver}. This is meant for
+     * {@link LayerArchiver} implementations that run the archiving themselves at a later moment, for example from a persisted job queue.
      *
      * @param layerId   the id of the layer to archive
      * @param overwrite whether to overwrite an existing archive
@@ -178,16 +179,19 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
-     * Reopens the layer with the specified id in the calling thread, so that its contents can be modified again. A CLOSED layer is reopened directly; an ARCHIVED layer is first unarchived to its
-     * staging directory, which may take a long time. While that is in progress, the layer remains in the ARCHIVED state and its contents can still be read. For an archive that must first be
-     * recalled, for example from tape, call {@link #requestLayerRecall(long)} and wait until {@link #isLayerRecalled(long)} returns true before calling this method; otherwise this method blocks
-     * until the archive is available.
+     * Reopens the layer with the specified id in the calling thread, so that its contents can be modified again. A CLOSED layer is reopened directly;
+     * an ARCHIVED layer is first unarchived to its staging directory, which may take a long time. While that is in progress, the layer remains in the
+     * ARCHIVED state and its contents can still be read. For an archive that must first be recalled, for example from tape, call
+     * {@link #requestLayerRecall(long)} and wait until {@link #isLayerRecalled(long)} returns true before calling this method; otherwise this method
+     * blocks until the archive is available.
      * <p>
-     * The top layer is always open and cannot be reopened. Reopening other layers does not affect writing to the top layer. A reopened layer must be closed and archived again explicitly.
+     * The top layer is always open and cannot be reopened. Reopening other layers does not affect writing to the top layer. A reopened layer must be
+     * closed and archived again explicitly.
      *
      * @param layerId the id of the layer to reopen
      * @throws IllegalArgumentException if no layer with the specified id exists
-     * @throws IllegalStateException    if the layer is the top layer, is not in the CLOSED or ARCHIVED state, or is already being reopened by this item store
+     * @throws IllegalStateException    if the layer is the top layer, is not in the CLOSED or ARCHIVED state, or is already being reopened by this
+     *                                  item store
      * @throws IOException              if an I/O error occurs
      */
     public void reopenLayer(long layerId) throws IOException {
@@ -209,8 +213,9 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
-     * Requests that the archive of the layer with the specified id be made available for reopening, for example by having it recalled from tape. Returns without waiting for the recall to
-     * complete. Does nothing if the layer is not in the ARCHIVED state or if its archive is always available.
+     * Requests that the archive of the layer with the specified id be made available for reopening, for example by having it recalled from tape.
+     * Returns without waiting for the recall to complete. Does nothing if the layer is not in the ARCHIVED state or if its archive is always
+     * available.
      *
      * @param layerId the id of the layer
      * @throws IllegalArgumentException if no layer with the specified id exists
@@ -220,8 +225,8 @@ public class LayeredItemStore implements ItemStore {
     }
 
     /**
-     * Returns whether the layer with the specified id can be reopened without first having to wait for its archive to be recalled, for example from tape. Returns true if the layer is not in the
-     * ARCHIVED state.
+     * Returns whether the layer with the specified id can be reopened without first having to wait for its archive to be recalled, for example from
+     * tape. Returns true if the layer is not in the ARCHIVED state.
      *
      * @param layerId the id of the layer
      * @return whether the layer can be reopened without delay
