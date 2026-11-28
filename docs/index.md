@@ -116,7 +116,9 @@ The transitions between these states are as follows:
 * **reopen** (transition: ARCHIVED or CLOSED -> OPEN). This is potentially a slow operation, as it involves reading the archive file and staging the files to
   fast storage again. The archive is **not** deleted after reopening. If the open layer is subsequently edited, closed and archived again, the client should
   pass `overwrite= true` to make sure the updates are reflected in the archive file. It is also possible to reopen a CLOSED layer, which is a fast operation
-  that does not involve reading the archive file.
+  that does not involve reading the archive file. The top layer cannot be reopened, as it is always open. Reopening another layer does not affect writing to
+  the top layer; a reopened layer must be closed and archived again explicitly. If the archive must first be recalled (e.g., from tape), the client can
+  call `requestLayerRecall` and poll `isLayerRecalled` before calling `reopenLayer`, so that the reopen itself does not have to wait for the recall.
 
 [OCFL]: https://ocfl.io/
 

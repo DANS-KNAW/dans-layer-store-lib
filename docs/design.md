@@ -60,7 +60,14 @@ Consequences for implementers:
 * `StagingDir` validates that there is never more than one staging directory per layer ID, and the `LayerManagerImpl` constructor validates that the staging
   root contains nothing but correctly named layer directories (and, optionally, that the archive root contains only valid archives).
 * `reopen()` of an archived layer unarchives into a `.partial` directory first and renames it to `<id>` only when complete; on failure the partial directory is
-  deleted. Layers are thus never visible as open in a half-restored state.
+  deleted. Layers are thus never visible as open in a half-restored state. While the `.partial` directory exists, the layer still reports the ARCHIVED state
+  and reads are served from the archive. A `.partial` directory found at the start of a `reopen()` is a leftover of an interrupted attempt (e.g., a crash) and
+  is removed before unarchiving starts.
+* `LayeredItemStore.reopenLayer(id)` refuses to reopen the top layer and refuses a second reopen of a layer that the same item store is already reopening.
+  Callers in other processes must coordinate among themselves.
+* An `Archive` may need to be recalled before it can be unarchived, for example from tape. `Archive.requestRecall()` starts the recall without waiting for it
+  and `Archive.isRecalled()` reports when it is done; the defaults (do nothing, always recalled) fit archives that are always available. This lets a client
+  wait for a recall that takes hours without blocking a thread in `reopen()`.
 
 ## Stack semantics
 

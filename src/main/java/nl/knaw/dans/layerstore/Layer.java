@@ -48,11 +48,28 @@ interface Layer {
 
     /**
      * Changes the state of the layer to open. It also stages the archive file in the staging directory. This operation is only allowed when the layer is in the CLOSED or ARCHIVED state.
+     * While an archived layer is being unarchived, its staging directory has the suffix '.partial' and the layer remains in the ARCHIVED state, so that reads are still served from the archive.
+     * A '.partial' staging directory found at the start of the operation is considered a leftover of an interrupted reopen and is removed first. The caller must therefore ensure that the same
+     * layer is not reopened concurrently.
      *
      * @throws IllegalStateException if the layer is not in the CLOSED or ARCHIVED state
      * @throws IOException           if the layer cannot be reopened
      */
     void reopen() throws IOException;
+
+    /**
+     * Requests that the archive of the layer be made available for unarchiving, for example by having it recalled from tape. Does nothing if the layer is not in the ARCHIVED state. See
+     * {@link Archive#requestRecall()}.
+     */
+    void requestRecall();
+
+    /**
+     * Returns whether the layer can be reopened without first having to wait for its archive to be recalled. Returns {@code true} if the layer is not in the ARCHIVED state. See
+     * {@link Archive#isRecalled()}.
+     *
+     * @return whether the layer can be reopened without delay
+     */
+    boolean isRecalled();
 
     /**
      * Turns the layer into an archive file. This operation is only allowed when the layer is in the CLOSED state.

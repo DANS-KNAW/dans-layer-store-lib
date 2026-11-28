@@ -33,6 +33,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
@@ -65,6 +67,11 @@ public class LayeredItemStore implements ItemStore {
     @Getter
     @Setter
     private boolean allowReadingContentFromArchives = true;
+
+    /**
+     * Ids of the layers that are being reopened by this item store, to prevent the same layer from being reopened twice at the same time.
+     */
+    private final Set<Long> layersBeingReopened = ConcurrentHashMap.newKeySet();
 
     /**
      * Creates a new LayeredItemStore without a database-backed content manager.
@@ -168,6 +175,60 @@ public class LayeredItemStore implements ItemStore {
      */
     public LayerState getLayerState(long layerId) {
         return layerManager.getLayer(layerId).getState();
+    }
+
+    /**
+     * Reopens the layer with the specified id in the calling thread, so that its contents can be modified again. A CLOSED layer is reopened directly; an ARCHIVED layer is first unarchived to its
+     * staging directory, which may take a long time. While that is in progress, the layer remains in the ARCHIVED state and its contents can still be read. For an archive that must first be
+     * recalled, for example from tape, call {@link #requestLayerRecall(long)} and wait until {@link #isLayerRecalled(long)} returns true before calling this method; otherwise this method blocks
+     * until the archive is available.
+     * <p>
+     * The top layer is always open and cannot be reopened. Reopening other layers does not affect writing to the top layer. A reopened layer must be closed and archived again explicitly.
+     *
+     * @param layerId the id of the layer to reopen
+     * @throws IllegalArgumentException if no layer with the specified id exists
+     * @throws IllegalStateException    if the layer is the top layer, is not in the CLOSED or ARCHIVED state, or is already being reopened by this item store
+     * @throws IOException              if an I/O error occurs
+     */
+    public void reopenLayer(long layerId) throws IOException {
+        if (Long.valueOf(layerId).equals(layerManager.getTopLayerId())) {
+            throw new IllegalStateException("Layer " + layerId + " is the top layer, which cannot be reopened");
+        }
+        var layer = layerManager.getLayer(layerId);
+        if (!layersBeingReopened.add(layerId)) {
+            throw new IllegalStateException("Layer " + layerId + " is already being reopened");
+        }
+        try {
+            log.info("Reopening layer {} (state {})", layerId, layer.getState());
+            layer.reopen();
+            log.info("Layer {} reopened", layerId);
+        }
+        finally {
+            layersBeingReopened.remove(layerId);
+        }
+    }
+
+    /**
+     * Requests that the archive of the layer with the specified id be made available for reopening, for example by having it recalled from tape. Returns without waiting for the recall to
+     * complete. Does nothing if the layer is not in the ARCHIVED state or if its archive is always available.
+     *
+     * @param layerId the id of the layer
+     * @throws IllegalArgumentException if no layer with the specified id exists
+     */
+    public void requestLayerRecall(long layerId) {
+        layerManager.getLayer(layerId).requestRecall();
+    }
+
+    /**
+     * Returns whether the layer with the specified id can be reopened without first having to wait for its archive to be recalled, for example from tape. Returns true if the layer is not in the
+     * ARCHIVED state.
+     *
+     * @param layerId the id of the layer
+     * @return whether the layer can be reopened without delay
+     * @throws IllegalArgumentException if no layer with the specified id exists
+     */
+    public boolean isLayerRecalled(long layerId) {
+        return layerManager.getLayer(layerId).isRecalled();
     }
 
     /**

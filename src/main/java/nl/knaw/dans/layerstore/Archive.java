@@ -62,4 +62,22 @@ public interface Archive {
      * @return an iterator over all items in the archive
      */
     Iterator<Item> listAllItems() throws IOException;
+
+    /**
+     * Requests that the archive be made available for unarchiving, for example by having it recalled from tape. The method returns without waiting for the recall to complete; use
+     * {@link #isRecalled()} to find out when it has. Calling it again while a recall is in progress must be harmless. The default implementation does nothing, which is appropriate for archives
+     * that are always available.
+     */
+    default void requestRecall() {
+    }
+
+    /**
+     * Returns whether the archive is available for unarchiving without first having to be recalled, for example from tape. The default implementation returns {@code true}, which is appropriate
+     * for archives that are always available.
+     *
+     * @return whether the archive can be unarchived without delay
+     */
+    default boolean isRecalled() {
+        return true;
+    }
 }

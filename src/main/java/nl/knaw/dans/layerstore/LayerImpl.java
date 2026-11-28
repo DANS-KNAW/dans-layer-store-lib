@@ -130,6 +130,10 @@ class LayerImpl implements Layer {
             stagingDir.open();
         }
         else if (currentState == LayerState.ARCHIVED) {
+            if (stagingDir.isPartial()) {
+                log.warn("Removing leftover staging directory {} of an interrupted reopen of layer {}", stagingDir.getPath(), id);
+                stagingDir.delete();
+            }
             stagingDir.partial();
             try {
                 archive.unarchiveTo(stagingDir.getPath());
@@ -148,6 +152,21 @@ class LayerImpl implements Layer {
         else {
             throw new IllegalStateException(String.format("Layer %d is in state %s, but must be in state CLOSED or ARCHIVED for this operation", id, currentState));
         }
+    }
+
+    /*
+     * Not synchronized, as the archive may need to run a remote command; holding the lock during that would block reads from this layer.
+     */
+    @Override
+    public void requestRecall() {
+        if (getState() == LayerState.ARCHIVED) {
+            archive.requestRecall();
+        }
+    }
+
+    @Override
+    public boolean isRecalled() {
+        return getState() != LayerState.ARCHIVED || archive.isRecalled();
     }
 
     @Override
